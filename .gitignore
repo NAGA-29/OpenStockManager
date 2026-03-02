@@ -1,0 +1,30 @@
+/node_modules
+/public/js
+/public/css
+/public/hot
+/public/storage
+/public/build/assets
+/public/build/manifest.json
+/storage/*.key
+/vendor
+.env
+.env.s3
+.env.backup
+.env.old
+.phpunit.result.cache
+docker-compose.override.yml
+Homestead.json
+Homestead.yaml
+npm-debug.log
+yarn-error.log
+
+# IDE 関連
+/.idea
+/.vscode
+/.claude
+
+# macOS 関連
+/.DS_Store
+
+# pnpm セキュリティチェックキャッシュ（ローカル環境固有のため除外）
+.pnpm-age-cache.json

@@ -1,0 +1,23 @@
+{
+    "preset": "psr12",
+    "rules": {
+        "array_syntax": {
+            "syntax": "short"
+        },
+        "no_unused_imports": true,
+        "ordered_imports": {
+            "sort_algorithm": "alpha"
+        },
+        "single_quote": true,
+        "trailing_comma_in_multiline": true
+    },
+    "exclude": [
+        "bootstrap",
+        "database",
+        "node_modules",
+        "public",
+        "resources",
+        "storage",
+        "vendor"
+    ]
+}

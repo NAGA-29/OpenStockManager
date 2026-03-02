@@ -1,0 +1,134 @@
+.edit-user-dialog {
+    border: none;
+    border-radius: 8px;
+    padding: 0;
+    width: 90%;
+    max-width: 560px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+}
+
+.edit-user-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.5);
+}
+
+/* Header */
+.edit-user-dialog__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.edit-user-dialog__header h5 {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 600;
+}
+
+.edit-user-dialog__close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+    color: #666;
+}
+
+.edit-user-dialog__close:hover {
+    color: #000;
+}
+
+/* Body */
+.edit-user-dialog__body {
+    padding: 20px;
+}
+
+.edit-user-dialog__field {
+    display: flex;
+    align-items: baseline;
+    margin-bottom: 16px;
+    gap: 12px;
+}
+
+.edit-user-dialog__label {
+    flex: 0 0 130px;
+    text-align: right;
+    font-size: 0.9rem;
+}
+
+.edit-user-dialog__input-wrap {
+    flex: 1;
+}
+
+.edit-user-dialog__input {
+    width: 100%;
+    padding: 6px 10px;
+    font-size: 0.9rem;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.edit-user-dialog__input:focus {
+    outline: none;
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+}
+
+select.edit-user-dialog__input {
+    appearance: auto;
+}
+
+.edit-user-dialog__hint {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+.edit-user-dialog__error {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.8rem;
+    color: #dc3545;
+}
+
+/* Footer */
+.edit-user-dialog__footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 12px 20px;
+    border-top: 1px solid #dee2e6;
+}
+
+.edit-user-dialog__btn {
+    padding: 6px 20px;
+    font-size: 0.9rem;
+    border-radius: 4px;
+    border: 1px solid transparent;
+    cursor: pointer;
+}
+
+.edit-user-dialog__btn--save {
+    color: #198754;
+    background: #fff;
+    border-color: #198754;
+}
+
+.edit-user-dialog__btn--save:hover {
+    color: #fff;
+    background: #198754;
+}
+
+.edit-user-dialog__btn--cancel {
+    color: #6c757d;
+    background: #fff;
+    border-color: #6c757d;
+}
+
+.edit-user-dialog__btn--cancel:hover {
+    color: #fff;
+    background: #6c757d;
+}

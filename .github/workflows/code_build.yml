@@ -1,0 +1,49 @@
+name: Build Assets
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  resource-build:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # PHPとComposerのセットアップ
+      - name: Setup PHP, with composer and extensions
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: mbstring, xml, ctype, iconv, intl, pdo_mysql
+          coverage: none
+
+      # 依存関係のインストール(PHP)
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-scripts --no-progress
+
+      # Node.jsのセットアップ
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # JavaScript & CSSのビルド（Laravel Mix）
+      - name: Build assets
+        run: |
+          npm ci
+          npm run prod
+
+      # アセットをZIPに圧縮
+      - name: Zip build assets
+        run: zip -r build-assets.zip public/js/ public/css/
+
+      # アーティファクトのアップロード
+      - name: Upload build assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-assets
+          path: build-assets.zip

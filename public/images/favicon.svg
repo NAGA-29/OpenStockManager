@@ -1,0 +1,21 @@
+<!-- DeviceManager Favicon — White Background -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+
+  <!-- Background -->
+  <rect width="64" height="64" rx="12" fill="#FFFFFF"/>
+
+  <!-- Cube -->
+  <g stroke="#1F3A5F" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none">
+
+    <!-- Top -->
+    <path d="M32 10 L52 20 L32 30 L12 20 Z"/>
+
+    <!-- Left -->
+    <path d="M12 20 L32 30 L32 54 L12 44 Z"/>
+
+    <!-- Right -->
+    <path d="M52 20 L32 30 L32 54 L52 44 Z"/>
+
+  </g>
+
+</svg>

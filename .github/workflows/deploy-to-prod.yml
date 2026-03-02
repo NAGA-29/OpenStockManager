@@ -1,0 +1,280 @@
+name: Deploy Action for Production
+
+on:
+  workflow_run:
+    workflows: ["Build Assets"]
+    types:
+      - completed
+
+# アーティスファクトのダウンロードに必要
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    env:
+      VPS_HOST: ${{ secrets.VPS_HOST }}
+      VPS_USER: ${{ secrets.VPS_USER }}
+      VPS_PORT: ${{ secrets.VPS_PORT }}
+      PRODUCTION_DIR: /var/www/html
+      BACKUP_DIR: /home/${{ secrets.VPS_USER }}/_backup
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup SSH Key
+        uses: webfactory/ssh-agent@v0.5.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add known hosts
+        run: ssh-keyscan -H -p ${{ secrets.VPS_PORT }} ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
+
+      # アーティファクトのダウンロード
+      - name: Download build assets
+        uses: actions/download-artifact@v4
+        with:
+          name: build-assets
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      # ビルドアセットの展開
+      - name: Extract build assets
+        id: extract-assets
+        run: |
+          unzip -o build-assets.zip -d ./
+          rm -rf build-assets.zip
+          echo "Extraction completed"
+
+      - name: Prepare for compression
+        id: prepare-compression
+        if: steps.extract-assets.outcome == 'success'
+        run: |
+          sleep 3  # ファイルシステムの状態を安定させるための短い待機時間
+          echo "Preparation for compression completed"
+
+      - name: Prepare output directory
+        run: mkdir -p /tmp/deploy
+
+      - name: Compress files for transfer
+        id: compress-files
+        if: steps.prepare-compression.outcome == 'success'
+        run: |
+          tar -cvzf /tmp/deploy/deploy.tar.gz \
+              --warning=no-file-changed \
+              --exclude='node_modules' \
+              --exclude='vendor' \
+              --exclude='.git' \
+              --exclude='.github' \
+              --exclude='.env' \
+              --exclude='storage/framework/cache' \
+              --exclude='storage/framework/sessions' \
+              --exclude='tests' \
+              .
+
+      # # デプロイ前のバックアップ作成
+      # - name: Create and verify backup
+      #   run: |
+      #     ssh -p ${{ secrets.VPS_PORT }} ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << EOF
+      #       set -e
+      #       timestamp=\$(date +%Y%m%d_%H%M%S)
+      #       cd $PRODUCTION_DIR
+      #       mkdir -p ${BACKUP_DIR}
+            
+      #       # 1. バックアップの圧縮
+      #       tar -czf ${BACKUP_DIR}/backup_\${timestamp}.tar.gz .
+            
+      #       # 2. 古いバックアップの自動削除（7日以上経過したもの）
+      #       find ${BACKUP_DIR} -name "backup_*.tar.gz" -type f -mtime +7 -delete
+            
+      #       # 3. バックアップの検証
+      #       if [ -f "${BACKUP_DIR}/backup_\${timestamp}.tar.gz" ]; then
+      #         echo "Backup created successfully: backup_\${timestamp}.tar.gz"
+      #       else
+      #         echo "Backup creation failed"
+      #         exit 1
+      #       fi
+      #     EOF
+
+      # さくらVPSにデプロイ（上書き）
+      - name: Deploy to VPS
+        run: |
+          # 一時ディレクトリにファイルを転送
+          rsync -avz --delete -e "ssh -p ${{ secrets.VPS_PORT }}" \
+            --itemize-changes \
+            --stats \
+            /tmp/deploy/deploy.tar.gz ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/tmp/deploy.tar.gz
+
+          ssh -p ${{ secrets.VPS_PORT }} ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << EOF
+            sudo chown -R ${{ secrets.VPS_USER }}:${{ secrets.VPS_USER }} $PRODUCTION_DIR
+
+            cd $PRODUCTION_DIR
+            tar -xzf /tmp/deploy.tar.gz --overwrite
+            rm /tmp/deploy.tar.gz
+
+            echo "Deployment completed!"
+          EOF
+
+      # Composer依存関係のインストール
+      - name: Install Composer dependencies
+        run: |
+          ssh -p ${{ secrets.VPS_PORT }} ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << EOF
+            cd $PRODUCTION_DIR
+            composer install --no-dev --optimize-autoloader --no-interaction
+          EOF
+
+      # # storageディレクトリの権限設定
+      # - name: Set storage permissions
+      #   run: |
+      #     ssh -p ${{ secrets.VPS_PORT }} ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << EOF
+      #       chmod -R 775 $PRODUCTION_DIR/storage
+      #       chown -R www-data:www-data $PRODUCTION_DIR/storage
+      #     EOF
+
+      # 環境変数の設定（既存の.envファイルを保持,ない場合は.env.sampleをコピー)
+      - name: Set up environment variables
+        run: |
+          ssh -p ${{ secrets.VPS_PORT }} ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << EOF
+            if [ ! -f "$PRODUCTION_DIR/.env" ]; then
+              cp $PRODUCTION_DIR/.env.example $PRODUCTION_DIR/.env
+            fi
+          EOF
+
+      # # キャッシュクリア
+      - name: Clear cache and optimize
+        run: |
+          ssh -p ${{ secrets.VPS_PORT }} ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << EOF
+            cd $PRODUCTION_DIR
+            php artisan optimize:clear
+          EOF
+
+      # デプロイ後の処理 + 所有権をwww-dataに変更
+      - name: Post-deployment tasks
+        run: |
+          ssh -p ${{ secrets.VPS_PORT }} ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << EOF
+            cd $PRODUCTION_DIR
+            php artisan storage:link
+            sudo chown -R www-data:www-data $PRODUCTION_DIR
+          EOF
+
+      # # ヘルスチェック
+      # - name: Perform health check
+      #   run: |
+      #     response=$(curl -sS -o /dev/null -w "%{http_code}" https://your-domain.com/health)
+      #     if [ $response != "200" ]; then
+      #       echo "Health check failed. Rolling back..."
+      #       ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << EOF
+      #         cd ${PRODUCTION_DIR}_backups
+      #         latest_backup=\$(ls -t | head -n1)
+      #         rsync -avz --delete \$latest_backup/ $PRODUCTION_DIR
+      #       EOF
+      #       exit 1
+      #     fi
+
+      # Slack通知
+      - name: Prepare commit message
+        run: |
+          COMMIT_MESSAGE=$(echo "${{ github.event.head_commit.message || 'No commit message' }}" | tr '\n' ' ')
+          echo "COMMIT_MESSAGE=${COMMIT_MESSAGE}"
+          echo "COMMIT_MESSAGE=${COMMIT_MESSAGE}" >> $GITHUB_ENV
+    
+
+      - name: Notify Slack on Failure
+        if: failure()
+        uses: 8398a7/action-slack@v3.16.2
+        with:
+          status: custom
+          fields: repo,message,commit,author,action,eventName,ref,workflow
+          custom_payload: |
+            {
+              "text": "Oops, Deploy Action failed 😢 (Production)",
+              "attachments": [
+                  {
+                      "color": "#FF0000",
+                      "fields": [
+                          {
+                              "title": "■ Repository",
+                              "value": "${{ github.repository }}",
+                              "short": true
+                          },
+                          {
+                              "title": "■ Branch",
+                              "value": "${{ github.ref_name }}",
+                              "short": true
+                          },
+                          {
+                              "title": "■ Commit",
+                              "value": "<${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}|${{ github.sha }}>",
+                              "short": true
+                          },
+                          {
+                              "title": "■ Message",
+                              "value": "Author: ${{ github.actor }} - ${{ env.COMMIT_MESSAGE }}",
+                              "short": false
+                          },
+                          {
+                              "title": "■ Workflow",
+                              "value": "${{ github.workflow }}",
+                              "short": true
+                          },
+                          {
+                              "title": "■ Job Logs",
+                              "value": "<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Logs>",
+                              "short": true
+                          }
+                      ]
+                  }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        continue-on-error: true
+
+      - name: Notify Slack on Success
+        if: success()
+        uses: 8398a7/action-slack@v3.16.2
+        with:
+          status: custom
+          fields: repo,message,commit,author,action,eventName,ref,workflow
+          custom_payload: |
+            {
+              "text": "Yay! Deploy Action succeeded! 🎉 (Production)",
+              "attachments": [
+                  {
+                      "color": "#36A64F",
+                      "fields": [
+                          {
+                              "title": "■ Repository",
+                              "value": "${{ github.repository }}",
+                              "short": true
+                          },
+                          {
+                              "title": "■ Branch",
+                              "value": "${{ github.ref_name }}",
+                              "short": true
+                          },
+                          {
+                              "title": "■ Commit",
+                              "value": "<${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}|${{ github.sha }}>",
+                              "short": true
+                          },
+                          {
+                              "title": "■ Message",
+                              "value": "Author: ${{ github.actor }} - ${{ env.COMMIT_MESSAGE }}",
+                              "short": true
+                          },
+                          {
+                              "title": "■ Workflow",
+                              "value": "${{ github.workflow }}",
+                              "short": true
+                          },
+                      ]
+                  }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        continue-on-error: true

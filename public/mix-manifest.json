@@ -1,0 +1,16 @@
+{
+    "/js/app.js": "/js/app.js",
+    "/js/popper.js": "/js/popper.js",
+    "/js/search.js": "/js/search.js",
+    "/js/cart.js": "/js/cart.js",
+    "/js/loading.js": "/js/loading.js",
+    "/js/slideshow.js": "/js/slideshow.js",
+    "/js/gallery.js": "/js/gallery.js",
+    "/js/synchronize-button.js": "/js/synchronize-button.js",
+    "/css/app.css": "/css/app.css",
+    "/css/sidebar.css": "/css/sidebar.css",
+    "/css/slideshow.css": "/css/slideshow.css",
+    "/css/table.css": "/css/table.css",
+    "/css/page_loading.css": "/css/page_loading.css",
+    "/js/sweetalert2.js": "/js/sweetalert2.js"
+}

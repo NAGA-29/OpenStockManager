@@ -1,0 +1,50 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+class CreatePersonnelsTable extends Migration
+{
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        Schema::create('personnels', function (Blueprint $table) {
+            $table->string("personnel_id")->primary();
+            $table->string("client_id");
+            $table->foreign('client_id')
+            ->references('client_id')
+            ->on('clients')
+            ->cascadeOnDelete()
+            ->cascadeOnUpdate();
+
+            $table->string('name');
+            $table->string('tel');
+            $table->string('email');
+            $table->text('note')->nullable();
+            $table->dateTime('created_at');
+            $table->dateTime('modified_at');
+            $table->dateTime('soft_deleted_at')->nullable();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+
+        Schema::disableForeignKeyConstraints();
+        // Schema::table('personnels', function (Blueprint $table) {
+        //     $table->dropForeign('personnels_client_id_foreign');
+        // });
+        Schema::dropIfExists('personnels');
+        Schema::enableForeignKeyConstraints();
+    }
+}
