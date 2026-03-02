@@ -8,7 +8,7 @@
         "security:audit:fix": "pnpm audit --fix"
     },
     "devDependencies": {
-        "autoprefixer": "^10.4.20",
+        "autoprefixer": "^10.4.27",
         "axios": "^1.7.7",
         "bootstrap": "^5.3.3",
         "laravel-vite-plugin": "^1.0.0",
