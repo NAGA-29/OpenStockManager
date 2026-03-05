@@ -2,6 +2,7 @@
 
 namespace App\Services\Image;
 
+use App\Exceptions\Infrastructure\ImageProcessingException;
 use getID3;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
@@ -18,6 +19,7 @@ class ImageProcessor
      * @access public
      * @param UploadedFile $file
      * @return array
+     * @throws ImageProcessingException
      */
     public function process(UploadedFile $file): array
     {
@@ -30,13 +32,23 @@ class ImageProcessor
         $width = null;
         $height = null;
         $mimeType = $file->getMimeType();
-        if (Str::startsWith($mimeType, 'image/')) {
-            [$width, $height] = getimagesize($img_path);
-        } elseif (Str::startsWith($mimeType, 'video/')) {
-            $getID3 = new getID3();
-            $fileInfo = $getID3->analyze($img_path);
-            $width = $fileInfo['video']['resolution_x'];
-            $height = $fileInfo['video']['resolution_y'];
+        try {
+            if (Str::startsWith($mimeType, 'image/')) {
+                $result = getimagesize($img_path);
+                if ($result === false) {
+                    throw ImageProcessingException::analysisFailure($img_path);
+                }
+                [$width, $height] = $result;
+            } elseif (Str::startsWith($mimeType, 'video/')) {
+                $getID3 = new getID3();
+                $fileInfo = $getID3->analyze($img_path);
+                $width = $fileInfo['video']['resolution_x'] ?? null;
+                $height = $fileInfo['video']['resolution_y'] ?? null;
+            }
+        } catch (ImageProcessingException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            throw ImageProcessingException::analysisFailure($img_path, $e);
         }
         return [
             'temp_path'     => $img_path,

@@ -2,6 +2,12 @@
 
 namespace App\Http\Controllers;
 
+// Exception
+use App\Exceptions\Domain\Device\DeviceAlreadySoldException;
+use App\Exceptions\Domain\Device\DeviceCurrentlyRentedException;
+use App\Exceptions\Domain\Device\DeviceDefectiveException;
+use App\Exceptions\Domain\Device\DeviceDuplicateException;
+use App\Exceptions\Domain\Device\DeviceNotFoundException;
 // Request
 use App\Http\Requests\StoreSaleCartRequest;
 use App\Http\Requests\UpdateSaleHistoryRequest;
@@ -16,7 +22,6 @@ use App\Traits\SearchesClients;
 use App\Utils\GeneralUtil;
 use Carbon\Carbon;
 use Exception;
-// Exception
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 // Utils
@@ -179,29 +184,32 @@ class SalesHistsController extends Controller
                 $record = GeneralUtil::sanitizeCsvRecord($record);
                 $device_info = Device::where('device_id', $record['device_id'])->first();
                 if (!$device_info) {
-                    throw new Exception(__('messages.device_not_exists', ['device_id' => $record['device_id']]));
+                    throw DeviceNotFoundException::forDevice($record['device_id']);
                 }
                 if (!empty($device_info['sale_id'])) {
-                    throw new Exception(__('messages.device_already_sold', ['device_id' => $device_info['device_id']]));
+                    throw DeviceAlreadySoldException::forDevice($device_info['device_id']);
                 }
                 if (!empty($device_info['lending_now'])) {
-                    throw new Exception(__('messages.device_currently_rented', ['device_id' => $device_info['device_id']]));
+                    throw DeviceCurrentlyRentedException::forDevice($device_info['device_id']);
                 }
                 if ($device_info['defective'] != 0) {
-                    throw new Exception(__('messages.device_defective', ['device_id' => $device_info['device_id']]));
+                    throw DeviceDefectiveException::forDevice($device_info['device_id']);
                 }
                 if (in_array($device_info->device_id, $device_ids)) {
-                    throw new Exception(__('messages.device_duplicate', ['device_id' => $device_info->device_id]));
+                    throw DeviceDuplicateException::forDevice($device_info->device_id);
                 } else {
                     array_push($device_ids, $device_info->device_id);
                     array_push($lists, [$device_info, $record]);
                 }
             }
+        } catch (DeviceNotFoundException | DeviceAlreadySoldException | DeviceCurrentlyRentedException | DeviceDefectiveException | DeviceDuplicateException $err) {
+            return redirect()->back()->with('error_message', $err->getMessage());
         } catch (Exception $err) {
             Log::channel('error')->error(__('messages.sales_csv_failed'), [
                 'error_message' => $err->getMessage(),
+                'error_class' => get_class($err),
             ]);
-            return redirect()->back()->with('error_message', $err->getMessage());
+            return redirect()->back()->with('error_message', __('messages.sales_csv_failed'));
         }
 
         $request_data = $request->all();
