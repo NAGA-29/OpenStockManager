@@ -11,6 +11,8 @@ use App\Http\Requests\StoreDeviceRequest;
 use App\Http\Requests\UpdateDeviceRequest;
 use App\Http\Requests\UploadBenchmarkFileRequest;
 use App\Http\Requests\UploadSpecFileRequest;
+// Exception
+use App\Exceptions\Infrastructure\ImageProcessingException;
 // Model
 use App\Models\Content;
 use App\Models\Device;
@@ -20,7 +22,6 @@ use App\Models\DeviceTypeField;
 use App\Services\Image\ImageProcessor;
 use App\Traits\Keyword;
 use App\Utils\GeneralUtil;
-// Exception
 use Carbon\Carbon;
 // Facades
 use Exception;
@@ -148,9 +149,6 @@ class DevicesController extends Controller
                 // @TODO: ファイルの詳細分析ロジック処理
                 $imgPro = new ImageProcessor();
                 $img_info = $imgPro->process($request->file('device_image'));
-                if (!$img_info) {
-                    throw new Exception(__('messages.image_analysis_failed'));
-                }
                 $result = Content::create([
                     'id'            => (string) Uuid::uuid7(),
                     'filename'      => $img_info['original_name'],
@@ -175,15 +173,27 @@ class DevicesController extends Controller
                 ->back()
                 ->with('success_message', __('messages.registration_completed'))
                 ->with('registered_device_id', $deviceId);
+        } catch (ImageProcessingException $err) {
+            DB::rollBack();
+            Log::channel('error')->error('device.store.image_failed', [
+                'action' => 'device_registration',
+                'device_id' => $deviceId ?? null,
+                'error_message' => $err->getMessage(),
+                'error_class' => get_class($err),
+                'context' => $err->getContext(),
+            ]);
+            return redirect()
+                ->back()
+                ->with('error_message', $err->getMessage());
         } catch (\Exception $err) {
             DB::rollBack();
             Log::channel('error')->error('device.store.failed', [
-                    'action' => 'device_registration',
-                    'device_id' => $deviceId ?? null,
-                    'device_type' => $safe['device_type'] ?? null,
-                    'error_message' => $err->getMessage(),
-                    'error_class' => get_class($err),
-                ]);
+                'action' => 'device_registration',
+                'device_id' => $deviceId ?? null,
+                'device_type' => $safe['device_type'] ?? null,
+                'error_message' => $err->getMessage(),
+                'error_class' => get_class($err),
+            ]);
             return redirect()
                 ->back()
                 ->with('error_message', __('messages.registration_failed'));
@@ -391,9 +401,6 @@ class DevicesController extends Controller
                 // @TODO: ファイルの詳細分析ロジック処理
                 $imgPro = new ImageProcessor();
                 $img_info = $imgPro->process($request->file('device_image'));
-                if (!$img_info) {
-                    throw new Exception(__('messages.image_analysis_failed'));
-                }
                 $result = Content::create([
                     'id'            => (string) Uuid::uuid7(),
                     'filename'      => $img_info['original_name'],
@@ -418,6 +425,19 @@ class DevicesController extends Controller
                 ->back()
                 ->with('success_message', __('messages.save_completed'))
                 ->withInput();
+        } catch (ImageProcessingException $err) {
+            DB::rollBack();
+            Log::channel('error')->error('device.update.image_failed', [
+                'action' => 'device_update',
+                'device_id' => $safe['device_id'] ?? null,
+                'error_message' => $err->getMessage(),
+                'error_class' => get_class($err),
+                'context' => $err->getContext(),
+            ]);
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error_message', $err->getMessage());
         } catch (\Exception $err) {
             DB::rollBack();
             Log::channel('error')->error('device.update.failed', [

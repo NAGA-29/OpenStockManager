@@ -95,8 +95,12 @@ class StoreRentalCartRequest extends FormRequest
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
-            foreach ($this->input('deviceIds') as $deice_id) {
-                $device = Device::where('device_id', $deice_id)->first();
+            foreach ($this->input('deviceIds', []) as $device_id) {
+                $device = Device::where('device_id', $device_id)->first();
+                if ($device === null) {
+                    $validator->errors()->add('deviceIds', '指定されたデバイスが存在しません');
+                    continue;
+                }
                 if ($device->sale_id != '') {
                     $validator->errors()->add('deviceIds', 'すでに販売されているデバイスが含まれています');
                 }

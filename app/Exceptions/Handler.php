@@ -2,8 +2,12 @@
 
 namespace App\Exceptions;
 
+use App\Exceptions\Domain\DeviceException;
+use App\Exceptions\Infrastructure\CsvImportException;
+use App\Exceptions\Infrastructure\ImageProcessingException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Session\TokenMismatchException;
+use Illuminate\Support\Facades\Log;
 use Sentry\Laravel\Integration;
 use Throwable;
 
@@ -15,7 +19,8 @@ class Handler extends ExceptionHandler
      * @var array
      */
     protected $dontReport = [
-        //
+        DeviceException::class,
+        CsvImportException::class,
     ];
 
     /**
@@ -51,10 +56,27 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Throwable $exception)
     {
-
-        if ($exception instanceof TokenMismatchException) {     // 追加
+        if ($exception instanceof TokenMismatchException) {
             // return redirect('user/login');       // 追加-> このURLは存在しなかったので修正
-            return redirect('login');           // 追加
+            return redirect('login');
+        }
+
+        if ($exception instanceof DeviceException) {
+            Log::channel('error')->error('device.exception.unhandled', [
+                'error_message' => $exception->getMessage(),
+                'error_class' => get_class($exception),
+                'context' => $exception->getContext(),
+            ]);
+            return redirect()->back()->with('error_message', $exception->getMessage());
+        }
+
+        if ($exception instanceof ImageProcessingException) {
+            Log::channel('error')->error('image.processing.exception.unhandled', [
+                'error_message' => $exception->getMessage(),
+                'error_class' => get_class($exception),
+                'context' => $exception->getContext(),
+            ]);
+            return redirect()->back()->with('error_message', $exception->getMessage());
         }
 
         return parent::render($request, $exception);
