@@ -68,7 +68,7 @@ return [
     'email_verification_failed' => 'Verification failed.',
 
     // Mail related
-    'return_deadline_subject' => '[DeviceManager] Return Deadline Notice',
+    'return_deadline_subject' => '[OpenStockManager] Return Deadline Notice',
     'return_deadline_mail_success' => 'Return deadline notification email sent successfully.',
     'return_deadline_mail_failed' => 'Return deadline notification email failed.',
     'return_deadline_mail_exception' => 'Return deadline notification email exception.',

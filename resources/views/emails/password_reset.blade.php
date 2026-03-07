@@ -1,7 +1,7 @@
 {!! nl2br("いつもお世話になっております。\n") !!}
 {!! nl2br("\n") !!}
 {!! nl2br("いつもご利用頂きまして、ありがとうございます。\n") !!}
-{!! nl2br("DeviceManager システムです。\n") !!}
+{!! nl2br("OpenStockManager システムです。\n") !!}
 {!! nl2br("\n") !!}
 {!! nl2br("お客様のアカウントでパスワードの変更依頼を受け付けました。\n") !!}
 {!! nl2br("以下「パスワード再設定画面リンク」より、パスワードの再設定をお願い致します。\n") !!}
@@ -15,8 +15,8 @@
 {!! nl2br("ご不明点は下記までお問合せくださいませ。\n") !!}
 {!! nl2br("\n") !!}
 {!! nl2br("システムに関するお問合せ\n") !!}
-{!! nl2br("DeviceManager システム窓口担当\n") !!}
+{!! nl2br("OpenStockManager システム窓口担当\n") !!}
 {!! nl2br(config('mail.contact.address') . "\n") !!}
 {!! nl2br("\n") !!}
 {!! nl2br("商品に関するお問い合わせ\n") !!}
-{!! nl2br("DeviceManager 各担当まで\n") !!}
+{!! nl2br("OpenStockManager 各担当まで\n") !!}

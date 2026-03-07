@@ -1,4 +1,4 @@
-# DeviceManager リファクタリング実装計画
+# OpenStockManager リファクタリング実装計画
 
 ## 「なんちゃってクリーンアーキテクチャ」の適用
 
@@ -22,7 +22,7 @@ mpyw氏が提唱する「なんちゃってクリーンアーキテクチャ」�
 
 ### 1.2 現状の課題
 
-DeviceManagerプロジェクトでは以下の問題が確認されている（`docs/code_analysis_report.md` 参照）：
+OpenStockManagerプロジェクトでは以下の問題が確認されている（`docs/code_analysis_report.md` 参照）：
 
 | 課題 | 詳細 |
 |------|------|

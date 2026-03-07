@@ -1,6 +1,6 @@
 @extends('layouts.error')
 
-@section('title', 'Device Manager | 500 Internal Server Error')
+@section('title', 'OpenStockManager | 500 Internal Server Error')
 
 @section('css')
     {{-- <link rel="stylesheet" href="{{ mix('css/icons_all.css') }}"> --}}

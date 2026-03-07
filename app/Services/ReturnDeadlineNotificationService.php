@@ -22,7 +22,7 @@ class ReturnDeadlineNotificationService
     {
         $FROM = config('mail.notification.address');
         $TO = config('mail.notification.address');
-        $SUBJECT = '[DeviceManager]返却期限通知';
+        $SUBJECT = '[OpenStockManager]返却期限通知';
 
         try {
             $from = new \SendGrid\Mail\From($FROM);
