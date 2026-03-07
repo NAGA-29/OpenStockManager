@@ -68,16 +68,16 @@ const removeFromCart = (deviceInfo: DeviceInfo) => {
  * @param deviceInfo DeviceInfo
  */
 const saveCartToSessionStorage = (deviceInfo: DeviceInfo) => {
-  const cart = sessionStorage.getItem("DeviceManagerCart");
+  const cart = sessionStorage.getItem("OpenStockManagerCart");
   if (cart) {
     const cartObj = JSON.parse(cart);
     // オブジェクトから特定の値を削除
     cartObj[deviceInfo["id"]] = deviceInfo;
-    sessionStorage.setItem("DeviceManagerCart", JSON.stringify(cartObj));
+    sessionStorage.setItem("OpenStockManagerCart", JSON.stringify(cartObj));
   } else {
     // セッションストレージにカートがない場合
     const cartObj = { [deviceInfo["id"]]: deviceInfo };
-    sessionStorage.setItem("DeviceManagerCart", JSON.stringify(cartObj));
+    sessionStorage.setItem("OpenStockManagerCart", JSON.stringify(cartObj));
   }
 };
 
@@ -86,13 +86,13 @@ const saveCartToSessionStorage = (deviceInfo: DeviceInfo) => {
  * @param deviceId string
  */
 const deleteCartToSessionStorage = (deviceId: string) => {
-  const cart = sessionStorage.getItem("DeviceManagerCart");
+  const cart = sessionStorage.getItem("OpenStockManagerCart");
   if (cart) {
     // JSON文字列をJavaScriptオブジェクトに変換
     const cartObj = JSON.parse(cart);
     // オブジェクトから特定の値を削除
     delete cartObj[deviceId];
-    sessionStorage.setItem("DeviceManagerCart", JSON.stringify(cartObj));
+    sessionStorage.setItem("OpenStockManagerCart", JSON.stringify(cartObj));
   }
 };
 
@@ -103,11 +103,11 @@ const deleteCartToSessionStorage = (deviceId: string) => {
  */
 const loadCartFromSessionStorage = () => {
   try {
-    const loadCart = sessionStorage.getItem("DeviceManagerCart");
+    const loadCart = sessionStorage.getItem("OpenStockManagerCart");
     if (loadCart) {
       return JSON.parse(loadCart);
     } else {
-      sessionStorage.setItem("DeviceManagerCart", JSON.stringify({}));
+      sessionStorage.setItem("OpenStockManagerCart", JSON.stringify({}));
     }
   } catch (error) {
     console.error("Error loading cart from session storage:", error);
@@ -124,7 +124,7 @@ const initializeCartModal = () => {
   document
     .getElementById("dm-cart-btn")
     ?.addEventListener("click", function () {
-      const load = sessionStorage.getItem("DeviceManagerCart");
+      const load = sessionStorage.getItem("OpenStockManagerCart");
       const loadCart = JSON.parse(load || "{}");
       if (Object.keys(loadCart).length > 0) {
         const table = document.getElementById("in-cart-devices") as HTMLElement;
@@ -199,7 +199,7 @@ const initializeCartModal = () => {
  */
 document.addEventListener("DOMContentLoaded", function () {
   // セッションストレージからカートをロード
-  const load = sessionStorage.getItem("DeviceManagerCart");
+  const load = sessionStorage.getItem("OpenStockManagerCart");
   const loadCart = JSON.parse(load || "{}");
 
   if (loadCart && typeof loadCart === "object") {
@@ -257,7 +257,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 // deviceIdにカートに入っているデバイスのIDを代入
 const setForm = (deviceId: string) => {
-  const sample = sessionStorage.getItem("DeviceManagerCart");
+  const sample = sessionStorage.getItem("OpenStockManagerCart");
   const List = JSON.parse(sample || "{}");
   const deviceInput = document.getElementById(
     "device-list"

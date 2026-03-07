@@ -7,7 +7,7 @@
     @if (session('device_cart') === 'RESET')
         <script>
             // sessionStorageにカート情報をリセット
-            sessionStorage.removeItem("DeviceManagerCart");
+            sessionStorage.removeItem("OpenStockManagerCart");
         </script>
     @endif
 

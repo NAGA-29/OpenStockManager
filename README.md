@@ -1,6 +1,6 @@
-# DeviceManager
+# OpenStockManager
 
-<img src="public/images/logo.png" alt="DeviceManager" width="200">
+<img src="public/images/logo.png" alt="OpenStockManager" width="200">
 
 在庫管理システム(特定の条件でカスタマイズされた機材管理システム)です。
 

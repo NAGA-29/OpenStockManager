@@ -1,14 +1,14 @@
 # PWA化 実装計画書
 
 **日付:** 2026-02-20
-**対象プロジェクト:** DeviceManager
+**対象プロジェクト:** OpenStockManager
 **ブランチ:** `claude/pwa-conversion-plan-ftGW5`
 
 ---
 
 ## 1. 概要
 
-DeviceManager（Laravel + Blade MPA）をPWA（Progressive Web App）化する。
+OpenStockManager（Laravel + Blade MPA）をPWA（Progressive Web App）化する。
 主な目的は以下の通り：
 
 - モバイル端末からのホーム画面追加（インストール体験）
@@ -115,7 +115,7 @@ MPAかつ認証必須のアプリケーションのため、以下の戦略を�
 ### 5.1 ディレクトリ構成（追加・変更ファイル）
 
 ```
-DeviceManager/
+OpenStockManager/
 ├── public/
 │   ├── manifest.json                 # 【新規】Web App Manifest
 │   ├── service-worker.js             # 【新規】Service Worker
@@ -143,7 +143,7 @@ DeviceManager/
 
 ```json
 {
-  "name": "DeviceManager",
+  "name": "OpenStockManager",
   "short_name": "DeviceMgr",
   "description": "機材管理システム",
   "start_url": "/dashboard",
@@ -290,7 +290,7 @@ if ('serviceWorker' in navigator) {
 ### 5.7 オフラインページ (`public/offline.html`)
 
 ネットワーク接続がない場合に表示するスタンドアロンのHTMLページ。
-DeviceManagerのブランドカラー（ダークテーマ）に合わせたデザインとし、
+OpenStockManagerのブランドカラー（ダークテーマ）に合わせたデザインとし、
 以下の情報を表示する：
 
 - オフライン状態の説明
