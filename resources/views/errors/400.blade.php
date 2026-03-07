@@ -1,6 +1,6 @@
 @extends('layouts.error')
 
-@section('title', 'OpenStockManager | 503 Service Unavailable')
+@section('title', 'OpenStockManager | 400 Bad Request')
 
 @section('css')
     {{-- <link rel="stylesheet" href="{{ mix('css/icons_all.css') }}"> --}}
@@ -12,11 +12,10 @@
         @include('layouts.error-navigation')
 
         <div class="content print_content print_target mgb-set3">
-            <h3>503 : システムに問題が発生しました。</h3>
+            <h3>お探しのページが見つかりません。</h3>
             <br>
-            <p>アクセスが集中しているため、しばらく時間を置いてからやり直してください。</p>
-            <br>
-            <p><a href="{{ url('/') }}">トップページへ</a></p>
+            <p>お探しのページは削除されたか、URLが変更された可能性があります。</p>
+            <p>お手数ですが、<a href="{{ url('/') }}">トップページ</a>から再度お探しください。</p>
         </div>
     </div>
 @endsection

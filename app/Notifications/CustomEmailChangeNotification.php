@@ -57,7 +57,7 @@ class CustomEmailChangeNotification extends Notification
         // $expire = Carbon::now()->addMinutes($expireMinutes)->format('Y年m月d日 H時i分s秒'); // 有効期限
 
         return (new MailMessage())
-            ->subject('DeviceManager メールアドレス認証通知')
+            ->subject('OpenStockManager メールアドレス認証通知')
             ->view('emails.email_change', compact('url'));
     }
 

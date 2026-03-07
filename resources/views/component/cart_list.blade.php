@@ -3,7 +3,7 @@
 <script>
     // カートに入っているデバイスを表示
     const html = document.getElementById('CartList');
-    const db = sessionStorage.getItem("DeviceManagerCart");
+    const db = sessionStorage.getItem("OpenStockManagerCart");
     const CartList = JSON.parse(db || "{}");
     if (Object.keys(CartList).length > 0) {
         Object.entries(CartList).forEach(([id, item]) => {

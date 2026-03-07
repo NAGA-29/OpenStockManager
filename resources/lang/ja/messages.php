@@ -68,7 +68,7 @@ return [
     'email_verification_failed' => '認証に失敗しました。',
 
     // メール関連
-    'return_deadline_subject' => '[DeviceManager]返却期限通知',
+    'return_deadline_subject' => '[OpenStockManager]返却期限通知',
     'return_deadline_mail_success' => '返却期限通知メール送信成功',
     'return_deadline_mail_failed' => '返却期限通知メール送信失敗',
     'return_deadline_mail_exception' => '返却期限通知メール送信例外',

@@ -8,5 +8,5 @@ SHELL=/bin/sh
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 
 # m h dom mon dow user	command
-* *	* * *  root cd /var/www/html/DeviceManager && sudo php artisan schedule:run >> /dev/null 2>&1
+* *	* * *  root cd /var/www/html/OpenStockManager && sudo php artisan schedule:run >> /dev/null 2>&1
 #

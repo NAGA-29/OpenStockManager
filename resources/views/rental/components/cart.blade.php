@@ -86,7 +86,7 @@
 
     <script>
         // deviceIdにカートに入っているデバイスのIDを代入
-        const sample = sessionStorage.getItem("DeviceManagerCart");
+        const sample = sessionStorage.getItem("OpenStockManagerCart");
         const List = JSON.parse(sample || "{}");
         const deviceInput = document.getElementById('device-list');
         Object.entries(List).forEach(([id, item]) => {

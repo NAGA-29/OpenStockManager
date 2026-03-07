@@ -35,7 +35,7 @@
         <nav class="navbar navbar-expand-md navbar-light bg-dark shadow-sm">
             <div class="container">
                 <a class="navbar-brand" href="{{ route('dashboard') }}">
-                    <span class="h2 text-blue-500">Device</span><span class="h2 text-white">Manager</span>
+                    <span class="h2 text-blue-500">Open</span><span class="h2 text-white">StockManager</span>
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                     data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"

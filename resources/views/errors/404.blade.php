@@ -1,6 +1,6 @@
 @extends('layouts.error')
 
-@section('title', 'Device Manager | 404 Not Found')
+@section('title', 'OpenStockManager | 404 Not Found')
 
 @section('css')
     {{-- <link rel="stylesheet" href="{{ mix('css/icons_all.css') }}"> --}}
