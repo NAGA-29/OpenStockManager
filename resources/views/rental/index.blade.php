@@ -17,7 +17,7 @@
     <div class="col-md-12 shadow-sm pt-0 pr-0 pb-0 pl-0 mt-2 mb-2">
         <div class="device-bar rounded bg-dark text-white p-3">
             <div class="device-name h3 m-0">
-                {{ __('端末レンタル手続き') }}
+                {{ __('レンタル手続き') }}
             </div>
         </div>
     </div>

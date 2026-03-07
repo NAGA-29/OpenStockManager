@@ -28,3 +28,4 @@ yarn-error.log
 
 # pnpm セキュリティチェックキャッシュ（ローカル環境固有のため除外）
 .pnpm-age-cache.json
+/.pnpm-store

@@ -134,7 +134,7 @@ const initializeCartModal = () => {
           const table_tr = document.createElement("tr");
           table_tr.innerHTML = `
                     <td><input type="checkbox" class="product-checkbox-cart" device-name="${escapeHtml(item.name)}" device-type="${escapeHtml(item.type)}" value="${escapeHtml(item.id)}" checked></td>
-                    <td><a href="/device/id/${encodeURIComponent(item.id)}">${escapeHtml(item.id)}</a></td>
+                    <td><a href="/devices/${encodeURIComponent(item.id)}">${escapeHtml(item.id)}</a></td>
                     <td>${escapeHtml(item.name)}</td>
                     <td>${escapeHtml(item.type)}</td>
                 `;

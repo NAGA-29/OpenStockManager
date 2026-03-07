@@ -21,12 +21,12 @@
         <div id='procedure' class="collapse list-unstyled pl-3">
             <li>
                 <a href="{{ route('device.rental') }}" class="text-decoration-none">
-                    レンタル処理
+                    レンタル
                 </a>
             </li>
             <li>
                 <a href={{ route('device.sale') }} class="text-decoration-none">
-                    販売処理
+                    販売
                 </a>
             </li>
         </div>
@@ -52,6 +52,11 @@
             <i class="fas fa-sort-down"></i>
         </li>
         <div id='data' class="collapse list-unstyled pl-3">
+            <li>
+                <a href='{{ route('device.file.benchmark') }}' class="text-decoration-none">
+                    商品データ
+                </a>
+            </li>
             <li>
                 <a href={{ route('client.list') }} class="text-decoration-none">
                     クライアント

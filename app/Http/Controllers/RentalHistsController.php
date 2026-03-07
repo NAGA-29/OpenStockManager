@@ -2,6 +2,11 @@
 
 namespace App\Http\Controllers;
 
+// Exception
+use App\Exceptions\Domain\Device\DeviceAlreadySoldException;
+use App\Exceptions\Domain\Device\DeviceCurrentlyRentedException;
+use App\Exceptions\Domain\Device\DeviceDefectiveException;
+use App\Exceptions\Domain\Device\DeviceNotFoundException;
 // Model
 use App\Http\Requests\StoreRentalCartRequest;
 use App\Http\Requests\StoreRentalFileRequest;
@@ -17,7 +22,6 @@ use App\Utils\GeneralUtil;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
-// Exception
 use Illuminate\Support\Facades\Auth;
 // Utils
 use Illuminate\Support\Facades\DB;
@@ -149,16 +153,16 @@ class RentalHistsController extends Controller
                 $record = GeneralUtil::sanitizeCsvRecord($record);
                 $device_info = Device::where('device_id', $record['device_id'])->first();
                 if ($device_info === null) {
-                    throw new Exception(__('messages.device_not_exists', ['device_id' => $record['device_id']]));
+                    throw DeviceNotFoundException::forDevice($record['device_id']);
                 }
                 if (!empty($device_info->sale_id)) {
-                    throw new Exception(__('messages.device_already_sold', ['device_id' => $record['device_id']]));
+                    throw DeviceAlreadySoldException::forDevice($record['device_id']);
                 }
                 if (!empty($device_info->lending_now)) {
-                    throw new Exception(__('messages.device_currently_rented', ['device_id' => $record['device_id']]));
+                    throw DeviceCurrentlyRentedException::forDevice($record['device_id']);
                 }
                 if ($device_info->defective != 0) {
-                    throw new Exception(__('messages.device_defective', ['device_id' => $record['device_id']]));
+                    throw DeviceDefectiveException::forDevice($record['device_id']);
                 }
                 array_push($lists, [$device_info, $record]);
             }
@@ -179,16 +183,22 @@ class RentalHistsController extends Controller
             $request->session()->put('request_data', $request_info);
             $request->session()->put('lists', $lists);
             return view('rental.rental_with_file_confirm', compact('lists', 'safe'));
+        } catch (DeviceNotFoundException | DeviceAlreadySoldException | DeviceCurrentlyRentedException | DeviceDefectiveException $err) {
+            return redirect()
+                ->back()
+                ->with('error_message', $err->getMessage())
+                ->withInput();
         } catch (Exception $err) {
             Log::channel('error')->error(
                 __('messages.csv_parse_failed'),
                 [
                     'error_message' => $err->getMessage(),
+                    'error_class' => get_class($err),
                 ]
             );
             return redirect()
                 ->back()
-                ->with('error_message', $err->getMessage())
+                ->with('error_message', __('messages.csv_parse_failed'))
                 ->withInput();
         }
     }
