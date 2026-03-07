@@ -74,7 +74,7 @@
                             <td>{{ $device_info->device_name }}</td>
                             <td class="text-truncate" style="max-width:200px;">{{ $device_info->note }}</td>
                             <td><button type="button" class="btn btn-outline-dark"
-                                    onclick="location.href='{{ url('/device/id', $device_info->device_id) }}'">
+                                    onclick="location.href='{{ url('/devices', $device_info->device_id) }}'">
                                     <i class="far fa-edit"></i></button>
                             </td>
                             </tr>

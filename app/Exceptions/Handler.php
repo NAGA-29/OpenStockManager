@@ -14,7 +14,7 @@ use Throwable;
 class Handler extends ExceptionHandler
 {
     /**
-     * A list of the exception types that are not reported.
+     * 報告されない例外タイプのリスト
      *
      * @var array
      */
@@ -24,7 +24,7 @@ class Handler extends ExceptionHandler
     ];
 
     /**
-     * A list of the inputs that are never flashed for validation exceptions.
+     * バリデーション例外でフラッシュされない入力のリスト
      *
      * @var array
      */
@@ -34,7 +34,7 @@ class Handler extends ExceptionHandler
     ];
 
     /**
-     * Register the exception handling callbacks for the application.
+     * アプリケーションの例外ハンドリングコールバックを登録する
      *
      * @return void
      */
@@ -46,7 +46,7 @@ class Handler extends ExceptionHandler
     }
 
     /**
-     * Render an exception into an HTTP response.
+     * 例外をHTTPレスポンスに変換する
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \Throwable  $exception
