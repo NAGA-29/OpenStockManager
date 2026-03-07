@@ -2,7 +2,19 @@
 
 <img src="public/images/logo.png" alt="OpenStockManager" width="200">
 
-在庫管理システム(特定の条件でカスタマイズされた機材管理システム)です。
+<div align="center">
+
+**在庫管理システム(特定の条件でカスタマイズされた機材管理システム)**
+
+[![Laravel](https://img.shields.io/badge/Laravel-12.0-red.svg)](https://laravel.com/)
+[![PHP](https://img.shields.io/badge/PHP-8.4-blue.svg)](https://www.php.net/)
+[![Sail](https://img.shields.io/badge/Sail-Docker-green.svg)](https://laravel.com/docs/sail)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
+[デモを見る](#) | [ドキュメント](docs/) | [貢献する](docs/CONTRIBUTING.md)
+
+</div>
+
 
 ### 主な機能
 - ダッシュボード（貸出中台数・返却期限間近・延滞一覧の表示）
