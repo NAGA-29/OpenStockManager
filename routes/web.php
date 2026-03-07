@@ -37,18 +37,10 @@ Route::group(['middleware' => 'auth'], function () {
     // デバイス一覧（動的カテゴリ）
     Route::get('/device/list/{code}', [DevicesController::class, 'deviceListByCategory'])->name('device.category');
     Route::get('/device/list', [DevicesController::class, 'deviceListDefault'])->name('device.list');
-
-    // 後方互換: 旧ルートを動的ルートへリダイレクト
-    // Route::get('/device/stb', fn () => redirect()->route('device.category', ['code' => 'STB']))->name('device.stb');
-    // Route::get('/device/tablet', fn () => redirect()->route('device.category', ['code' => 'TAB']))->name('device.tablet');
-    // Route::get('/device/camera', fn () => redirect()->route('device.category', ['code' => 'CAM']))->name('device.camera');
-    // Route::get('/device/signage', fn () => redirect()->route('device.category', ['code' => 'SIGN']))->name('device.signage');
-    // Route::get('/device/other', fn () => redirect()->route('device.category', ['code' => 'OTH']))->name('device.other');
-
-    Route::get('/device/id/{device_id}', [DevicesController::class, 'deviceIndividual'])->name('device.individual');
-    Route::post('/device/id/', [DevicesController::class, 'updateDevice'])->name('device.update');
-    Route::get('/device/id/{device_id}/barcode', [DevicesController::class, 'barcodePrint'])->name('device.barcode');
-    Route::get('/device/search/', [DevicesController::class, 'searchDevice'])->name('device.search.IDorSerial');
+    Route::get('/devices/{device_id}', [DevicesController::class, 'deviceIndividual'])->name('device.individual');
+    Route::post('/devices', [DevicesController::class, 'updateDevice'])->name('device.update');
+    Route::get('/devices/{device_id}/barcode', [DevicesController::class, 'barcodePrint'])->name('device.barcode');
+    Route::get('/devices/search/', [DevicesController::class, 'searchDevice'])->name('device.search.IDorSerial');
 
     // 機材カテゴリ管理 (管理者のみ)
     Route::group(['middleware' => 'admin', 'prefix' => 'device/categories'], function () {
@@ -77,9 +69,9 @@ Route::group(['middleware' => 'auth'], function () {
     Route::post('/device/sale/history/edit/', [SalesHistsController::class, 'editSaleHistory'])->name('sales.history.edit');
 
     // レンタル履歴
-    Route::get('/device/rental_his/', [RentalHistsController::class, 'getAllHistory'])->name('rental.history');
-    Route::get('/device/rental_his/{id}', [RentalHistsController::class, 'getDetail'])->name('rental.rental_detail');
-    Route::post('/device/rental_his/edit/', [RentalHistsController::class, 'editRentalHistory'])->name('rental.edit');
+    Route::get('/device/rental/history/', [RentalHistsController::class, 'getAllHistory'])->name('rental.history');
+    Route::get('/device/rental/history/{id}', [RentalHistsController::class, 'getDetail'])->name('rental.rental_detail');
+    Route::post('/device/rental/history/edit/', [RentalHistsController::class, 'editRentalHistory'])->name('rental.edit');
 
     // デバイス登録 単数
     Route::get('/device/register', [DevicesController::class, 'registerDevice'])->name('device.register');

@@ -17,7 +17,7 @@
             <div class="card-header bg-white text-black">{{ __('下記の記入欄を入力してください') }}</div>
             {{-- <div>下記の記入欄を入力してください</div> --}}
             <div class="card-body m-5">
-                <form action="{{ Route('device.sell') }}" method='POST'>
+                <form action="{{ Route('device.sale.store') }}" method='POST'>
                     @csrf
                     @foreach ($device_info_collection as $device_info)
                         <table class="table table-hover">
