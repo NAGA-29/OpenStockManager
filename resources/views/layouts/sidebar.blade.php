@@ -88,17 +88,22 @@
         <div id='system' class="collapse list-unstyled pl-3">
             <li>
                 <a href="{{ route('user.list') }}" class="text-decoration-none">
-                    管理者管理
+                    ユーザー
                 </a>
             </li>
             <li>
                 <a href="{{ route('device_categories.index') }}" class="text-decoration-none">
-                    機材カテゴリ管理
+                    機材カテゴリ
                 </a>
             </li>
             <li>
                 <a href="{{ route('device_fields.index') }}" class="text-decoration-none">
-                    カスタムフィールド管理
+                    カスタムフィールド
+                </a>
+            </li>
+            <li>
+                <a href="#" class="text-decoration-none">
+                    外部連携
                 </a>
             </li>
         </div>
