@@ -26,6 +26,11 @@
 - [Meilisearch](https://www.meilisearch.com/) v1.8.1
 - [Mailpit](https://github.com/axllent/mailpit)（メール開発環境）
 
+### 開発環境構築手順
+
+- [docs/wiki/development_setup.md](docs/wiki/development_setup.md)
+
+
 ### 使用ライブラリ
 #### バックエンド
 - [League CSV](https://csv.thephpleague.com/) v9.7
