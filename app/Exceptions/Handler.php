@@ -2,14 +2,16 @@
 
 namespace App\Exceptions;
 
+use Throwable;
 use App\Exceptions\Domain\DeviceException;
 use App\Exceptions\Infrastructure\CsvImportException;
 use App\Exceptions\Infrastructure\ImageProcessingException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Session\TokenMismatchException;
+// Facade
 use Illuminate\Support\Facades\Log;
+// Sentry
 use Sentry\Laravel\Integration;
-use Throwable;
 
 class Handler extends ExceptionHandler
 {
@@ -41,7 +43,7 @@ class Handler extends ExceptionHandler
     public function register()
     {
         $this->reportable(function (Throwable $e) {
-            Integration::captureUnhandledException($e);
+            Integration::captureUnhandledException($e); // Sentryに例外を送信
         });
     }
 
