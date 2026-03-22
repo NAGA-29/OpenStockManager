@@ -8,11 +8,22 @@
             </a>
         </li>
 
-        <li class="header" style="cursor: pointer;">
-            <a href="{{ route('device.list') }}" class="text-decoration-none" style="padding: 0;">
-                <i class="fa fa-tablet-alt"> 在庫一覧</i>
-            </a>
+        <li class="header" data-bs-target="#inventory" data-bs-toggle="collapse" style="cursor: pointer;">
+            <i class="fa fa-tablet-alt"> 在庫一覧</i>
+            <i class="fas fa-sort-down"></i>
         </li>
+        <div id='inventory' class="collapse list-unstyled pl-3">
+            <li>
+                <a href="{{ route('inventory.units.index') }}" class="text-decoration-none">
+                    個別管理
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('inventory.stocks.index') }}" class="text-decoration-none">
+                    数量管理
+                </a>
+            </li>
+        </div>
 
         <li class="header" data-bs-target="#procedure" data-bs-toggle="collapse" style="cursor: pointer;">
             <i class="fa fa-file-signature"> 手続き</i>
