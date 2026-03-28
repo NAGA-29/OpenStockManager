@@ -13,8 +13,8 @@ class CreatePersonnelsTable extends Migration
      */
     public function up()
     {
-        Schema::create('personnels', function (Blueprint $table) {
-            $table->string("personnel_id")->primary();
+        Schema::create('contacts', function (Blueprint $table) {
+            $table->id("id");
             $table->string("client_id");
             $table->foreign('client_id')
             ->references('client_id')

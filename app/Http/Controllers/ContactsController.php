@@ -7,7 +7,7 @@ use App\Http\Requests\StorePersonnelRequest;
 use App\Http\Requests\UpdatePersonnelRequest;
 use App\Models\Client;
 // Models
-use App\Models\Personnel;
+use App\Models\Contacts;
 use App\Traits\SearchesClients;
 // Facades
 use Exception;
@@ -20,15 +20,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Ramsey\Uuid\Uuid;
 
-class PersonnelsController extends Controller
+class ContactsController extends Controller
 {
     use SearchesClients;
 
-    public function getAllPersonnel()
+    public function getAllContacts()
     {
         try {
-            $personnel = Personnel::orderBy('name', 'asc')->paginate(10);
-            return view('personnel.all_personnel', compact('personnel'));
+            $contacts = Contacts::orderBy('name', 'asc')->paginate(10);
+            return view('contacts.all_contacts', compact('contacts'));
         } catch (Exception $err) {
             Log::channel('error')->error(
                 __('messages.personnel_data_fetch_failed'),
@@ -49,7 +49,7 @@ class PersonnelsController extends Controller
     {
         // Clientテーブル全データ取得
         $clients = Client::all();
-        return view('personnel.register', compact('clients'));
+        return view('contacts.register', compact('clients'));
     }
 
     /**
@@ -62,8 +62,7 @@ class PersonnelsController extends Controller
     {
         $personnel_id = (string) Uuid::uuid7();
         try {
-            Personnel::create([
-                'personnel_id'  => $personnel_id,
+            Contacts::create([
                 'client_id'     => $request->client_id,
                 'name'          => $request->name,
                 'email'         => $request->email,
@@ -92,11 +91,11 @@ class PersonnelsController extends Controller
      * @param Request $request
      * @return \Illuminate\View\View | \Illuminate\Http\RedirectResponse
      */
-    public function personnelDetail($personnel_id)
+    public function contactDetail($contact_id)
     {
         try {
-            $psn = new Personnel();
-            $personnel = $psn->find($personnel_id);
+            $ctc = new Contacts();
+            $contact = $ctc->find($contact_id);
         } catch (Exception $err) {
             Log::channel('error')->error(
                 __('messages.personnel_data_fetch_failed'),
@@ -106,7 +105,7 @@ class PersonnelsController extends Controller
             );
             return redirect()->back();
         }
-        return view('personnel.detail', compact('personnel'));
+        return view('contacts.detail', compact('contact'));
     }
 
 
@@ -121,8 +120,8 @@ class PersonnelsController extends Controller
         try {
             $validated = $request->validated();
 
-            $psn = new Personnel();
-            $psn->where('personnel_id', $validated['personnel_id'])->update([
+            $ctc = new Contacts();
+            $ctc->where('contact_id', $validated['contact_id'])->update([
                 'name' => $validated['name'],
                 'tel' => $validated['tel'],
                 'email' => $validated['email'],
@@ -133,7 +132,7 @@ class PersonnelsController extends Controller
                 ->with('success_message', __('messages.registration_completed'));
         } catch (Exception $err) {
             Log::channel('error')->error(
-                __('messages.personnel_registration_failed'),
+                __('messages.contact_registration_failed'),
                 [
                     'error_message' => $err->getMessage(),
                 ]
@@ -163,9 +162,9 @@ class PersonnelsController extends Controller
             $persons = array_splice($persons, 1);
             // データの更新
             foreach ($persons as $person) {
-                $p = new Personnel();
+                $p = new Contacts();
                 $p->updateOrCreate(
-                    ['personnel_id' => $person['id']],
+                    ['contact_id' => $person['id']],
                     [
                         'client_id' => $person['client_id'],
                         'name'      => $person['name'],
