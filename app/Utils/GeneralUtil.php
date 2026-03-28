@@ -7,7 +7,7 @@ use Illuminate\Support\Str;
 
 class GeneralUtil
 {
-    public static function generalID(?int $digit): string
+    public static function generalID(?int $digit = null): string
     {
         if (is_int($digit)) {
             return Str::random($digit). '-'. Carbon::now()->getTimestamp() ;
@@ -15,7 +15,7 @@ class GeneralUtil
         return (string) Str::uuid();
     }
 
-    public static function generalToken(?int $digit): string
+    public static function generalToken(?int $digit = null): string
     {
         if (is_int($digit)) {
             return Str::random($digit). '-'. Carbon::now()->getTimestamp() ;

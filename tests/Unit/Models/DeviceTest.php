@@ -42,7 +42,7 @@ class DeviceTest extends TestCase
     {
         $expected = [
             'device_id', 'device_type', 'device_name', 'device_serial',
-            'os', 'os_ver', 'first_work_date_at',
+            'custom_fields', 'first_work_date_at',
             'purchase_date_at', 'client', 'sale_date_at', 'option',
             'condition_id', 'defective', 'not_for_sale', 'note',
             'lending_now', 'using_user_id', 'created_at', 'modified_at',
