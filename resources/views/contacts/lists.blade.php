@@ -61,7 +61,7 @@
                     <td>{{ $person->email }}</td>
                     <td>{{ $person->note }}</td>
                     <td>
-                        <a href='{{ url('/personnel/detail', $person->personnel_id) }}'>
+                        <a href='{{ url('/personnel/detail', $person->id) }}'>
                             <button type="button" class="btn btn-outline-dark">詳細</button>
                         </a>
                     </td>

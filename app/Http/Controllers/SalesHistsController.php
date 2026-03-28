@@ -15,7 +15,7 @@ use App\Http\Requests\UploadSaleFileRequest;
 use App\Models\Client;
 // Model
 use App\Models\Device;
-use App\Models\Personnel;
+use App\Models\Contacts;
 use App\Models\SaleHist;
 use App\Traits\SearchesClients;
 // Facades
@@ -75,7 +75,7 @@ class SalesHistsController extends Controller
         $data_list = [];
 
         $personnel_id = $request->personnel_id;
-        $personnels = Personnel::where('client_id', $personnel_id)->get();
+        $personnels = Contacts::where('client_id', $personnel_id)->get();
 
         // 結果判定
         if (count($personnels) == 0) {
@@ -213,7 +213,7 @@ class SalesHistsController extends Controller
         }
 
         $request_data = $request->all();
-        array_push($request_data, Personnel::where('personnel_id', $request['personnel'])->first());
+        array_push($request_data, Contacts::find($request['personnel']));
 
         $request_info = [
             'client_id'             => $request_data['client_id'],

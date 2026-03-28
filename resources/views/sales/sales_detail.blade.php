@@ -37,7 +37,7 @@
                         <td>
                             {{ $sales_details->personnels->name }}
                             <a class="far fa-arrow-alt-circle-right"
-                                href="{{ route('personnel.detail', ['personnel_id' => $sales_details->personnels->personnel_id]) }}"></a>
+                                href="{{ route('personnel.detail', ['contact_id' => $sales_details->personnels->id]) }}"></a>
                         </td>
                     </tr>
                     <tr>

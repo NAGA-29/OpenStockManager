@@ -14,7 +14,7 @@ use App\Http\Requests\UpdateRentalHistoryRequest;
 use App\Models\Client;
 // Request
 use App\Models\Device;
-use App\Models\Personnel;
+use App\Models\Contacts;
 use App\Models\RentalHist;
 use App\Traits\SearchesClients;
 // Facades
@@ -169,7 +169,7 @@ class RentalHistsController extends Controller
 
             array_push(
                 $safe,
-                Personnel::where('personnel_id', $request['personnel'])->first()
+                Contacts::find($request['personnel'])
             );
 
             $request_info = [
@@ -282,7 +282,7 @@ class RentalHistsController extends Controller
         $data = [];
         $data_list = [];
         $personnel_id = $request->personnel_id;
-        $personnels = Personnel::where('client_id', $personnel_id)->get();
+        $personnels = Contacts::where('client_id', $personnel_id)->get();
 
         // 結果判定
         if (count($personnels) == 0) {

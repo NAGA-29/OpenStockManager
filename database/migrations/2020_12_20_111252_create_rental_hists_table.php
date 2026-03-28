@@ -22,10 +22,10 @@ class CreateRentalHistsTable extends Migration
             ->on('clients')
             ->cascadeOnDelete()
             ->cascadeOnUpdate();
-            $table->string('personnel');
+            $table->unsignedBigInteger('personnel');
             $table->foreign('personnel')
-            ->references('personnel_id')
-            ->on('personnels')
+            ->references('id')
+            ->on('contacts')
             ->cascadeOnDelete()
             ->cascadeOnUpdate();
             $table->bigInteger('staff')->unsigned();

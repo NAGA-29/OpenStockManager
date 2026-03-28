@@ -43,7 +43,7 @@
                         <td>
                             {{ $rental_details->personnels->name }}
                             <a class="far fa-arrow-alt-circle-right"
-                                href="{{ route('personnel.detail', ['personnel_id' => $rental_details->personnels->personnel_id]) }}"></a>
+                                href="{{ route('personnel.detail', ['contact_id' => $rental_details->personnels->id]) }}"></a>
                         </td>
                     </tr>
                     {{-- 対応スタッフ --}}

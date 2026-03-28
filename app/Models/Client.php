@@ -31,6 +31,6 @@ class Client extends Model
 
     public function personnels()
     {
-        return $this->hasMany('App\Models\Personnel', 'client_id', 'client_id');
+        return $this->hasMany('App\Models\Contacts', 'client_id', 'client_id');
     }
 }

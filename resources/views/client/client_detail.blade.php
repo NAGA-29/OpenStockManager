@@ -83,7 +83,7 @@
                             <td class="text-wrap" style="max-width: 450px; ">{{ $p->note }}</td>
                             <td>{{ $p->modified_at }}</td>
                             <td>
-                                <a href="{{ route('personnel.detail', ['personnel_id' => $p->personnel_id]) }}">
+                                <a href="{{ route('personnel.detail', ['contact_id' => $p->id]) }}">
                                     {{-- <button type="button" class="btn btn-outline-dark"　data-toggle="modal" data-target="#client_Edit_Modal">詳細</button> --}}
                                     <button type="button" class="btn btn-outline-dark">詳細</button>
                                 </a>

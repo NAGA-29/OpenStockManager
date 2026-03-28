@@ -45,7 +45,7 @@ class SaleHist extends Model
 
     public function personnels()
     {
-        return $this->belongsTo('App\Models\Personnel', 'personnel', 'personnel_id');
+        return $this->belongsTo('App\Models\Contacts', 'personnel', 'id');
     }
 
     public function clients()

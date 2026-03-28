@@ -22,7 +22,7 @@
         </p>
         <p>担当者名: {{ $request_data->personnels->name }}
             <a class="far fa-arrow-alt-circle-right"
-                href="{{ route('personnel.detail', ['personnel_id' => $request_data->personnels->personnel_id]) }}"></a>
+                href="{{ route('personnel.detail', ['contact_id' => $request_data->personnels->id]) }}"></a>
         </p>
         <p>貸出日: {{ $request_data->checkout_at }}</p>
         <p>返却予定日: {{ $request_data->schedule_return_at }}</p>

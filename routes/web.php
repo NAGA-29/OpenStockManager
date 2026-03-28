@@ -8,7 +8,7 @@ use App\Http\Controllers\DeviceTypeFieldController;
 use App\Http\Controllers\InventoryStockController;
 use App\Http\Controllers\InventoryUnitController;
 use App\Http\Controllers\MailingController;
-use App\Http\Controllers\PersonnelsController;
+use App\Http\Controllers\ContactsController;
 use App\Http\Controllers\RentalHistsController;
 use App\Http\Controllers\SalesHistsController;
 use App\Http\Controllers\UserController;
@@ -108,11 +108,11 @@ Route::group(['middleware' => 'auth'], function () {
     Route::post('/client/search', [ClientsController::class, 'searchClient'])->name('client.search');
 
     // 担当者登録
-    Route::get('/personnel/list', [PersonnelsController::class, 'getAllPersonnel'])->name('personnel.list');
-    Route::get('/personnel/register', [PersonnelsController::class, 'form'])->name('personnel.register_form');
-    Route::post('/personnel/client/search', [PersonnelsController::class, 'searchClient'])->name('personnel.search.client');
-    Route::post('/personnel/register', [PersonnelsController::class, 'register'])->name('personnel.register');
-    Route::get('/personnel/detail/{personnel_id}', [PersonnelsController::class, 'personnelDetail'])->name('personnel.detail');
+    Route::get('/personnel/list', [ContactsController::class, 'getAllContacts'])->name('personnel.list');
+    Route::get('/personnel/register', [ContactsController::class, 'form'])->name('personnel.register_form');
+    Route::post('/personnel/client/search', [ContactsController::class, 'searchClient'])->name('personnel.search.client');
+    Route::post('/personnel/register', [ContactsController::class, 'register'])->name('personnel.register');
+    Route::get('/personnel/detail/{contact_id}', [ContactsController::class, 'contactDetail'])->name('personnel.detail');
 
     // レンタル File形式(複数)
     Route::post('/device/rental/multi/upload', [RentalHistsController::class, 'upload'])->name('device.multi_csv_upload');
