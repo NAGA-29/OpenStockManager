@@ -14,7 +14,7 @@
         </li>
         <div id='inventory' class="collapse list-unstyled pl-3">
             <li>
-                <a href="{{ route('inventory.units.index') }}" class="text-decoration-none">
+                <a href="{{ route('inventory.units.category', ['code' => 'STB']) }}" class="text-decoration-none">
                     個別管理
                 </a>
             </li>
