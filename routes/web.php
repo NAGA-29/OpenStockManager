@@ -5,6 +5,8 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DeviceCategoryController;
 use App\Http\Controllers\DevicesController;
 use App\Http\Controllers\DeviceTypeFieldController;
+use App\Http\Controllers\InventoryStockController;
+use App\Http\Controllers\InventoryUnitController;
 use App\Http\Controllers\MailingController;
 use App\Http\Controllers\PersonnelsController;
 use App\Http\Controllers\RentalHistsController;
@@ -33,6 +35,12 @@ Route::group(['middleware' => 'auth'], function () {
         Route::post('/users/register', [UserController::class, 'store'])->name('user.store');
         Route::post('/users/update', [UserController::class, 'update'])->name('user.update');
     });
+
+    // 在庫一覧 - 個別管理
+    Route::get('/inventory/units', [InventoryUnitController::class, 'index'])->name('inventory.units.index');
+
+    // 在庫一覧 - 数量管理
+    Route::get('/inventory/stocks', [InventoryStockController::class, 'index'])->name('inventory.stocks.index');
 
     // デバイス一覧（動的カテゴリ）
     Route::get('/device/list/{code}', [DevicesController::class, 'deviceListByCategory'])->name('device.category');
