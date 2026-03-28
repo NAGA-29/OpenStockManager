@@ -15,7 +15,7 @@
 
     <!-- Fonts -->
     <link rel="dns-prefetch" href="//fonts.gstatic.com">
-    <link href="https://fonts.googleapis.com/css?family=Nunito" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.1/css/all.css"
         integrity="sha384-vp86vTRFVJgpjF9jiIGPEEqYqlDwgyBgEF109VFjmqGmIY/Y4HV4d3Gp2irVfcrp" crossorigin="anonymous">
 
@@ -102,8 +102,11 @@
             <div class="container main-container" style="max-width: 1920px;">
                 <div class='row'>
                     {{-- サイドメニュー --}}
-                    <div class="col-lg-2 p-0">
+                    <div class="col-lg-2 p-0" style="position: relative;">
                         @include('layouts.sidebar')
+                        <button class="sidebar-toggle-btn" id="sidebar-toggle-btn" aria-label="サイドバーを折りたたむ">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
                     </div>
                     {{-- コンテンツ --}}
                     <div class="col-lg-10 float-right pt-0 pr-3 pb-0 pl-3 main-column">
@@ -137,7 +140,7 @@
         @show
 
         @yield('js')
-        @vite(['resources/js/ui/loading/loading.ts', 'resources/js/components/cart.ts'])
+        @vite(['resources/js/ui/loading/loading.ts', 'resources/js/components/cart.ts', 'resources/js/ui/sidebar/sidebar-toggle.ts'])
 </body>
 
 </html>

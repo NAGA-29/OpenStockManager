@@ -17,6 +17,7 @@ export default defineConfig({
                 'resources/js/user/edit-user-modal.js',
                 'resources/js/components/cart.ts',
                 'resources/js/ui/loading/loading.ts',
+                'resources/js/ui/sidebar/sidebar-toggle.ts',
                 'resources/js/components/slideshow.ts',
                 'resources/js/components/gallery.ts',
                 'resources/js/ui/button/synchronize-button.ts',
