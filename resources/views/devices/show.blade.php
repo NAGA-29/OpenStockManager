@@ -61,7 +61,7 @@
                         @else
                             <div class="col-md-12 text-center">
                                 <p>No Image</p>
-                                <img src="{{ asset('images/no_image.png') }}" class="img-fluid" alt="No Image">
+                                <img src="{{ asset('images/no_image.png') }}" class="img-fluid d-block mx-auto" style="max-width: 200px; max-height: 200px; object-fit: contain;" alt="No Image">
                             </div>
                         @endif
                     </div>

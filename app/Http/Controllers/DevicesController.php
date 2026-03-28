@@ -514,16 +514,6 @@ class DevicesController extends Controller
     }
 
     /**
-     * ベンチマークExcelファイルアップロードページ
-     * @access public
-     * @return \Illuminate\View\View
-     */
-    public function getBenchMarkFile()
-    {
-        return view('devices.device_benchmark_file');
-    }
-
-    /**
      * スペックExcelファイルアップロード
      * @access public
      * @param Request $request

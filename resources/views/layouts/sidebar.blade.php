@@ -75,11 +75,6 @@
                     <span class="sidebar-label">クライアント</span>
                 </a>
             </li>
-            <li>
-                <a href='{{ route('device.file.benchmark') }}' class="text-decoration-none">
-                    <span class="sidebar-label">ベンチマーク</span>
-                </a>
-            </li>
         </div>
 
         <li class="header" data-bs-target="#register" data-bs-toggle="collapse" style="cursor: pointer;">
