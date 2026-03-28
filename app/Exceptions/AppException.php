@@ -11,8 +11,13 @@ abstract class AppException extends RuntimeException
         parent::__construct($message, 0, $previous);
     }
 
-    public function getContext(): array
+    public function context(): array
     {
         return $this->context;
+    }
+
+    public function getContext(): array
+    {
+        return $this->context();
     }
 }

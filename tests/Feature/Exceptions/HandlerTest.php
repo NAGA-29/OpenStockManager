@@ -9,12 +9,10 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Handler による例外レンダリング動作のFeatureテスト
+ * 例外ハンドリング設定のレンダリング動作を検証するFeatureテスト
  *
  * テスト用ルートをその場で登録し、例外を throw させることで
- * Handler::render() の振る舞いを検証する。
- *
- * @covers \App\Exceptions\Handler
+ * `bootstrap/app.php` に定義した例外レスポンス変換を検証する。
  */
 class HandlerTest extends TestCase
 {
