@@ -5,6 +5,8 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DeviceCategoryController;
 use App\Http\Controllers\DevicesController;
 use App\Http\Controllers\DeviceTypeFieldController;
+use App\Http\Controllers\InventoryStockController;
+use App\Http\Controllers\InventoryUnitController;
 use App\Http\Controllers\MailingController;
 use App\Http\Controllers\PersonnelsController;
 use App\Http\Controllers\RentalHistsController;
@@ -34,9 +36,15 @@ Route::group(['middleware' => 'auth'], function () {
         Route::post('/users/update', [UserController::class, 'update'])->name('user.update');
     });
 
-    // デバイス一覧（動的カテゴリ）
-    Route::get('/device/list/{code}', [DevicesController::class, 'deviceListByCategory'])->name('device.category');
-    Route::get('/device/list', [DevicesController::class, 'deviceListDefault'])->name('device.list');
+    // 在庫一覧 - 個別管理
+    // Route::get('/inventory/units', [InventoryUnitController::class, 'index'])->name('inventory.units.index');
+
+    // 在庫一覧 - 数量管理
+    Route::get('/inventory/stocks', [InventoryStockController::class, 'index'])->name('inventory.stocks.index');
+
+    // 在庫一覧（個別管理・動的カテゴリ）
+    Route::get('/inventory/units/{code}', [DevicesController::class, 'deviceListByCategory'])->name('inventory.units.category');
+    // Route::get('/device/list', [DevicesController::class, 'deviceListDefault'])->name('device.list');
     Route::get('/devices/{device_id}', [DevicesController::class, 'deviceIndividual'])->name('device.individual');
     Route::post('/devices', [DevicesController::class, 'updateDevice'])->name('device.update');
     Route::get('/devices/{device_id}/barcode', [DevicesController::class, 'barcodePrint'])->name('device.barcode');
@@ -98,7 +106,6 @@ Route::group(['middleware' => 'auth'], function () {
     Route::post('/client/edit', [ClientsController::class, 'edit'])->name('client.edit');
     Route::get('/client/id/{client_id}', [ClientsController::class, 'clientDetails'])->name('client.details');
     Route::post('/client/search', [ClientsController::class, 'searchClient'])->name('client.search');
-    // Route::post('/personnel/client/search', [PersonnelsController::class, 'searchClient'])->name('personnel.search.client');
 
     // 担当者登録
     Route::get('/personnel/list', [PersonnelsController::class, 'getAllPersonnel'])->name('personnel.list');
@@ -106,7 +113,6 @@ Route::group(['middleware' => 'auth'], function () {
     Route::post('/personnel/client/search', [PersonnelsController::class, 'searchClient'])->name('personnel.search.client');
     Route::post('/personnel/register', [PersonnelsController::class, 'register'])->name('personnel.register');
     Route::get('/personnel/detail/{personnel_id}', [PersonnelsController::class, 'personnelDetail'])->name('personnel.detail');
-    // Route::post('/personnel/edit', [PersonnelsController::class, 'edit'])->name('personnel.edit');
 
     // レンタル File形式(複数)
     Route::post('/device/rental/multi/upload', [RentalHistsController::class, 'upload'])->name('device.multi_csv_upload');

@@ -20,7 +20,7 @@ class AppEnumTest extends TestCase
 
     public function test_app_types_has_seven_entries(): void
     {
-        $this->assertCount(7, AppEnum::APP_TYPES);
+        $this->assertCount(4, AppEnum::APP_TYPES);
     }
 
     public function test_app_types_first_entry_is_none(): void

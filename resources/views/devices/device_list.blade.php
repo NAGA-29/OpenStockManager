@@ -10,7 +10,7 @@
             @foreach ($categories as $cat)
                 <li class="nav-item" role="presentation">
                     <a class="nav-link {{ $cat->code === $currentCategory->code ? 'active' : '' }}"
-                       href="{{ route('device.category', ['code' => $cat->code]) }}">
+                       href="{{ route('inventory.units.category', ['code' => $cat->code]) }}">
                         <i class="fa {{ $cat->icon }}"></i> {{ $cat->name }}
                     </a>
                 </li>

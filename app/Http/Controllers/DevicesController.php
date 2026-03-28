@@ -67,7 +67,7 @@ class DevicesController extends Controller
             abort(404, __('messages.device_not_found'));
         }
 
-        return redirect()->route('device.category', ['code' => $first->code]);
+        return redirect()->route('inventory.units.category', ['code' => $first->code]);
     }
 
     /**
