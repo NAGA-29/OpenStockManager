@@ -149,5 +149,5 @@ Route::group(['middleware' => 'auth'], function () {
         Route::post('/sendmail', [MailingController::class, 'sendMail']);
         Route::get('/sync/crm', [ClientsController::class, 'syncFromCRM'])->name('synchronize.clients');
     });
-    // Route::get('/sync/contact', [contactsController::class, 'synchronizecontact'])->name('synchronize.contact');
+    // Route::get('/sync/contact', [ContactsController::class, 'synchronizecontact'])->name('synchronize.contact');
 });

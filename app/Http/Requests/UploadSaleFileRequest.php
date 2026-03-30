@@ -26,7 +26,7 @@ class UploadSaleFileRequest extends FormRequest
     {
         return [
             'client_id'    => ['required', 'string', 'exists:clients,client_id'],
-            'contact'    => ['required', 'string', 'exists:contacts,contact_id'],
+            'contact'    => ['required', 'string', 'exists:contacts,id'],
             'sale_date_at' => ['required', 'date'],
             'note'         => ['nullable', 'string'],
             'csv_file'     => ['required', 'file', 'mimes:csv,txt'],

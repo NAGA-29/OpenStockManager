@@ -7,7 +7,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\Redirect;
 
-class UpdatecontactRequest extends FormRequest
+class UpdateContactRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,7 +25,7 @@ class UpdatecontactRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'contact_id' => ['required', 'string', 'exists:contacts,contact_id'],
+            'contact_id'   => ['required', 'string', 'exists:contacts,id'],
             'name'         => ['required', 'string', 'max:255'],
             'tel'          => ['required', 'numeric', 'digits_between:8,11'],
             'email'        => ['required', 'email'],

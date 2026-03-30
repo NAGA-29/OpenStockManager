@@ -56,7 +56,7 @@ app/
 │   │   ├── DevicesController.php
 │   │   ├── RentalHistsController.php
 │   │   ├── SalesHistsController.php
-│   │   ├── contactsController.php
+│   │   ├── ContactsController.php
 │   │   ├── ClientsController.php
 │   │   ├── UserController.php
 │   │   └── MailingController.php
