@@ -83,7 +83,7 @@
                                 <td>
                                     <div class="form-group row">
                                         <div class="col-md-10">
-                                            <p class="select_personnel" name='select_personnel'>貸出先企業を先に選択してください</p>
+                                            <p class="select_contact" name='select_contact'>貸出先企業を先に選択してください</p>
                                         </div>
                                     </div>
                                 </td>

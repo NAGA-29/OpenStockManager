@@ -33,7 +33,7 @@ class StoreRentalCartRequest extends FormRequest
             'deviceIds[]'           => ['array'],
             'deviceIds.*'           => ['required', 'string', 'max:255', 'exists:App\Models\Device,device_id', 'distinct'], // distinct->重複を検証
             'client_id'             => ['required', 'string', 'max:255', 'exists:App\Models\Client,client_id'],
-            'contact'               => ['required', 'string', 'max:255', 'exists:App\Models\Contacts,personnel_id'],
+            'contact'               => ['required', 'string', 'max:255', 'exists:App\Models\Contacts,contact_id'],
             'checkout_at'           => ['required', 'date', 'before_or_equal:schedule_return_at'],
             'schedule_return_at'    => ['required', 'date'],
             'note'                  => ['nullable', 'string', 'max:500',],

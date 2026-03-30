@@ -15,5 +15,5 @@
     @endif
 
     @include('client.components.client')
-    @include('client.components.personnel')
+    @include('client.components.contact')
 @endsection

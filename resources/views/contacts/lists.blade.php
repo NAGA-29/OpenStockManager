@@ -39,7 +39,7 @@
         </div>
     </div>
 </div>
-{{ $personnel->links() }}
+{{ $contact->links() }}
 <div class=" bg-white rounded shadow table-responsive text-nowrap">
     <table class="table table-hover">
         <thead class="table-dark">
@@ -53,7 +53,7 @@
             </tr>
         </thead>
         <tbody>
-            @foreach($personnel as $person)
+            @foreach($contact as $person)
                 <tr>
                     <td>{{ $person->name }}</td>
                     <td>{{ $person->client->company }}</td>
@@ -61,7 +61,7 @@
                     <td>{{ $person->email }}</td>
                     <td>{{ $person->note }}</td>
                     <td>
-                        <a href='{{ url('/personnel/detail', $person->id) }}'>
+                        <a href='{{ url('/contact/detail', $person->id) }}'>
                             <button type="button" class="btn btn-outline-dark">詳細</button>
                         </a>
                     </td>

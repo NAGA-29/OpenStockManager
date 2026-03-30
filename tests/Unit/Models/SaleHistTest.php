@@ -33,7 +33,7 @@ class SaleHistTest extends TestCase
     public function test_fillable_contains_all_expected_fields(): void
     {
         $expected = [
-            'sale_id', 'client', 'personnel', 'staff',
+            'sale_id', 'client', 'contact', 'staff',
             'sale_date_at', 'note', 'created_at', 'modified_at',
             'soft_deleted_at',
         ];

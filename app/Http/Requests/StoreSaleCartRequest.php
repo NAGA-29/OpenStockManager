@@ -33,7 +33,7 @@ class StoreSaleCartRequest extends FormRequest
             'deviceIds[]'           => ['array'],
             'deviceIds.*'           => ['required', 'string', 'max:255', 'exists:App\Models\Device,device_id', 'distinct'], // distinct->重複を検証
             'client_id'                => ['required', 'string', 'max:255', 'exists:App\Models\Client,client_id'],
-            'contact'               => ['required', 'string', 'max:255', 'exists:App\Models\Contacts,personnel_id'],
+            'contact'               => ['required', 'string', 'max:255', 'exists:App\Models\Contacts,id'],
             'sale_date_at'          => ['required', 'date'],
             'note'                  => ['nullable', 'string', 'max:500'],
         ];

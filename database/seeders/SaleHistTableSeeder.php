@@ -19,7 +19,7 @@ class SaleHistTableSeeder extends Seeder
             DB::table('sale_hists')->insert([
                 'sale_id' => "SALE${i}",
                 'client' => "DDD${i}",
-                'personnel' => $i,
+                'contact' => $i,
                 'staff' => 1,
                 'sale_date_at' => new DateTime(),
                 'note' => "test${i}だ",

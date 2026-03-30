@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 // Request
-use App\Http\Requests\StorePersonnelRequest;
-use App\Http\Requests\UpdatePersonnelRequest;
+use App\Http\Requests\StorecontactRequest;
+use App\Http\Requests\UpdatecontactRequest;
 use App\Models\Client;
 // Models
 use App\Models\Contacts;
@@ -31,7 +31,7 @@ class ContactsController extends Controller
             return view('contacts.all_contacts', compact('contacts'));
         } catch (Exception $err) {
             Log::channel('error')->error(
-                __('messages.personnel_data_fetch_failed'),
+                __('messages.contact_data_fetch_failed'),
                 [
                     'error_message' => $err->getMessage(),
                 ]
@@ -58,9 +58,9 @@ class ContactsController extends Controller
      * @param Request $request
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function register(StorePersonnelRequest $request)
+    public function register(StorecontactRequest $request)
     {
-        $personnel_id = (string) Uuid::uuid7();
+        $contact_id = (string) Uuid::uuid7();
         try {
             Contacts::create([
                 'client_id'     => $request->client_id,
@@ -71,7 +71,7 @@ class ContactsController extends Controller
             ]);
         } catch (Exception $err) {
             Log::channel('error')->error(
-                __('messages.personnel_registration_failed'),
+                __('messages.contact_registration_failed'),
                 [
                     'error_message' => $err->getMessage(),
                 ]
@@ -98,7 +98,7 @@ class ContactsController extends Controller
             $contact = $ctc->find($contact_id);
         } catch (Exception $err) {
             Log::channel('error')->error(
-                __('messages.personnel_data_fetch_failed'),
+                __('messages.contact_data_fetch_failed'),
                 [
                     'error_message' => $err->getMessage(),
                 ]
@@ -115,7 +115,7 @@ class ContactsController extends Controller
      * @param Request $request
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function edit(UpdatePersonnelRequest $request)
+    public function edit(UpdatecontactRequest $request)
     {
         try {
             $validated = $request->validated();
@@ -151,7 +151,7 @@ class ContactsController extends Controller
      * @throws \GuzzleHttp\Exception\GuzzleException
      * @throws \Exception
      */
-    public function synPersonnel(string $url)
+    public function syncontact(string $url)
     {
         try {
             $guzzle = new GuzzleClient();

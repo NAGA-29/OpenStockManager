@@ -15,9 +15,9 @@ class ContactsTest extends TestCase
         $this->contacts = new Contacts();
     }
 
-    public function test_primary_key_is_personnel_id(): void
+    public function test_primary_key_is_contact_id(): void
     {
-        $this->assertEquals('personnel_id', $this->contacts->getKeyName());
+        $this->assertEquals('contact_id', $this->contacts->getKeyName());
     }
 
     public function test_primary_key_is_not_incrementing(): void
@@ -33,7 +33,7 @@ class ContactsTest extends TestCase
     public function test_fillable_contains_all_expected_fields(): void
     {
         $expected = [
-            'personnel_id', 'client_id', 'name', 'tel',
+            'contact_id', 'client_id', 'name', 'tel',
             'email', 'note', 'created_at', 'modified_at',
             'soft_deleted_at',
         ];

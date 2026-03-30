@@ -7,7 +7,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\Redirect;
 
-class StorePersonnelRequest extends FormRequest
+class StorecontactRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.

@@ -7,7 +7,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\Redirect;
 
-class UpdatePersonnelRequest extends FormRequest
+class UpdatecontactRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,7 +25,7 @@ class UpdatePersonnelRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'personnel_id' => ['required', 'string', 'exists:personnels,personnel_id'],
+            'contact_id' => ['required', 'string', 'exists:contacts,contact_id'],
             'name'         => ['required', 'string', 'max:255'],
             'tel'          => ['required', 'numeric', 'digits_between:8,11'],
             'email'        => ['required', 'email'],
@@ -41,8 +41,8 @@ class UpdatePersonnelRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'personnel_id.required' => '担当者IDが不正です。',
-            'personnel_id.exists'   => '存在しない担当者です。',
+            'contact_id.required' => '担当者IDが不正です。',
+            'contact_id.exists'   => '存在しない担当者です。',
             'name.required'         => '担当者名を入力してください。',
             'name.max'              => '担当者名は255文字以内で入力してください。',
             'tel.required'          => '電話番号を入力してください。',

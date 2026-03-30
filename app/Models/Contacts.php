@@ -9,16 +9,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * 連絡先担当者を管理するモデル。
  *
- * @property string $personnel_id
- * @property string $client_id
+ * @property int|string $id
+ * @property int|string $client_id
  * @property string $name
  * @property string|null $tel
  * @property string|null $email
  * @property string|null $note
- * @property string|null $created_at
- * @property string|null $modified_at
- * @property string|null $soft_deleted_at
- * @property-read Client $client
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $modified_at
+ * @property \Illuminate\Support\Carbon|null $soft_deleted_at
+ * @property-read Client|null $client
  *
  * @method static \Illuminate\Database\Eloquent\Builder|self query()
  */

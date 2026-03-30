@@ -95,7 +95,7 @@ MPAかつ認証必須のアプリケーションのため、以下の戦略を�
 /rental/**
 /sales/**
 /clients/**
-/personnel/**
+/contact/**
 /users/**
 /profile
 ```

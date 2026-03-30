@@ -6,8 +6,8 @@
 
 - [x] **Eager Loading適用** - `RentalHistsController::getAllHistory()` ✅
   - 対象: `app/Http/Controllers/RentalHistsController.php:439`
-  - 問題: 関連データ（clients, personnels, user）を個別に取得しているためN+1問題が発生
-  - 解決: `with(['clients', 'personnels', 'user'])` でEager Loadingを適用
+  - 問題: 関連データ（clients, contacts, user）を個別に取得しているためN+1問題が発生
+  - 解決: `with(['clients', 'contacts', 'user'])` でEager Loadingを適用
 
 - [ ] **N+1問題修正** - `DevicesController::deviceIndividual()`
   - 対象: `app/Http/Controllers/DevicesController.php:366-368`

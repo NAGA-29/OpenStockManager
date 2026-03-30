@@ -26,7 +26,7 @@ class StoreRentalFileRequest extends FormRequest
         return [
             'lend_id'               => ['required', 'string', 'max:255', 'unique:rental_hists,lend_id',],
             'client_id'             => ['required', 'string', 'max:255', 'exists:App\Models\Client,client_id'],
-            'contact'               => ['required', 'string', 'max:255', 'exists:App\Models\Contacts,personnel_id'],
+            'contact'               => ['required', 'string', 'max:255', 'exists:App\Models\Contacts,contact_id'],
             'checkout_at'           => ['required', 'date', 'before_or_equal:schedule_return_at'],
             'schedule_return_at'    => ['required', 'date'],
             'note'                  => ['nullable', 'string', 'max:500',],

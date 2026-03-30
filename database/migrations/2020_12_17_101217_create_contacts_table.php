@@ -41,10 +41,10 @@ class CreateContactsTable extends Migration
     {
 
         Schema::disableForeignKeyConstraints();
-        // Schema::table('personnels', function (Blueprint $table) {
-        //     $table->dropForeign('personnels_client_id_foreign');
+        // Schema::table('contacts', function (Blueprint $table) {
+        //     $table->dropForeign('contacts_client_id_foreign');
         // });
-        Schema::dropIfExists('personnels');
+        Schema::dropIfExists('contacts');
         Schema::enableForeignKeyConstraints();
     }
 }
