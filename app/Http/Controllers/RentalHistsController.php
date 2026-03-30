@@ -89,7 +89,7 @@ class RentalHistsController extends Controller
             $result = RentalHist::create([
                 'lend_id'               => $safe['lend_id'],
                 'client'                => $safe['client_id'],
-                'personnel'             => $safe['personnel'],
+                'personnel'             => $safe['contact'],
                 'staff'                 => Auth::id(),
                 'all_returned'          => 0,
                 'checkout_at'           => $safe['checkout_at'],
@@ -169,13 +169,13 @@ class RentalHistsController extends Controller
 
             array_push(
                 $safe,
-                Contacts::find($request['personnel'])
+                Contacts::find($request['contact'])
             );
 
             $request_info = [
                 'lend_id'               => $safe['lend_id'],
                 'client_id'             => $safe['client_id'],
-                'personnel_id'          => $safe['personnel'],
+                'personnel_id'          => $safe['contact'],
                 'checkout_at'           => $safe['checkout_at'],
                 'schedule_return_at'    => $safe['schedule_return_at'],
                 'note'                  => $safe['note'],

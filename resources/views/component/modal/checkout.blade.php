@@ -161,10 +161,10 @@
 
     {{-- 貸出先担当者 --}}
     <div class="form-group row">
-        <label for="personnel" class="col-md-4 col-form-label text-md-right">{{ __('貸出先担当者') }}</label>
+        <label for="contact" class="col-md-4 col-form-label text-md-right">{{ __('貸出先担当者') }}</label>
         <div class="col-md-6">
-            <input id="personnel" type="text" class="form-control @error('personnel') is-invalid @enderror"
-                name="personnel" required>
+            <input id="contact" type="text" class="form-control @error('contact') is-invalid @enderror"
+                name="contact" required>
         </div>
     </div>
 

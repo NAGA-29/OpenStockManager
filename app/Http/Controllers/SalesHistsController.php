@@ -213,11 +213,11 @@ class SalesHistsController extends Controller
         }
 
         $request_data = $request->all();
-        array_push($request_data, Contacts::find($request['personnel']));
+        array_push($request_data, Contacts::find($request['contact']));
 
         $request_info = [
             'client_id'             => $request_data['client_id'],
-            'personnel_id'          => $request_data['personnel'],
+            'contact_id'          => $request_data['contact'],
             'sale_date_at'          => $request_data['sale_date_at'],
             'note'                  => $request_data['note'],
         ];
@@ -240,7 +240,7 @@ class SalesHistsController extends Controller
             $result = SaleHist::create([
                 'sale_id'               => $safe['sale_id'],
                 'client'                => $safe['client_id'],
-                'personnel'             => $safe['personnel'],
+                'personnel'             => $safe['contact'],
                 'staff'                 => Auth::id(),
                 'sale_date_at'          => $safe['sale_date_at'],
                 'note'                  => $safe['note'],

@@ -4,7 +4,24 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * 連絡先担当者を管理するモデル。
+ *
+ * @property string $personnel_id
+ * @property string $client_id
+ * @property string $name
+ * @property string|null $tel
+ * @property string|null $email
+ * @property string|null $note
+ * @property string|null $created_at
+ * @property string|null $modified_at
+ * @property string|null $soft_deleted_at
+ * @property-read Client $client
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder|self query()
+ */
 class Contacts extends Model
 {
     use HasFactory;
@@ -13,6 +30,7 @@ class Contacts extends Model
     public const UPDATED_AT = 'modified_at';
 
     protected $fillable = [
+        'id',
         'client_id',
         'name',
         'tel',
@@ -23,7 +41,10 @@ class Contacts extends Model
         'soft_deleted_at',
     ];
 
-    public function client()
+    /**
+     * 紐づくクライアント情報を取得する。
+     */
+    public function client(): BelongsTo
     {
         return $this->belongsTo('App\Models\Client', 'client_id', 'client_id');
     }

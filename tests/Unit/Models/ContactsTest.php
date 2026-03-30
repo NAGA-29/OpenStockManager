@@ -2,32 +2,32 @@
 
 namespace Tests\Unit\Models;
 
-use App\Models\Personnel;
+use App\Models\Contacts;
 use PHPUnit\Framework\TestCase;
 
-class PersonnelTest extends TestCase
+class ContactsTest extends TestCase
 {
-    private Personnel $personnel;
+    private Contacts $contacts;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->personnel = new Personnel();
+        $this->contacts = new Contacts();
     }
 
     public function test_primary_key_is_personnel_id(): void
     {
-        $this->assertEquals('personnel_id', $this->personnel->getKeyName());
+        $this->assertEquals('personnel_id', $this->contacts->getKeyName());
     }
 
     public function test_primary_key_is_not_incrementing(): void
     {
-        $this->assertFalse($this->personnel->getIncrementing());
+        $this->assertFalse($this->contacts->getIncrementing());
     }
 
     public function test_updated_at_column_is_modified_at(): void
     {
-        $this->assertEquals('modified_at', Personnel::UPDATED_AT);
+        $this->assertEquals('modified_at', Contacts::UPDATED_AT);
     }
 
     public function test_fillable_contains_all_expected_fields(): void
@@ -38,7 +38,7 @@ class PersonnelTest extends TestCase
             'soft_deleted_at',
         ];
 
-        $fillable = $this->personnel->getFillable();
+        $fillable = $this->contacts->getFillable();
         foreach ($expected as $field) {
             $this->assertContains($field, $fillable, "Fillable should contain '{$field}'");
         }

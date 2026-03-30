@@ -86,7 +86,7 @@ $(function() {// 検索ボタン押下
                     if(document.getElementById("personnel_btn")){
                         $('#personnel_btn').remove()
                     }
-                    $('#select_personnel').after("<select id='personnel_selector' name='personnel' class='form-control'></select>")
+                    $('#select_contact').after("<select id='personnel_selector' name='contact' class='form-control'></select>")
                     for(data in datas.data){
                         count+=1;
                         console.log(datas.data[data].personnel_id);

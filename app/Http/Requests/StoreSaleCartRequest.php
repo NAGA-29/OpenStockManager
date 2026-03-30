@@ -33,7 +33,7 @@ class StoreSaleCartRequest extends FormRequest
             'deviceIds[]'           => ['array'],
             'deviceIds.*'           => ['required', 'string', 'max:255', 'exists:App\Models\Device,device_id', 'distinct'], // distinct->重複を検証
             'client_id'                => ['required', 'string', 'max:255', 'exists:App\Models\Client,client_id'],
-            'personnel'             => ['required', 'string', 'max:255', 'exists:App\Models\Personnel,personnel_id'],
+            'contact'               => ['required', 'string', 'max:255', 'exists:App\Models\Contacts,personnel_id'],
             'sale_date_at'          => ['required', 'date'],
             'note'                  => ['nullable', 'string', 'max:500'],
         ];
@@ -60,10 +60,10 @@ class StoreSaleCartRequest extends FormRequest
             'client_id.string'                     => 'クライアントが不正です',
             'client_id.max'                        => 'クライアントが不正です',
             'client_id.exists'                     => '指定されたクライアントが存在しません',
-            'personnel.required'                => '担当者が指定されていません',
-            'personnel.string'                  => '担当者が不正です',
-            'personnel.max'                     => '担当者が不正です',
-            'personnel.exists'                  => '指定された担当者が存在しません',
+            'contact.required'                  => '担当者が指定されていません',
+            'contact.string'                    => '担当者が不正です',
+            'contact.max'                       => '担当者が不正です',
+            'contact.exists'                    => '指定された担当者が存在しません',
             'sale_date_at.required'             => '販売日が指定されていません',
             'sale_date_at.date'                 => '販売日が不正です',
             'note.string'                       => 'ノートが不正です',

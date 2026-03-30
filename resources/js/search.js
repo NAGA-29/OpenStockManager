@@ -109,7 +109,7 @@ document.addEventListener("DOMContentLoaded", function () {
             });
             let select = document.createElement("select");
             // select.id = "personnel_selector";
-            select.name = "personnel";
+            select.name = "contact";
             select.className = "personnel_selector form-control";
             // document.querySelector(".select_personnel").after(select);
             datas.data.forEach((data) => {
