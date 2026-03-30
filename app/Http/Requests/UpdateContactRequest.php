@@ -41,8 +41,8 @@ class UpdateContactRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'contact_id.required' => '担当者IDが不正です。',
-            'contact_id.exists'   => '存在しない担当者です。',
+            'contact_id.required'   => '担当者を選択してください',
+            'contact_id.exists'     => '存在しない担当者です。',
             'name.required'         => '担当者名を入力してください。',
             'name.max'              => '担当者名は255文字以内で入力してください。',
             'tel.required'          => '電話番号を入力してください。',
