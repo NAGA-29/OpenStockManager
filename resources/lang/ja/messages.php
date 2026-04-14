@@ -74,8 +74,8 @@ return [
     'return_deadline_mail_exception' => '返却期限通知メール送信例外',
 
     // 担当者関連
-    'personnel_registration_failed' => '登録に失敗しました',
-    'personnel_data_fetch_failed' => 'データの取得に失敗しました',
+    'contact_registration_failed' => '登録に失敗しました',
+    'contact_data_fetch_failed' => 'データの取得に失敗しました',
 
     // ログメッセージ
     'log_search_failed' => '検索が失敗しました',

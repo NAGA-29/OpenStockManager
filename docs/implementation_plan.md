@@ -27,7 +27,7 @@ OpenStockManagerプロジェクトでは以下の問題が確認されている�
 | 課題 | 詳細 |
 |------|------|
 | **Fat Controller** | ビジネスロジック（CSV解析、画像処理、DB操作、バリデーション）がコントローラーに集中 |
-| **コードの重複** | `getPersonnel()` が `RentalHistsController` と `SalesHistsController` に重複。CSV解析ロジックも同様 |
+| **コードの重複** | `getcontact()` が `RentalHistsController` と `SalesHistsController` に重複。CSV解析ロジックも同様 |
 | **テスト困難** | コントローラーにロジックが密結合しており、ユニットテストが書きにくい |
 | **N+1問題** | 一部修正済みだが `DevicesController::deviceIndividual()` に残存 |
 
@@ -56,7 +56,7 @@ app/
 │   │   ├── DevicesController.php
 │   │   ├── RentalHistsController.php
 │   │   ├── SalesHistsController.php
-│   │   ├── PersonnelsController.php
+│   │   ├── ContactsController.php
 │   │   ├── ClientsController.php
 │   │   ├── UserController.php
 │   │   └── MailingController.php
@@ -89,7 +89,7 @@ app/
 │       │   ├── GetSaleDetailUseCase.php
 │       │   └── EditSaleHistoryUseCase.php
 │       └── Common/
-│           └── GetPersonnelUseCase.php
+│           └── GetcontactUseCase.php
 ├── Lib/
 ├── Logging/
 ├── Models/
@@ -126,31 +126,31 @@ app/
 
 #### 1-1. 重複コードの統合
 
-**対象:** `RentalHistsController::getPersonnel()` と `SalesHistsController::getPersonnel()` の重複
+**対象:** `RentalHistsController::getcontact()` と `SalesHistsController::getcontact()` の重複
 
 **方針:**
-- `app/Http/UseCases/Common/GetPersonnelUseCase.php` を作成
+- `app/Http/UseCases/Common/GetcontactUseCase.php` を作成
 - 両Controllerから共通UseCaseを呼び出す
 
 ```php
-// app/Http/UseCases/Common/GetPersonnelUseCase.php
+// app/Http/UseCases/Common/GetcontactUseCase.php
 namespace App\Http\UseCases\Common;
 
-use App\Models\Personnel;
+use App\Models\contact;
 
-class GetPersonnelUseCase
+class GetcontactUseCase
 {
     public function __invoke(string $clientId): array
     {
-        $personnels = Personnel::where('client_id', $clientId)->get();
+        $contacts = contact::where('client_id', $clientId)->get();
 
-        if ($personnels->isEmpty()) {
+        if ($contacts->isEmpty()) {
             return ['success' => 0];
         }
 
         return [
             'success' => 1,
-            'data' => $personnels->toArray(),
+            'data' => $contacts->toArray(),
         ];
     }
 }
@@ -158,9 +158,9 @@ class GetPersonnelUseCase
 
 ```php
 // Controller側（両方共通）
-public function getPersonnel(Request $request, GetPersonnelUseCase $useCase)
+public function getcontact(Request $request, GetcontactUseCase $useCase)
 {
-    return response()->json($useCase($request->personnel_id));
+    return response()->json($useCase($request->contact_id));
 }
 ```
 
@@ -619,7 +619,7 @@ class {Name}UseCase
 | N+1問題修正 (`DevicesController::deviceIndividual`) | Phase 2-5 の `GetDeviceDetailUseCase` で対応 |
 | DeviceServiceクラス作成 | Phase 2 で UseCase として分離（Service ではなく UseCase パターンを採用） |
 | RentalServiceクラス作成 | Phase 3 で UseCase として分離（同上） |
-| 重複メソッドの統合 | Phase 1-1 で `GetPersonnelUseCase` として統合 |
+| 重複メソッドの統合 | Phase 1-1 で `GetcontactUseCase` として統合 |
 | DeviceRegistrationTest作成 | Phase 5 で UseCase 単位のテスト + Feature テストを作成 |
 | RentalProcessTest作成 | Phase 5 で UseCase 単位のテスト + Feature テストを作成 |
 | CSVエラーメッセージの改善 | Phase 2-3 の `ConfirmDeviceMultiUseCase` 内で対応 |

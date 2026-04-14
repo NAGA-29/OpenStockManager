@@ -58,10 +58,10 @@ $(function() {// 検索ボタン押下
             headers: {
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
             },
-            url: "client/search/personnel",
+            url: "client/search/contact",
             dataType:'json',
             type: 'POST',
-            data: JSON.stringify({'personnel_id': split_list[0]}),
+            data: JSON.stringify({'contact_id': split_list[0]}),
             contentType: "application/json",
             timeout: 5000
         })
@@ -69,34 +69,34 @@ $(function() {// 検索ボタン押下
             .done(function(datas) {
                 // console.log('成功！')
                 if(datas.success == 0){
-                    $('#select_personnel').text('登録されている担当者がいません');
-                    // $("#personnel").empty()
-                    if(document.getElementById("personnel_selector")){
-                        $('#personnel_selector').remove()
+                    $('#select_contact').text('登録されている担当者がいません');
+                    // $("#contact").empty()
+                    if(document.getElementById("contact_selector")){
+                        $('#contact_selector').remove()
                     }
-                    if(document.getElementById("personnel_btn")){
-                        $('#personnel_btn').remove()
+                    if(document.getElementById("contact_btn")){
+                        $('#contact_btn').remove()
                     }
-                    $('#select_personnel').after('<button id="personnel_btn" type="button" class="btn btn-outline-success" data-toggle="modal" data-target="#EditModal">担当者を登録する</button>')
+                    $('#select_contact').after('<button id="contact_btn" type="button" class="btn btn-outline-success" data-toggle="modal" data-target="#EditModal">担当者を登録する</button>')
                 }else{
                     let count = 0;
-                    if(document.getElementById("personnel_selector")){
-                        $('#personnel_selector').remove()
+                    if(document.getElementById("contact_selector")){
+                        $('#contact_selector').remove()
                     }
-                    if(document.getElementById("personnel_btn")){
-                        $('#personnel_btn').remove()
+                    if(document.getElementById("contact_btn")){
+                        $('#contact_btn').remove()
                     }
-                    $('#select_personnel').after("<select id='personnel_selector' name='personnel' class='form-control'></select>")
+                    $('#select_contact').after("<select id='contact_selector' name='contact' class='form-control'></select>")
                     for(data in datas.data){
                         count+=1;
-                        console.log(datas.data[data].personnel_id);
-                        $("#personnel_selector").append(
+                        console.log(datas.data[data].contact_id);
+                        $("#contact_selector").append(
                             $("<option></option>")
-                                .val(datas.data[data].personnel_id)
+                                .val(datas.data[data].contact_id)
                                 .text(datas.data[data].name + ' : ' + datas.data[data].email)
                         );
                     }
-                    $('#select_personnel').text('登録されている担当者が'+ count +'名います');
+                    $('#select_contact').text('登録されている担当者が'+ count +'名います');
                 }
             })
             // Ajaxリクエストが失敗した場合

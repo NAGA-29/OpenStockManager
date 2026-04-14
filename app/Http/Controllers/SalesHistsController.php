@@ -15,7 +15,7 @@ use App\Http\Requests\UploadSaleFileRequest;
 use App\Models\Client;
 // Model
 use App\Models\Device;
-use App\Models\Personnel;
+use App\Models\Contacts;
 use App\Models\SaleHist;
 use App\Traits\SearchesClients;
 // Facades
@@ -63,27 +63,27 @@ class SalesHistsController extends Controller
     }
 
     /**
-     * personnelsテーブルから担当者情報を取得
+     * contactsテーブルから担当者情報を取得
      * client_idからその企業に所属している人物のデータを全て取得する
      * @access public
      * @param Request $request: client_id クライアントID
      * @return string|false
      */
-    public function getPersonnel(Request $request)
+    public function getcontact(Request $request)
     {
         $data = [];
         $data_list = [];
 
-        $personnel_id = $request->personnel_id;
-        $personnels = Personnel::where('client_id', $personnel_id)->get();
+        $contact_id = $request->contact_id;
+        $contacts = Contacts::where('client_id', $contact_id)->get();
 
         // 結果判定
-        if (count($personnels) == 0) {
+        if (count($contacts) == 0) {
             $data_list['success'] = 0;
         } else {
             $data_list['success'] = 1;
-            foreach ($personnels as $personnel) {
-                array_push($data, $personnel);
+            foreach ($contacts as $contact) {
+                array_push($data, $contact);
             }
             $data_list['data'] = $data;
         }
@@ -213,11 +213,11 @@ class SalesHistsController extends Controller
         }
 
         $request_data = $request->all();
-        array_push($request_data, Personnel::where('personnel_id', $request['personnel'])->first());
+        array_push($request_data, Contacts::find($request['contact']));
 
         $request_info = [
             'client_id'             => $request_data['client_id'],
-            'personnel_id'          => $request_data['personnel'],
+            'contact_id'          => $request_data['contact'],
             'sale_date_at'          => $request_data['sale_date_at'],
             'note'                  => $request_data['note'],
         ];
@@ -240,7 +240,7 @@ class SalesHistsController extends Controller
             $result = SaleHist::create([
                 'sale_id'               => $safe['sale_id'],
                 'client'                => $safe['client_id'],
-                'personnel'             => $safe['personnel'],
+                'contact'             => $safe['contact'],
                 'staff'                 => Auth::id(),
                 'sale_date_at'          => $safe['sale_date_at'],
                 'note'                  => $safe['note'],
@@ -311,7 +311,7 @@ class SalesHistsController extends Controller
             SaleHist::create([
                 'sale_id'               => $sale_id,
                 'client'                => $request_info['client_id'],
-                'personnel'             => $request_info['personnel_id'],
+                'contact'             => $request_info['contact_id'],
                 'staff'                 => Auth::id(),
                 'sale_date_at'          => $request_info['sale_date_at'],
                 'note'                  => $request_info['note'],

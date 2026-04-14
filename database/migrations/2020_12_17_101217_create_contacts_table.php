@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreatePersonnelsTable extends Migration
+class CreateContactsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,8 +13,8 @@ class CreatePersonnelsTable extends Migration
      */
     public function up()
     {
-        Schema::create('personnels', function (Blueprint $table) {
-            $table->string("personnel_id")->primary();
+        Schema::create('contacts', function (Blueprint $table) {
+            $table->id("id");
             $table->string("client_id");
             $table->foreign('client_id')
             ->references('client_id')
@@ -41,10 +41,10 @@ class CreatePersonnelsTable extends Migration
     {
 
         Schema::disableForeignKeyConstraints();
-        // Schema::table('personnels', function (Blueprint $table) {
-        //     $table->dropForeign('personnels_client_id_foreign');
+        // Schema::table('contacts', function (Blueprint $table) {
+        //     $table->dropForeign('contacts_client_id_foreign');
         // });
-        Schema::dropIfExists('personnels');
+        Schema::dropIfExists('contacts');
         Schema::enableForeignKeyConstraints();
     }
 }

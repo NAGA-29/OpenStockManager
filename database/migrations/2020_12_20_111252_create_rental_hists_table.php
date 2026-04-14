@@ -22,10 +22,10 @@ class CreateRentalHistsTable extends Migration
             ->on('clients')
             ->cascadeOnDelete()
             ->cascadeOnUpdate();
-            $table->string('personnel');
-            $table->foreign('personnel')
-            ->references('personnel_id')
-            ->on('personnels')
+            $table->unsignedBigInteger('contact');
+            $table->foreign('contact')
+            ->references('id')
+            ->on('contacts')
             ->cascadeOnDelete()
             ->cascadeOnUpdate();
             $table->bigInteger('staff')->unsigned();
@@ -56,7 +56,7 @@ class CreateRentalHistsTable extends Migration
         Schema::disableForeignKeyConstraints();
         // Schema::table('rental_hists', function (Blueprint $table) {
         //     $table->dropForeign('rental_hists_client_foreign');
-        //     $table->dropForeign('rental_hists_personnel_foreign');
+        //     $table->dropForeign('rental_hists_contact_foreign');
         //     $table->dropForeign('rental_hists_staff_foreign');
         // });
         Schema::dropIfExists('rental_hists');

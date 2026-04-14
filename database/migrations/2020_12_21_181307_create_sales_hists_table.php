@@ -21,10 +21,10 @@ class CreateSalesHistsTable extends Migration
             ->on('clients')
             ->cascadeOnDelete()
             ->cascadeOnUpdate();
-            $table->string('personnel');
-            $table->foreign('personnel')
-            ->references('personnel_id')
-            ->on('personnels')
+            $table->unsignedBigInteger('contact');
+            $table->foreign('contact')
+            ->references('id')
+            ->on('contacts')
             ->cascadeOnDelete()
             ->cascadeOnUpdate();
             $table->bigInteger('staff')->unsigned();

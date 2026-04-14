@@ -73,9 +73,9 @@ return [
     'return_deadline_mail_failed' => 'Return deadline notification email failed.',
     'return_deadline_mail_exception' => 'Return deadline notification email exception.',
 
-    // Personnel related
-    'personnel_registration_failed' => 'Registration failed.',
-    'personnel_data_fetch_failed' => 'Failed to fetch data.',
+    // contact related
+    'contact_registration_failed' => 'Registration failed.',
+    'contact_data_fetch_failed' => 'Failed to fetch data.',
 
     // Log messages
     'log_search_failed' => 'Search failed.',

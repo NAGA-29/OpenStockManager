@@ -25,7 +25,7 @@
       $histories = RentalHist::orderBy('checkout_at', 'desc')->paginate(10);
 
       // 修正後
-      $histories = RentalHist::with(['clients', 'personnels', 'user'])
+      $histories = RentalHist::with(['clients', 'contacts', 'user'])
           ->orderBy('checkout_at', 'desc')
           ->paginate(10);
       ```

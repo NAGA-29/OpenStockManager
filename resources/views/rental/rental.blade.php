@@ -86,9 +86,9 @@
                                 <td>
                                     <div class="form-group row">
                                         <div class="col-md-10">
-                                            <p class="select_personnel" name='select_personnel'>貸出先企業を先に選択してください</p>
-                                            {{-- <input id="personnel" type="text" class="form-control @error('personnel') is-invalid @enderror" name="personnel" required > --}}
-                                            {{-- <select id='personnel' name='personnel' >
+                                            <p class="select_contact" name='select_contact'>貸出先企業を先に選択してください</p>
+                                            {{-- <input id="contact" type="text" class="form-control @error('contact') is-invalid @enderror" name="contact" required > --}}
+                                            {{-- <select id='contact' name='contact' >
                                         </select> --}}
                                         </div>
                                     </div>

@@ -6,7 +6,7 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use DateTime;
 
-class PersonnelTableSeeder extends Seeder
+class ContactTableSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -16,8 +16,7 @@ class PersonnelTableSeeder extends Seeder
     public function run()
     {
         for($i=1;$i<20;$i++){
-            DB::table('personnels')->insert([
-                'personnel_id' => "HHH${i}",
+            DB::table('contacts')->insert([
                 'client_id' => "DDD${i}",
                 'name' => "佐藤${i}",
                 'tel' => "0801111111${i}",

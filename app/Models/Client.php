@@ -29,8 +29,8 @@ class Client extends Model
         'soft_deleted_at',
     ];
 
-    public function personnels()
+    public function contacts()
     {
-        return $this->hasMany('App\Models\Personnel', 'client_id', 'client_id');
+        return $this->hasMany('App\Models\Contacts', 'client_id', 'client_id');
     }
 }

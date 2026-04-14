@@ -41,7 +41,7 @@ class RentalHistTest extends TestCase
     public function test_fillable_contains_all_expected_fields(): void
     {
         $expected = [
-            'lend_id', 'client', 'personnel', 'staff',
+            'lend_id', 'client', 'contact', 'staff',
             'all_returned', 'checkout_at', 'schedule_return_at',
             'return_at', 'note', 'created_at', 'modified_at',
             'soft_deleted_at',

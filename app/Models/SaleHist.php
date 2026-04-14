@@ -19,7 +19,7 @@ class SaleHist extends Model
     protected $fillable = [
         'sale_id',
         'client',
-        'personnel',
+        'contact',
         'staff',
         'sale_date_at',
         'note',
@@ -43,9 +43,9 @@ class SaleHist extends Model
         return $this->belongsTo('App\Models\User', 'staff', 'id');
     }
 
-    public function personnels()
+    public function contacts()
     {
-        return $this->belongsTo('App\Models\Personnel', 'personnel', 'personnel_id');
+        return $this->belongsTo('App\Models\Contacts', 'contact', 'id');
     }
 
     public function clients()

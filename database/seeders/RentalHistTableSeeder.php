@@ -19,7 +19,7 @@ class RentalHistTableSeeder extends Seeder
             DB::table('rental_hists')->insert([
                 'lend_id' => "RENT${i}",
                 'client' => "DDD${i}",
-                'personnel' => "HHH${i}",
+                'contact' => $i,
                 'staff' => 1,
                 'all_returned' => $i % 2 === 0,
                 'checkout_at' => new DateTime(),

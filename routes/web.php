@@ -8,7 +8,7 @@ use App\Http\Controllers\DeviceTypeFieldController;
 use App\Http\Controllers\InventoryStockController;
 use App\Http\Controllers\InventoryUnitController;
 use App\Http\Controllers\MailingController;
-use App\Http\Controllers\PersonnelsController;
+use App\Http\Controllers\ContactsController;
 use App\Http\Controllers\RentalHistsController;
 use App\Http\Controllers\SalesHistsController;
 use App\Http\Controllers\UserController;
@@ -108,18 +108,18 @@ Route::group(['middleware' => 'auth'], function () {
     Route::post('/client/search', [ClientsController::class, 'searchClient'])->name('client.search');
 
     // 担当者登録
-    Route::get('/personnel/list', [PersonnelsController::class, 'getAllPersonnel'])->name('personnel.list');
-    Route::get('/personnel/register', [PersonnelsController::class, 'form'])->name('personnel.register_form');
-    Route::post('/personnel/client/search', [PersonnelsController::class, 'searchClient'])->name('personnel.search.client');
-    Route::post('/personnel/register', [PersonnelsController::class, 'register'])->name('personnel.register');
-    Route::get('/personnel/detail/{personnel_id}', [PersonnelsController::class, 'personnelDetail'])->name('personnel.detail');
+    Route::get('/contact/list', [ContactsController::class, 'getAllContacts'])->name('contact.list');
+    Route::get('/contact/register', [ContactsController::class, 'form'])->name('contact.register_form');
+    Route::post('/contact/client/search', [ContactsController::class, 'searchClient'])->name('contact.search.client');
+    Route::post('/contact/register', [ContactsController::class, 'register'])->name('contact.register');
+    Route::get('/contact/detail/{contact_id}', [ContactsController::class, 'contactDetail'])->name('contact.detail');
 
     // レンタル File形式(複数)
     Route::post('/device/rental/multi/upload', [RentalHistsController::class, 'upload'])->name('device.multi_csv_upload');
     Route::post('/device/rental/multi/store', [RentalHistsController::class, 'storeWithFile'])->name('device.multi_csv_store');
     Route::get('/device/rental/multi/download', [RentalHistsController::class, 'download'])->name('device.multi_csv_download');
     Route::get('/device/rental/multi/return_confirm/{lend_id}', [RentalHistsController::class, 'confirmReturnDeviceMulti'])->name('device.multi_return_device_confirm');
-    Route::post('/search/personnel', [RentalHistsController::class, 'getPersonnel'])->name('search.personnel');
+    Route::post('/search/contact', [RentalHistsController::class, 'getcontact'])->name('search.contact');
     // 一括返却機能
     Route::post('/device/rental/multi/return_complete/{lend_id}', [RentalHistsController::class, 'storeReturnDeviceMulti'])->name('device.multi_return_device_complete');
 
@@ -128,7 +128,7 @@ Route::group(['middleware' => 'auth'], function () {
     Route::post('/device/rental/store', [RentalHistsController::class, 'storeWithCart'])->name('device.rental.store');
     Route::post('/device/rental/return', [RentalHistsController::class, 'return'])->name('device.return');
     // Route::post('/device/rental/client/search', [RentalHistsController::class, 'searchClient'])->name('device.search.client');
-    // Route::post('/device/rental/client/search/personnel', [RentalHistsController::class, 'getPersonnel'])->name('device.search.client.personnel');
+    // Route::post('/device/rental/client/search/contact', [RentalHistsController::class, 'getcontact'])->name('device.search.client.contact');
     Route::get('/device/rental/{device_id}', [RentalHistsController::class, 'checkOutWrite'])->name('device.checkout_write');
 
     // 販売 複数
@@ -140,7 +140,7 @@ Route::group(['middleware' => 'auth'], function () {
     // Route::post('/device/sales', [SalesHistsController::class, 'sell'])->name('device.sell'); // CHANGE: Delete 2024-09-25
     Route::post('/device/sales/store', [SalesHistsController::class, 'storeWithCart'])->name('device.sale.store');
     // Route::post('/device/sales/client/search', [SalesHistsController::class, 'searchClient'])->name('sales.search.client');
-    // Route::post('/device/sales/client/search/personnel', [SalesHistsController::class, 'getPersonnel'])->name('sales.search.client.personnel');
+    // Route::post('/device/sales/client/search/contact', [SalesHistsController::class, 'getcontact'])->name('sales.search.client.contact');
     Route::get('/device/sales/{device_id}', [SalesHistsController::class, 'saleWrite'])->name('sales.sales_write');
 
     // メール送信・CRM同期 (管理者のみ)
@@ -149,5 +149,5 @@ Route::group(['middleware' => 'auth'], function () {
         Route::post('/sendmail', [MailingController::class, 'sendMail']);
         Route::get('/sync/crm', [ClientsController::class, 'syncFromCRM'])->name('synchronize.clients');
     });
-    // Route::get('/sync/personnel', [PersonnelsController::class, 'synchronizePersonnel'])->name('synchronize.personnel');
+    // Route::get('/sync/contact', [ContactsController::class, 'synchronizecontact'])->name('synchronize.contact');
 });

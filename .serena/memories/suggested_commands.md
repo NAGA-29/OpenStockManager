@@ -1,1 +1,0 @@
-Useful commands: `composer lint` (runs Pint check and PHPStan), `composer pint` (format), `composer phpstan`, `php artisan test`, `vendor/bin/phpunit`, `php artisan --version`, `php artisan list`, `php artisan serve`. Frontend/build files indicate `pnpm` is in use; inspect `package.json` before running JS tasks. Fast code search: `rg pattern .`, `rg --files`.

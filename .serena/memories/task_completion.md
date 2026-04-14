@@ -1,1 +1,0 @@
-After code changes, prefer running targeted tests first, then `composer lint` when PHP files are touched. For exception-flow changes, inspect `app/Exceptions/Handler.php`, any controller/request catch blocks, and related feature/unit tests under `tests/Feature/Exceptions` and `tests/Unit/Exceptions`.

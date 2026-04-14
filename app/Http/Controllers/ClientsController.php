@@ -175,8 +175,8 @@ class ClientsController extends Controller
             }
 
             // クライアント先担当者情報取得と更新
-            $p = new PersonnelsController();
-            $p->synPersonnel($crm['url'] . '?sheet_name=contacts');
+            $p = new ContactsController();
+            $p->syncontact($crm['url'] . '?sheet_name=contacts');
 
             DB::commit();
             return response()

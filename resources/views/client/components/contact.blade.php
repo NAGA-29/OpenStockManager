@@ -6,16 +6,16 @@
     </div>
 </div>
 
-@if (Session::has('personnel_register'))
+@if (Session::has('contact_register'))
     <div class="alert alert-success" role="alert">
-        {{ session('personnel_register') }}
+        {{ session('contact_register') }}
     </div>
 @endif
 
 <div class=" bg-white rounded shadow table-responsive text-nowrap">
     <div class="card">
         <div class="card-body m-5">
-            <form action={{ Route('personnel.register') }} method='POST' class='h6 font-weight-bold'>
+            <form action={{ Route('contact.register') }} method='POST' class='h6 font-weight-bold'>
                 @csrf
                 <div class="form-group row">
                     <div class="col-md-10">
@@ -60,18 +60,18 @@
 </div>
 
 <!-- Search Client Modal -->
-<div class="modal fade" id="ClientSearchModal" tabindex="-1" role="dialog" aria-labelledby="clientSearchPersonnelCompModalTitle"
+<div class="modal fade" id="ClientSearchModal" tabindex="-1" role="dialog" aria-labelledby="clientSearchcontactCompModalTitle"
     aria-hidden="true">
     <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="clientSearchPersonnelCompModalTitle">担当者所属企業の検索</h5>
+                <h5 class="modal-title" id="clientSearchcontactCompModalTitle">担当者所属企業の検索</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body">
-                @include('component.modal.client_search_for_personnel')
+                @include('component.modal.client_search_for_contact')
             </div>
         </div>
     </div>

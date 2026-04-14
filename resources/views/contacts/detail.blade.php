@@ -20,23 +20,23 @@
             <table class="table table-hover">
                 <tr>
                     <td>所属企業名</td>
-                    <td>{{ $personnel->client->company }}</td>
+                    <td>{{ $contact->client->company }}</td>
                 </tr>
                 <tr>
                     <td>名前</td>
-                    <td>{{ $personnel->name }}</td>
+                    <td>{{ $contact->name }}</td>
                 </tr>
                 <tr>
                     <td>電話番号</td>
-                    <td>{{ $personnel->tel }}</td>
+                    <td>{{ $contact->tel }}</td>
                 </tr>
                 <tr>
                     <td>Email</td>
-                    <td>{{ $personnel->email }}</td>
+                    <td>{{ $contact->email }}</td>
                 </tr>
                 <tr>
                     <td>ノート</td>
-                    <td>{{ $personnel->note }}</td>
+                    <td>{{ $contact->note }}</td>
                 </tr>
             </table>
         </div>

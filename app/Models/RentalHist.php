@@ -21,7 +21,7 @@ class RentalHist extends Model
     protected $fillable = [
         'lend_id',
         'client',
-        'personnel',
+        'contact',
         'staff',
         'all_returned',
         'checkout_at',
@@ -77,9 +77,9 @@ class RentalHist extends Model
         return $this->belongsTo('App\Models\User', 'staff', 'id');
     }
 
-    public function personnels()
+    public function contacts()
     {
-        return $this->belongsTo('App\Models\Personnel', 'personnel', 'personnel_id');
+        return $this->belongsTo('App\Models\Contacts', 'contact', 'id');
     }
 
     public function clients()

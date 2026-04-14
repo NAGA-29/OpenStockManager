@@ -20,7 +20,7 @@
         </div>
             <p>貸出先企業名:{{ $safe[0]->client['company'] }}
                 <a class="far fa-arrow-alt-circle-right" href="#"></a>
-                {{-- <a class="far fa-arrow-alt-circle-right" href="{{ route('personnel.detail', ['personnel_id'=> $rental_details->personnels->personnel_id]) }}"></a> --}}
+                {{-- <a class="far fa-arrow-alt-circle-right" href="{{ route('contact.detail', ['contact_id'=> $rental_details->contacts->contact_id]) }}"></a> --}}
             </p>
             <p>担当者名:{{ $safe[0]['name'] }}
                 <a class="far fa-arrow-alt-circle-right" href="#"></a></p>

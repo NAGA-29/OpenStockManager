@@ -82,7 +82,7 @@ document.addEventListener("DOMContentLoaded", function () {
         element.value = split_list[0];
       });
 
-      fetch("/search/personnel", {
+      fetch("/search/contact", {
         method: "POST",
         headers: {
           "X-CSRF-TOKEN": document
@@ -90,41 +90,41 @@ document.addEventListener("DOMContentLoaded", function () {
             .getAttribute("content"),
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ personnel_id: split_list[0] }),
+        body: JSON.stringify({ contact_id: split_list[0] }),
       })
         .then((response) => response.json())
         .then((datas) => {
           if (datas.success == 0) {
-            document.querySelectorAll(".select_personnel").forEach((element) => {
+            document.querySelectorAll(".select_contact").forEach((element) => {
               element.textContent = "登録されている担当者がいません、CRMに登録してください";
             });
-            // すべてのclass="personnel_selector"を取得し、そのすべてを削除
-              document.querySelectorAll(".personnel_selector").forEach((element) => {
+            // すべてのclass="contact_selector"を取得し、そのすべてを削除
+              document.querySelectorAll(".contact_selector").forEach((element) => {
                 element.remove();
               });
           } else {
             let count = 0;
-            document.querySelectorAll(".personnel_selector").forEach((element) => {
+            document.querySelectorAll(".contact_selector").forEach((element) => {
               element.remove();
             });
             let select = document.createElement("select");
-            // select.id = "personnel_selector";
-            select.name = "personnel";
-            select.className = "personnel_selector form-control";
-            // document.querySelector(".select_personnel").after(select);
+            // select.id = "contact_selector";
+            select.name = "contact";
+            select.className = "contact_selector form-control";
+            // document.querySelector(".select_contact").after(select);
             datas.data.forEach((data) => {
               count += 1;
               let option = document.createElement("option");
-              option.value = data.personnel_id;
+              option.value = data.contact_id;
               option.textContent = `${data.name} : ${data.email}`;
               select.appendChild(option);
             });
 
-            document.querySelectorAll(".select_personnel").forEach((element) => {
+            document.querySelectorAll(".select_contact").forEach((element) => {
               element.after(select.cloneNode(true));
             });
 
-            document.querySelectorAll(".select_personnel").forEach((element) => {
+            document.querySelectorAll(".select_contact").forEach((element) => {
               element.textContent = `登録されている担当者が${count}名います`;
             }); 
           }

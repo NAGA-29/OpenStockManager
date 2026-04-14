@@ -63,6 +63,6 @@
         </div>
     </div>
 {{-- </form> --}}
-    <script src="{{ asset('/js/search_for_personnel.js') }}"></script>
+    <script src="{{ asset('/js/search_for_contact.js') }}"></script>
     {{-- <a href="{{ route('edit.user') }}">編集</a> --}}
 
