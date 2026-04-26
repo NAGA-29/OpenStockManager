@@ -1,6 +1,6 @@
 # OpenStockManager
 
-<img src="public/images/logo.png" alt="OpenStockManager" width="200">
+<p align="center"><img src="public/images/logo.png" alt="OpenStockManager" width="500"></p>
 
 <div align="center">
 
