@@ -62,7 +62,7 @@
 | 2-4 | React Router 設定＋認証ガード（ProtectedRoute） | ☑ | `src/router.tsx`（createBrowserRouter）＋`auth/ProtectedRoute`。`/login`公開・保護下に`/dashboard`・`*`→404。プレースホルダ画面で骨組み |
 | 2-5 | 共通レイアウト（サイドバー／ヘッダー／フッター）移植 | ☑ | `AppLayout`/`Sidebar`/`Footer`。`ProtectedRoute`→`AppLayout`→各ページの構成 |
 | 2-6 | 共通 UI（テーブル, モーダル, トースト, ローディング, アラート） | ☐ | sweetalert2/toastr 相当を選定 |
-| 2-7 | TanStack Query 導入＋エラーハンドリング共通化 | ☐ | |
+| 2-7 | TanStack Query 導入＋エラーハンドリング共通化 | ☑ | `QueryClientProvider` を `main.tsx` に配線。`lib/queryClient.ts` |
 
 ### Phase 3 — 画面移行（ドメイン別）
 
@@ -71,7 +71,7 @@
 | # | ドメイン | 状態 | 主担当画面数 |
 | --- | --- | --- | --- |
 | 3-1 | 認証（ログイン／パスワード／メール認証） | ◐ | 7（ログインのみ完了） |
-| 3-2 | ダッシュボード | ◐ | 1（API済・UI未） |
+| 3-2 | ダッシュボード | ☑ | API済・UI実装済 |
 | 3-3 | 在庫（数量管理／個別管理／端末詳細／バーコード） | ◐ | 7（一部API済） |
 | 3-4 | 端末登録（単体／CSV一括／確認） | ☐ | 5 |
 | 3-5 | データ（スペック／ベンチマーク／企業／担当者） | ☐ | 8 |
@@ -113,7 +113,7 @@
 ### 3-2 ダッシュボード
 | Blade | React ルート | API | 状態 |
 | --- | --- | --- | --- |
-| `dashboard/index` | `/dashboard` | `GET /api/dashboard` ✅実装済 | ◐ |
+| `dashboard/index` | `/dashboard` | `GET /api/dashboard` ✅実装済 | ☑ |
 
 ### 3-3 在庫
 | Blade | React ルート | API | 状態 |
@@ -281,10 +281,16 @@
   - **エラー踏襲**: 422 応答の `errors`（`auth.failed` は `errors.email` に入る）をフィールド単位で各入力欄下に表示（`is-invalid` 装飾）。その他の応答エラーは `message`、ネットワーク不通は接続エラーを上部 `login-alert` に表示。
   - DoD: `typecheck`/`build`/`lint` すべて green。
   - 残課題: `remember`（Remember Me）はトークン方式では効果がないため UI から省略（旧 Blade にはチェックボックスあり）。パスワードリセット／メール認証／メール変更／ユーザー登録（3-1 の残り 6 画面）は API 未実装のため未着手。
-- 次の推奨タスク: **2-6（共通 UI：テーブル/モーダル/トースト/ローディング/アラート）→ 2-7（TanStack Query 導入：`QueryClientProvider` を `main.tsx` に追加）→ 3-2 ダッシュボード本体（`GET /api/dashboard`）**。
-  - 2-6 メモ: 旧は sweetalert2/toastr 相当。React では軽量な自前トースト or ライブラリ選定。テーブルは旧 `table.css` の見た目を踏襲。
-  - 2-7 メモ: `@tanstack/react-query` は依存追加済み・未配線。`main.tsx` に `QueryClientProvider` を追加し、エラーハンドリング（401 は api.ts 側で処理済み）を共通化。
+- 2026-06-16: **2-7 完了**。`frontend/src/lib/queryClient.ts` に `QueryClient`（`retry:1`・`staleTime:30s`・`refetchOnWindowFocus:false`）を定義し、`main.tsx` を `QueryClientProvider`（最外）→ `AuthProvider` → `RouterProvider` 構成へ変更。401 は `lib/api.ts` のインターセプタで処理するため query 側の retry は控えめ。
+- 2026-06-16: **3-2 ダッシュボード 完了**。`features/dashboard/useDashboard.ts`（`useQuery` フック＋型）と `pages/DashboardPage.tsx`＋`dashboard.css` を実装し、旧 `dashboard/index.blade.php` を移植。
+  - 内容: サマリーカード（貸出中台数／延滞中／期限間近）＋延滞・期限間近の 2 テーブル（レンタルID→`/rental/history/:id` リンク・クライアント・デバイス・返却予定日・超過/残日数）。ローディング／エラー（再読込ボタン）／空状態を処理。
+  - **API レスポンス注意**: `GET /api/dashboard` は `{ data: ... }` 包みでなく **フラットなキー**（`lending_count`/`near_deadline`/`overdue`）を返す。各行は `device_count`（台数）のみで個別 device 一覧は含まないため、デバイス列は「N台」表示（旧 Blade の device_id バッジ羅列は API 非対応）。必要なら API 側で device 一覧を足す検討を。
+  - DoD: `typecheck`/`build`/`lint` すべて green。
+- 次の推奨タスク: **2-6（共通 UI：テーブル/モーダル/トースト/ローディング/アラート）→ 3-3 在庫（`/inventory/stocks`・`/inventory/units/:code` は API 実装済）**。
+  - 2-6 メモ: 旧は sweetalert2/toastr 相当。React では軽量な自前トースト or ライブラリ選定。テーブルは旧 `table.css`／本コミットの `dashboard.css` の見た目を踏襲し共通 `<Table>` 化を検討。ローディング／空／エラー表示も共通コンポーネント化すると 3-3 以降が楽。
+  - 3-3 メモ: API は `GET /api/inventory/stocks`・`GET /api/devices/category/:code`・`GET /api/devices/:id` が実装済。`useDashboard` と同じ要領で feature 別 query フックを作る。
   - 2-5 残課題（後続で対応）: 上部バーのカートボタン（旧 `InCartModal`）は Phase 3-10 で配線するため未実装。ナビのドロップダウンは外側クリックで閉じる挙動は未実装（トグルのみ）。
+  - 3-1 残課題: パスワードリセット／メール認証／メール変更／ユーザー登録（残 6 画面）は対応 API 未実装のため未着手。
   - **1-6 について**: `admin` alias 登録済み・`AdminMiddleware` はガード非依存。admin 専用 API ルートを足す回（3-9 設定等）で `->middleware('admin')` を付与すれば実質達成。
   - **1-6 について**: `admin` alias は `bootstrap/app.php` で登録済み・`AdminMiddleware` は `$request->user()->isAdmin()` 判定でガード非依存。admin 専用 API ルートを足す回（例: 3-9 設定/ユーザー管理の API 化）に `->middleware('admin')` を付与して実質達成すればよく、単独セッションを割く必要は薄い。
 
