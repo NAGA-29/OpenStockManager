@@ -105,4 +105,19 @@ class ApiRoutesTest extends TestCase
 
         $response->assertStatus(200)->assertJsonStructure(['data']);
     }
+
+    /**
+     * フロント(Vite)オリジンからの CORS プリフライトが許可されること。
+     */
+    public function test_cors_preflight_allows_frontend_origin(): void
+    {
+        config(['cors.allowed_origins' => ['http://localhost:5173']]);
+
+        $response = $this->call('OPTIONS', '/api/auth/login', [], [], [], [
+            'HTTP_ORIGIN'                        => 'http://localhost:5173',
+            'HTTP_ACCESS_CONTROL_REQUEST_METHOD' => 'POST',
+        ]);
+
+        $this->assertSame('http://localhost:5173', $response->headers->get('Access-Control-Allow-Origin'));
+    }
 }

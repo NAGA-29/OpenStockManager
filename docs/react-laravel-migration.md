@@ -48,7 +48,7 @@
 | 1-1 | `User` に `HasApiTokens` 追加 | ☑ | Sanctum |
 | 1-2 | `Api\AuthController`（login / me / logout） | ☑ | トークン発行 |
 | 1-3 | `routes/api.php` に認証＋保護ルートを登録 | ☑ | `auth:sanctum` グループ。login（公開）/ me・logout・dashboard・inventory/stocks・devices を登録。Sanctum 用 `expires_at` 列追加移行も実施 |
-| 1-4 | CORS / Sanctum 設定をフロントのオリジンに合わせる | ☐ | `config/cors.php`, `SANCTUM_STATEFUL_DOMAINS` |
+| 1-4 | CORS / Sanctum 設定をフロントのオリジンに合わせる | ☑ | `config/cors.php` に `FRONTEND_URL`(既定 `http://localhost:5173`)を追加。`config/sanctum.php` を公開し `SANCTUM_STATEFUL_DOMAINS` を env 化。`.env.example` 追記 |
 | 1-5 | 例外を API では JSON で返すよう調整（419 リダイレクト除去等） | ☐ | `bootstrap/app.php` |
 | 1-6 | `admin` ミドルウェアを API ルートでも利用可能に | ☐ | 既存 alias 流用 |
 
@@ -247,7 +247,11 @@
   公開: `POST /api/auth/login`。`auth:sanctum` 保護: `GET /api/auth/me`・`POST /api/auth/logout`・`GET /api/dashboard`・`GET /api/inventory/stocks`・`GET /api/devices/category/{code}`・`GET /api/devices/{deviceId}`。
   既存の `personal_access_tokens` 移行（2019 年・tokenable_id 文字列化のカスタム版）に Sanctum v4 が要求する `expires_at` 列が無くトークン発行が失敗したため、既存定義を壊さない追加移行を作成。
   `tests/Feature/Api/ApiRoutesTest`（login 成否・401 ガード・認証済みアクセス）を追加し **9 件 green**。全体は **241 passed**（既知の ContactsTest 3 件のみ失敗）。
-- 次の推奨タスク: **1-4（CORS/Sanctum）→ 1-5（API 例外 JSON 化）→ 2-1（frontend 初期化）**。
+- 2026-06-16: **1-4 完了**。`config/cors.php` の `allowed_origins` に `FRONTEND_URL`（既定 `http://localhost:5173`）を追加（既存の `APP_URL`・`script.google.com` は踏襲）。
+  `config/sanctum.php` を公開し `stateful` を `SANCTUM_STATEFUL_DOMAINS`（既定に Vite 5173 を含む）で env 化、`expiration` を `SANCTUM_TOKEN_EXPIRATION` 化。`.env.example` に `FRONTEND_URL`・`SANCTUM_STATEFUL_DOMAINS` を追記。
+  `ApiRoutesTest` にフロントオリジンの CORS プリフライト確認を追加し全体 **242 passed**（既知の ContactsTest 3 件のみ失敗）。
+  補足: 認証は Bearer トークン方式が主のため stateful Cookie は現状必須でないが、将来切替に備え設定済み。
+- 次の推奨タスク: **1-5（API 例外 JSON 化）→ 1-6（admin ミドルウェアを API でも利用可）→ 2-1（frontend 初期化）**。
 - 注意: 認証は当初 Sanctum トークン方式で確定。CSV 一括・バーコード・カメラスキャン・ドラッグ並び替え・グラフは移植難度が高いため、対象ドメインの後半で個別設計する。
 
 ### 既知の課題（移設前から存在 / 本移行の前提ではない）

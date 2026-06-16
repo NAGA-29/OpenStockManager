@@ -19,7 +19,13 @@ return [
 
     'allowed_methods' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
 
-    'allowed_origins' => [env('APP_URL', 'http://localhost'), 'https://script.google.com'],
+    'allowed_origins' => array_values(array_filter([
+        env('APP_URL', 'http://localhost'),
+        // React(Vite)SPA のオリジン。フロントから Bearer トークンで API を呼ぶ。
+        env('FRONTEND_URL', 'http://localhost:5173'),
+        // Google Apps Script からの CRM 同期（既存挙動を踏襲）
+        'https://script.google.com',
+    ])),
 
     'allowed_origins_patterns' => [],
 
