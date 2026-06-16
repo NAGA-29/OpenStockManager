@@ -3,6 +3,7 @@ import { ProtectedRoute } from './auth/ProtectedRoute';
 import AppLayout from './layouts/AppLayout';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
+import InventoryStocksPage from './pages/InventoryStocksPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 /**
@@ -25,6 +26,7 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <Navigate to="/dashboard" replace /> },
           { path: '/dashboard', element: <DashboardPage /> },
+          { path: '/inventory/stocks', element: <InventoryStocksPage /> },
         ],
       },
     ],

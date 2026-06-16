@@ -61,7 +61,7 @@
 | 2-3 | 認証コンテキスト＋トークン永続化（localStorage） | ☑ | `src/auth/`（context/AuthProvider/useAuth/types）。起動時 `me` 復元・`login`/`logout`。`main.tsx` で全体を Provider 包み |
 | 2-4 | React Router 設定＋認証ガード（ProtectedRoute） | ☑ | `src/router.tsx`（createBrowserRouter）＋`auth/ProtectedRoute`。`/login`公開・保護下に`/dashboard`・`*`→404。プレースホルダ画面で骨組み |
 | 2-5 | 共通レイアウト（サイドバー／ヘッダー／フッター）移植 | ☑ | `AppLayout`/`Sidebar`/`Footer`。`ProtectedRoute`→`AppLayout`→各ページの構成 |
-| 2-6 | 共通 UI（テーブル, モーダル, トースト, ローディング, アラート） | ☐ | sweetalert2/toastr 相当を選定 |
+| 2-6 | 共通 UI（テーブル, モーダル, トースト, ローディング, アラート） | ☑ | `components/ui/`。自前実装（外部UIライブラリ不採用） |
 | 2-7 | TanStack Query 導入＋エラーハンドリング共通化 | ☑ | `QueryClientProvider` を `main.tsx` に配線。`lib/queryClient.ts` |
 
 ### Phase 3 — 画面移行（ドメイン別）
@@ -72,7 +72,7 @@
 | --- | --- | --- | --- |
 | 3-1 | 認証（ログイン／パスワード／メール認証） | ◐ | 7（ログインのみ完了） |
 | 3-2 | ダッシュボード | ☑ | API済・UI実装済 |
-| 3-3 | 在庫（数量管理／個別管理／端末詳細／バーコード） | ◐ | 7（一部API済） |
+| 3-3 | 在庫（数量管理／個別管理／端末詳細／バーコード） | ◐ | 7（数量管理 完了。個別管理/端末詳細 残） |
 | 3-4 | 端末登録（単体／CSV一括／確認） | ☐ | 5 |
 | 3-5 | データ（スペック／ベンチマーク／企業／担当者） | ☐ | 8 |
 | 3-6 | 手続き・レンタル（カート／CSV／一括返却） | ☐ | 7 |
@@ -118,7 +118,7 @@
 ### 3-3 在庫
 | Blade | React ルート | API | 状態 |
 | --- | --- | --- | --- |
-| `inventory/stocks/index` | `/inventory/stocks` | `GET /api/inventory/stocks` ✅実装済 | ◐ |
+| `inventory/stocks/index` | `/inventory/stocks` | `GET /api/inventory/stocks` ✅実装済 | ☑ |
 | `inventory/units/index` | `/inventory/units/:code` | `GET /api/devices/category/:code` ✅実装済 | ◐ |
 | `devices/device_list` | （上記内のテーブル） | 同上 | ☐ |
 | `devices/show` | `/devices/:id` | `GET /api/devices/:id` ✅実装済 | ◐ |
@@ -286,9 +286,19 @@
   - 内容: サマリーカード（貸出中台数／延滞中／期限間近）＋延滞・期限間近の 2 テーブル（レンタルID→`/rental/history/:id` リンク・クライアント・デバイス・返却予定日・超過/残日数）。ローディング／エラー（再読込ボタン）／空状態を処理。
   - **API レスポンス注意**: `GET /api/dashboard` は `{ data: ... }` 包みでなく **フラットなキー**（`lending_count`/`near_deadline`/`overdue`）を返す。各行は `device_count`（台数）のみで個別 device 一覧は含まないため、デバイス列は「N台」表示（旧 Blade の device_id バッジ羅列は API 非対応）。必要なら API 側で device 一覧を足す検討を。
   - DoD: `typecheck`/`build`/`lint` すべて green。
-- 次の推奨タスク: **2-6（共通 UI：テーブル/モーダル/トースト/ローディング/アラート）→ 3-3 在庫（`/inventory/stocks`・`/inventory/units/:code` は API 実装済）**。
-  - 2-6 メモ: 旧は sweetalert2/toastr 相当。React では軽量な自前トースト or ライブラリ選定。テーブルは旧 `table.css`／本コミットの `dashboard.css` の見た目を踏襲し共通 `<Table>` 化を検討。ローディング／空／エラー表示も共通コンポーネント化すると 3-3 以降が楽。
-  - 3-3 メモ: API は `GET /api/inventory/stocks`・`GET /api/devices/category/:code`・`GET /api/devices/:id` が実装済。`useDashboard` と同じ要領で feature 別 query フックを作る。
+- 2026-06-16: **2-6 完了**。`frontend/src/components/ui/` に共通 UI を自前実装（外部 UI ライブラリ不採用）。`ui.css` に全スタイル＋ユーティリティ（`.page-bar`/`.text-danger`/`.text-warning`/`.text-success`）。
+  - `Loading.tsx`（スピナー）・`Alert.tsx`（`info/success/warning/danger`、`AlertVariant` 型 export）・`DataTable.tsx`（ジェネリック `Column<T>` 定義・`render`/`empty`/`rowKey`）・`Modal.tsx`（背景クリック/×/Esc 閉じ）。
+  - トースト: `toast/`（`types.ts`/`context.ts`/`useToast.ts`/`ToastProvider.tsx`）。`main.tsx` に `ToastProvider` を配線（`QueryClientProvider`→`ToastProvider`→`AuthProvider`→`RouterProvider`）。`show(message, variant)` で右上に表示・4 秒で自動消去。
+  - dogfooding: `DashboardPage` を `Loading`/`Alert`/`DataTable` 利用へリファクタ（`dashboard.css` から重複テーブル/状態スタイルを削除）。lint の型 export（`Column`/`AlertVariant`）は `react-refresh/only-export-components` を通過。
+- 2026-06-16: **3-3 数量管理 完了**（在庫ドメインの 1 画面目）。`features/inventory/useStocks.ts`＋`pages/InventoryStocksPage.tsx`、ルート `/inventory/stocks` を追加。
+  - 旧 `inventory/stocks/index.blade.php` は「開発中」プレースホルダだが `GET /api/inventory/stocks` が実データ（`{ data: [...] }` 包み・`location`/`item_name`/`quantity`/`min_stock`/`below_min`）を返すため、実テーブルとして実装。`below_min` を赤字＋状態列で強調。ローディング/エラー/空を共通 UI で処理。
+  - DoD: `typecheck`/`build`/`lint` すべて green。
+- 次の推奨タスク: **3-3 の残り（個別管理 `/inventory/units/:code`＝`GET /api/devices/category/:code`、端末詳細 `/devices/:id`＝`GET /api/devices/:id`）→ 3-2/3-3 で作った feature パターンを横展開**。
+  - 3-3 残メモ: 個別管理は category code（STB 等）でデバイス一覧、端末詳細は device 単体。`useStocks` と同じ要領で `features/inventory/` に query フックを追加し `DataTable` で一覧化。端末詳細は編集モーダル（旧 `edit_device_info`）が絡むため、まず読み取り表示→編集は Phase 3-10 のモーダルと合わせて。バーコード/検索は移植難度が高く後回し（§注意参照）。
+  - 共通 UI 活用: 一覧は `DataTable`、フィードバックは `useToast`（mutation 成功/失敗時）、確認ダイアログは `Modal` を利用する。
+  - 2-5 残課題: 上部バーのカートボタン（旧 `InCartModal`）は Phase 3-10、ナビのドロップダウン外側クリック閉じは未実装。
+  - 3-1 残課題: パスワードリセット／メール認証／メール変更／ユーザー登録（残 6 画面）は対応 API 未実装のため未着手。
+  - **1-6 について**: `admin` alias 登録済み・`AdminMiddleware` はガード非依存。admin 専用 API ルートを足す回（3-9 設定等）で `->middleware('admin')` を付与すれば実質達成。
   - 2-5 残課題（後続で対応）: 上部バーのカートボタン（旧 `InCartModal`）は Phase 3-10 で配線するため未実装。ナビのドロップダウンは外側クリックで閉じる挙動は未実装（トグルのみ）。
   - 3-1 残課題: パスワードリセット／メール認証／メール変更／ユーザー登録（残 6 画面）は対応 API 未実装のため未着手。
   - **1-6 について**: `admin` alias 登録済み・`AdminMiddleware` はガード非依存。admin 専用 API ルートを足す回（3-9 設定等）で `->middleware('admin')` を付与すれば実質達成。
