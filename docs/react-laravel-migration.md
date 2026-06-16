@@ -59,7 +59,7 @@
 | 2-1 | Vite + React + TS プロジェクト初期化（`package.json`, `tsconfig`, `vite.config.ts`） | ☑ | `frontend/` 作成。Vite5+React18+TS、Router/Axios/TanStack Query を依存に追加。`npm run build`/`typecheck`/`lint` green、dev は 5173 で 200 応答 |
 | 2-2 | Axios クライアント（baseURL, トークン注入, 401 ハンドリング） | ☑ | `src/lib/api.ts`＋`src/lib/token.ts`。baseURL=`${VITE_API_BASE_URL}/api`、Bearer 自動付与、401 で token 破棄＋`/login` 誘導 |
 | 2-3 | 認証コンテキスト＋トークン永続化（localStorage） | ☑ | `src/auth/`（context/AuthProvider/useAuth/types）。起動時 `me` 復元・`login`/`logout`。`main.tsx` で全体を Provider 包み |
-| 2-4 | React Router 設定＋認証ガード（ProtectedRoute） | ☐ | `src/router.tsx` |
+| 2-4 | React Router 設定＋認証ガード（ProtectedRoute） | ☑ | `src/router.tsx`（createBrowserRouter）＋`auth/ProtectedRoute`。`/login`公開・保護下に`/dashboard`・`*`→404。プレースホルダ画面で骨組み |
 | 2-5 | 共通レイアウト（サイドバー／ヘッダー／フッター）移植 | ☐ | `layouts/sidebar.blade.php` 参照 |
 | 2-6 | 共通 UI（テーブル, モーダル, トースト, ローディング, アラート） | ☐ | sweetalert2/toastr 相当を選定 |
 | 2-7 | TanStack Query 導入＋エラーハンドリング共通化 | ☐ | |
@@ -266,8 +266,12 @@
 - 2026-06-16: **2-3 完了**。`frontend/src/auth/` に認証基盤を追加（lint `react-refresh` 対策でファイル分割）。
   `context.ts`（`AuthContext`）・`AuthProvider.tsx`（状態供給）・`useAuth.ts`（参照フック）・`types.ts`（`AuthUser`/`AuthContextValue`）。
   起動時にトークンがあれば `GET /api/auth/me` で復元（失敗時 `clearToken`）、`login()`=`POST /api/auth/login`→`setToken`→user 設定、`logout()`=`POST /api/auth/logout`→`clearToken`。`main.tsx` で全体を `AuthProvider` で包み、`App.tsx` で認証状態を表示。`typecheck`/`build`/`lint` green。
-- 次の推奨タスク: **2-4（React Router＋ProtectedRoute `src/router.tsx`）→ 2-5（共通レイアウト：サイドバー/ヘッダー/フッター 移植）→ 3-1 認証画面（`/login` など）**。
-  - 2-4 メモ: `react-router-dom` 導入済み。`ProtectedRoute` は `useAuth()` の `isLoading` 中はローディング、未認証なら `/login` へ `<Navigate>`。最低限 `/login`（3-1 で中身）・`/dashboard`（3-2）・404 を定義し、`main.tsx` を `RouterProvider`/`BrowserRouter` 構成へ。`api.ts` の 401 リダイレクト先は `/login` で一致済み。
+- 2026-06-16: **2-4 完了**。`frontend/src/router.tsx`（`createBrowserRouter`）と `auth/ProtectedRoute.tsx` を追加。
+  ルート: `/login`（公開）／`ProtectedRoute` 配下に index→`/dashboard` リダイレクト・`/dashboard`／`*`→404。`main.tsx` を `AuthProvider`＋`RouterProvider` 構成へ変更し、未使用化した `App.tsx` を削除。
+  プレースホルダ画面 `pages/`（LoginPage/DashboardPage/NotFoundPage）で骨組みのみ用意（ログインフォーム実体は 3-1、ダッシュボード集計は 3-2）。`ProtectedRoute` は `isLoading` 中ローディング・未認証は `/login` へ `<Navigate replace>`。`api.ts` の 401 リダイレクト先 `/login` と一致。`typecheck`/`build`/`lint` green、dev で `/login`・`/dashboard` が 200。
+- 次の推奨タスク: **2-5（共通レイアウト：サイドバー/ヘッダー/フッター 移植 `layouts/sidebar.blade.php` 参照）→ 2-6（共通 UI：テーブル/モーダル/トースト等）→ 3-1 認証画面（`/login` フォーム実装）**。
+  - 2-5 メモ: 旧 `resources/views/layouts/sidebar.blade.php`・`app.blade.php`・`footer.blade.php` を参照し `AppLayout`/`Sidebar`/`Footer` を作成。`ProtectedRoute` 配下のレイアウトルートとして差し込み、各保護ページを `<Outlet>` に流す構成が素直。サイドバーのメニュー項目は Blade の権限分岐（admin のみ表示）を踏襲（`useAuth().user.is_admin`）。
+  - 3-1 メモ: `LoginPage` に email/password フォームを実装し `useAuth().login()` を呼ぶ。バリデーション・エラー表示は旧 `auth/login.blade.php` の挙動（422 の `errors` 表示・`auth.failed` メッセージ）を踏襲。
   - **1-6 について**: `admin` alias は `bootstrap/app.php` で登録済み・`AdminMiddleware` は `$request->user()->isAdmin()` 判定でガード非依存。admin 専用 API ルートを足す回（例: 3-9 設定/ユーザー管理の API 化）に `->middleware('admin')` を付与して実質達成すればよく、単独セッションを割く必要は薄い。
 
 ### 既知の課題（移設前から存在 / 本移行の前提ではない）
