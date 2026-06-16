@@ -38,8 +38,8 @@
 | 0-1 | Laravel 一式を `api/` へ移設 | ☑ | `git mv` 済 |
 | 0-2 | ルート `.gitignore`（モノレポ用）作成 | ☑ | |
 | 0-3 | `docker-compose.yml` を `api/` 参照へ更新＋`frontend` サービス追加 | ☑ | Vite 用 5173 ポート |
-| 0-4 | `api/` 単体で `composer install` → `php artisan test` が通ることを確認 | ☐ | 移設後の健全性チェック |
-| 0-5 | CI ワークフロー（`.github/workflows/*`）のパスを `api/` 基準へ更新 | ☐ | code_build / run-tests / code_analysis |
+| 0-4 | `api/` 単体で `composer install` → `php artisan test` が通ることを確認 | ☑ | **232 passed**。失敗3件は移設前から存在する `ContactsTest`（`contact_id`→`id` リファクタにテスト未追従）で移設とは無関係。検証中に PSR-4 不整合 `keyword.php`→`Keyword.php` を修正 |
+| 0-5 | CI ワークフロー（`.github/workflows/*`）のパスを `api/` 基準へ更新 | ☑ | run-tests / code_analysis / code_security / code_build を `working-directory: api`・キャッシュ/DBパス更新。`deploy-to-prod.yml` はモノレポ向けデプロイ再設計が必要なため **Phase 4-5 へ委譲** |
 
 ### Phase 1 — バックエンド API 基盤
 
@@ -239,7 +239,13 @@
 
 ## 5. 申し送り・メモ（随時追記）
 
-- 2026-06-16: Phase 0 で Laravel を `api/` へ移設、`docker-compose.yml` 更新、ルート `.gitignore` 追加。
-  Phase 1 で `User` に `HasApiTokens`、`Api\AuthController`・`Api\DashboardController`・`Api\InventoryStockController`・`Api\DeviceController` を実装（**`routes/api.php` への登録は未**＝1-3 で実施）。
-- 次の推奨タスク: **0-4（移設後の `php artisan test` 健全性確認）→ 1-3（API ルート登録）→ 2-1（frontend 初期化）**。
+- 2026-06-16: **Phase 0 完了**。Laravel を `api/` へ移設、`docker-compose.yml` 更新、ルート `.gitignore` 追加。
+  移設後の健全性確認（0-4）として `composer install`＋`php artisan test` を実施し **232 passed** を確認。
+  CI 4 ワークフロー（0-5）を `api/` 基準へ更新。
+- 2026-06-16: Phase 1 で `User` に `HasApiTokens`、`Api\AuthController`・`Api\DashboardController`・`Api\InventoryStockController`・`Api\DeviceController` を実装（**`routes/api.php` への登録は未**＝1-3 で実施）。
+- 次の推奨タスク: **1-3（API ルート登録）→ 1-4（CORS/Sanctum）→ 2-1（frontend 初期化）**。
 - 注意: 認証は当初 Sanctum トークン方式で確定。CSV 一括・バーコード・カメラスキャン・ドラッグ並び替え・グラフは移植難度が高いため、対象ドメインの後半で個別設計する。
+
+### 既知の課題（移設前から存在 / 本移行の前提ではない）
+- `tests/Unit/Models/ContactsTest` の3ケースが失敗。直近の「personnel → contact」リファクタで `Contacts` モデルの主キーが `contact_id`→`id`（auto-increment）へ変わった一方、テストが旧仕様（`contact_id` 主キー・非incrementing・fillable に `contact_id`）を期待しているため。**移設とは無関係**。設定（3-5 の担当者画面 / API 化）の際にモデル仕様へ追従させて解消する。
+- `tests/Feature/*` の一部は Blade を描画するため `php artisan test` 前に `npm run build`（Vite manifest 生成）が必要。Blade 全廃（Phase 4-1）まではこの前提を維持。
