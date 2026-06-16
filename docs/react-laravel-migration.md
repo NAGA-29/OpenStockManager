@@ -58,7 +58,7 @@
 | --- | --- | --- | --- |
 | 2-1 | Vite + React + TS プロジェクト初期化（`package.json`, `tsconfig`, `vite.config.ts`） | ☑ | `frontend/` 作成。Vite5+React18+TS、Router/Axios/TanStack Query を依存に追加。`npm run build`/`typecheck`/`lint` green、dev は 5173 で 200 応答 |
 | 2-2 | Axios クライアント（baseURL, トークン注入, 401 ハンドリング） | ☑ | `src/lib/api.ts`＋`src/lib/token.ts`。baseURL=`${VITE_API_BASE_URL}/api`、Bearer 自動付与、401 で token 破棄＋`/login` 誘導 |
-| 2-3 | 認証コンテキスト＋トークン永続化（localStorage） | ☐ | `src/auth/` |
+| 2-3 | 認証コンテキスト＋トークン永続化（localStorage） | ☑ | `src/auth/`（context/AuthProvider/useAuth/types）。起動時 `me` 復元・`login`/`logout`。`main.tsx` で全体を Provider 包み |
 | 2-4 | React Router 設定＋認証ガード（ProtectedRoute） | ☐ | `src/router.tsx` |
 | 2-5 | 共通レイアウト（サイドバー／ヘッダー／フッター）移植 | ☐ | `layouts/sidebar.blade.php` 参照 |
 | 2-6 | 共通 UI（テーブル, モーダル, トースト, ローディング, アラート） | ☐ | sweetalert2/toastr 相当を選定 |
@@ -263,8 +263,11 @@
   依存に **React Router / Axios / TanStack Query** を追加済み（2-2〜2-4 で利用）。`npm install`（外部レジストリ到達 OK）→ `npm run typecheck` / `npm run build` / `npm run lint` すべて green、`npm run dev` で 5173 が HTTP 200 応答を確認。`package-lock.json` も追跡（再現性のため）。
 - 2026-06-16: **2-2 完了**。`frontend/src/lib/api.ts`（共有 Axios インスタンス）と `src/lib/token.ts`（localStorage トークン永続化、キー `osm_token`）を追加。
   baseURL=`${VITE_API_BASE_URL}/api`、リクエスト時に `Authorization: Bearer <token>` を自動付与、401 応答時は token 破棄＋`/login` へ誘導（`/auth/login`・`/auth/me` の 401 はリダイレクトせず呼び出し側で処理）。`typecheck`/`build`/`lint` green（未 import のため現状バンドルからは tree-shake、型検査は通過）。
-- 次の推奨タスク: **2-3（認証コンテキスト＋トークン永続化 `src/auth/`）→ 2-4（React Router＋ProtectedRoute `src/router.tsx`）→ 2-5（共通レイアウト移植）**。
-  - 2-3 メモ: `AuthContext` で `user`/`login()`/`logout()`/`isLoading` を提供。`login()` は `POST /api/auth/login`→`setToken`→`me` 取得。起動時に token があれば `GET /api/auth/me` で復元、失敗時 `clearToken`。`logout()` は `POST /api/auth/logout`→`clearToken`。token/api ヘルパは `src/lib/` に実装済み。
+- 2026-06-16: **2-3 完了**。`frontend/src/auth/` に認証基盤を追加（lint `react-refresh` 対策でファイル分割）。
+  `context.ts`（`AuthContext`）・`AuthProvider.tsx`（状態供給）・`useAuth.ts`（参照フック）・`types.ts`（`AuthUser`/`AuthContextValue`）。
+  起動時にトークンがあれば `GET /api/auth/me` で復元（失敗時 `clearToken`）、`login()`=`POST /api/auth/login`→`setToken`→user 設定、`logout()`=`POST /api/auth/logout`→`clearToken`。`main.tsx` で全体を `AuthProvider` で包み、`App.tsx` で認証状態を表示。`typecheck`/`build`/`lint` green。
+- 次の推奨タスク: **2-4（React Router＋ProtectedRoute `src/router.tsx`）→ 2-5（共通レイアウト：サイドバー/ヘッダー/フッター 移植）→ 3-1 認証画面（`/login` など）**。
+  - 2-4 メモ: `react-router-dom` 導入済み。`ProtectedRoute` は `useAuth()` の `isLoading` 中はローディング、未認証なら `/login` へ `<Navigate>`。最低限 `/login`（3-1 で中身）・`/dashboard`（3-2）・404 を定義し、`main.tsx` を `RouterProvider`/`BrowserRouter` 構成へ。`api.ts` の 401 リダイレクト先は `/login` で一致済み。
   - **1-6 について**: `admin` alias は `bootstrap/app.php` で登録済み・`AdminMiddleware` は `$request->user()->isAdmin()` 判定でガード非依存。admin 専用 API ルートを足す回（例: 3-9 設定/ユーザー管理の API 化）に `->middleware('admin')` を付与して実質達成すればよく、単独セッションを割く必要は薄い。
 
 ### 既知の課題（移設前から存在 / 本移行の前提ではない）
