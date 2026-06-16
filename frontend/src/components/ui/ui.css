@@ -1,0 +1,207 @@
+/* 共通 UI コンポーネントのスタイル（2-6）。旧 Bootstrap/toastr/sweetalert2 相当を素の CSS で。 */
+
+/* ---- 共通ユーティリティ ---- */
+.text-danger {
+  color: #dc2626;
+  font-weight: 700;
+}
+.text-warning {
+  color: #d97706;
+  font-weight: 700;
+}
+.text-success {
+  color: #059669;
+  font-weight: 700;
+}
+
+/* ページ見出しバー */
+.page-bar {
+  background-color: #212529;
+  color: #fff;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+.page-bar i {
+  margin-right: 0.5rem;
+}
+
+/* ---- Loading ---- */
+.ui-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1.5rem 0;
+  color: #64748b;
+}
+.ui-loading__spinner {
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 2px solid #cbd5e1;
+  border-top-color: #2c22bd;
+  border-radius: 50%;
+  animation: ui-spin 0.7s linear infinite;
+}
+@keyframes ui-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---- Alert ---- */
+.ui-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid transparent;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+.ui-alert--info {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1e40af;
+}
+.ui-alert--success {
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+  color: #065f46;
+}
+.ui-alert--warning {
+  background: #fffbeb;
+  border-color: #fde68a;
+  color: #92400e;
+}
+.ui-alert--danger {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+/* ---- DataTable ---- */
+.ui-table__wrap {
+  overflow-x: auto;
+}
+.ui-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  background: #fff;
+}
+.ui-table th,
+.ui-table td {
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  white-space: nowrap;
+  border-top: 1px solid #f1f5f9;
+}
+.ui-table thead th {
+  background-color: #f8fafc;
+  border-top: none;
+  font-weight: 600;
+  color: #475569;
+}
+.ui-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+.ui-table a {
+  color: #2c22bd;
+  text-decoration: none;
+}
+.ui-table a:hover {
+  text-decoration: underline;
+}
+.ui-table__empty {
+  padding: 1rem;
+  margin: 0;
+  color: #64748b;
+}
+
+/* ---- Modal ---- */
+.ui-modal__backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 1050;
+}
+.ui-modal {
+  background: #fff;
+  border-radius: 0.5rem;
+  width: 100%;
+  max-width: 640px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 1.25rem 2.5rem rgba(0, 0, 0, 0.25);
+}
+.ui-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1.25rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+.ui-modal__title {
+  margin: 0;
+  font-size: 1.1rem;
+}
+.ui-modal__close {
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  color: #64748b;
+}
+.ui-modal__body {
+  padding: 1.25rem;
+  overflow-y: auto;
+}
+.ui-modal__footer {
+  padding: 0.85rem 1.25rem;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+/* ---- Toast ---- */
+.ui-toast-container {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.ui-toast {
+  min-width: 240px;
+  max-width: 360px;
+  padding: 0.7rem 1rem;
+  border-radius: 0.5rem;
+  color: #fff;
+  font-size: 0.9rem;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+}
+.ui-toast--info {
+  background: #2563eb;
+}
+.ui-toast--success {
+  background: #059669;
+}
+.ui-toast--warning {
+  background: #d97706;
+}
+.ui-toast--danger {
+  background: #dc2626;
+}
