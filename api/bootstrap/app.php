@@ -69,28 +69,48 @@ return Application::configure(basePath: dirname(__DIR__))
             Integration::captureUnhandledException($e);
         });
 
-        $exceptions->render(function (DeviceException $e, Request $request) {
+        // API リクエスト（api/* もしくは JSON 期待）の判定。
+        // SPA(React) からの呼び出しはリダイレクトでなく JSON で返す。
+        $wantsJson = static fn (Request $request): bool => $request->is('api/*') || $request->expectsJson();
+
+        $exceptions->render(function (DeviceException $e, Request $request) use ($wantsJson) {
             Log::channel('error')->error('device.exception.unhandled', [
                 'error_message' => $e->getMessage(),
                 'error_class' => $e::class,
                 'context' => $e->getContext(),
             ]);
 
+            if ($wantsJson($request)) {
+                return response()->json([
+                    'message' => $e->getMessage(),
+                    'context' => $e->getContext(),
+                ], 422);
+            }
+
             return redirect()->back()->with('error_message', $e->getMessage());
         });
 
-        $exceptions->render(function (ImageProcessingException $e, Request $request) {
+        $exceptions->render(function (ImageProcessingException $e, Request $request) use ($wantsJson) {
             Log::channel('error')->error('image.processing.exception.unhandled', [
                 'error_message' => $e->getMessage(),
                 'error_class' => $e::class,
                 'context' => $e->getContext(),
             ]);
 
+            if ($wantsJson($request)) {
+                return response()->json([
+                    'message' => $e->getMessage(),
+                    'context' => $e->getContext(),
+                ], 422);
+            }
+
             return redirect()->back()->with('error_message', $e->getMessage());
         });
 
-        $exceptions->respond(function (Response $response) {
-            if ($response->getStatusCode() === 419) {
+        $exceptions->respond(function (Response $response, \Throwable $e, Request $request) {
+            // 419(CSRF/セッション切れ)は Blade のみログインへリダイレクト。
+            // API はトークン方式のため 419 リダイレクトは行わず JSON のまま返す。
+            if ($response->getStatusCode() === 419 && ! ($request->is('api/*') || $request->expectsJson())) {
                 return redirect('login');
             }
 

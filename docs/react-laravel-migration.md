@@ -47,19 +47,19 @@
 | --- | --- | --- | --- |
 | 1-1 | `User` に `HasApiTokens` 追加 | ☑ | Sanctum |
 | 1-2 | `Api\AuthController`（login / me / logout） | ☑ | トークン発行 |
-| 1-3 | `routes/api.php` に認証＋保護ルートを登録 | ☐ | `auth:sanctum` グループ |
-| 1-4 | CORS / Sanctum 設定をフロントのオリジンに合わせる | ☐ | `config/cors.php`, `SANCTUM_STATEFUL_DOMAINS` |
-| 1-5 | 例外を API では JSON で返すよう調整（419 リダイレクト除去等） | ☐ | `bootstrap/app.php` |
+| 1-3 | `routes/api.php` に認証＋保護ルートを登録 | ☑ | `auth:sanctum` グループ。login（公開）/ me・logout・dashboard・inventory/stocks・devices を登録。Sanctum 用 `expires_at` 列追加移行も実施 |
+| 1-4 | CORS / Sanctum 設定をフロントのオリジンに合わせる | ☑ | `config/cors.php` に `FRONTEND_URL`(既定 `http://localhost:5173`)を追加。`config/sanctum.php` を公開し `SANCTUM_STATEFUL_DOMAINS` を env 化。`.env.example` 追記 |
+| 1-5 | 例外を API では JSON で返すよう調整（419 リダイレクト除去等） | ☑ | `bootstrap/app.php`。`api/*`/`expectsJson` 時は DeviceException・ImageProcessingException を 422 JSON 化、419 リダイレクトは Blade のみに限定 |
 | 1-6 | `admin` ミドルウェアを API ルートでも利用可能に | ☐ | 既存 alias 流用 |
 
 ### Phase 2 — フロント基盤（`frontend/`）
 
 | # | タスク | 状態 | 備考 |
 | --- | --- | --- | --- |
-| 2-1 | Vite + React + TS プロジェクト初期化（`package.json`, `tsconfig`, `vite.config.ts`） | ☐ | |
-| 2-2 | Axios クライアント（baseURL, トークン注入, 401 ハンドリング） | ☐ | `src/lib/api.ts` |
-| 2-3 | 認証コンテキスト＋トークン永続化（localStorage） | ☐ | `src/auth/` |
-| 2-4 | React Router 設定＋認証ガード（ProtectedRoute） | ☐ | `src/router.tsx` |
+| 2-1 | Vite + React + TS プロジェクト初期化（`package.json`, `tsconfig`, `vite.config.ts`） | ☑ | `frontend/` 作成。Vite5+React18+TS、Router/Axios/TanStack Query を依存に追加。`npm run build`/`typecheck`/`lint` green、dev は 5173 で 200 応答 |
+| 2-2 | Axios クライアント（baseURL, トークン注入, 401 ハンドリング） | ☑ | `src/lib/api.ts`＋`src/lib/token.ts`。baseURL=`${VITE_API_BASE_URL}/api`、Bearer 自動付与、401 で token 破棄＋`/login` 誘導 |
+| 2-3 | 認証コンテキスト＋トークン永続化（localStorage） | ☑ | `src/auth/`（context/AuthProvider/useAuth/types）。起動時 `me` 復元・`login`/`logout`。`main.tsx` で全体を Provider 包み |
+| 2-4 | React Router 設定＋認証ガード（ProtectedRoute） | ☑ | `src/router.tsx`（createBrowserRouter）＋`auth/ProtectedRoute`。`/login`公開・保護下に`/dashboard`・`*`→404。プレースホルダ画面で骨組み |
 | 2-5 | 共通レイアウト（サイドバー／ヘッダー／フッター）移植 | ☐ | `layouts/sidebar.blade.php` 参照 |
 | 2-6 | 共通 UI（テーブル, モーダル, トースト, ローディング, アラート） | ☐ | sweetalert2/toastr 相当を選定 |
 | 2-7 | TanStack Query 導入＋エラーハンドリング共通化 | ☐ | |
@@ -243,8 +243,36 @@
   移設後の健全性確認（0-4）として `composer install`＋`php artisan test` を実施し **232 passed** を確認。
   CI 4 ワークフロー（0-5）を `api/` 基準へ更新。
 - 2026-06-16: Phase 1 で `User` に `HasApiTokens`、`Api\AuthController`・`Api\DashboardController`・`Api\InventoryStockController`・`Api\DeviceController` を実装（**`routes/api.php` への登録は未**＝1-3 で実施）。
-- 次の推奨タスク: **1-3（API ルート登録）→ 1-4（CORS/Sanctum）→ 2-1（frontend 初期化）**。
+- 2026-06-16: **1-3 完了**。`routes/api.php` に Sanctum トークン認証ルートを登録。
+  公開: `POST /api/auth/login`。`auth:sanctum` 保護: `GET /api/auth/me`・`POST /api/auth/logout`・`GET /api/dashboard`・`GET /api/inventory/stocks`・`GET /api/devices/category/{code}`・`GET /api/devices/{deviceId}`。
+  既存の `personal_access_tokens` 移行（2019 年・tokenable_id 文字列化のカスタム版）に Sanctum v4 が要求する `expires_at` 列が無くトークン発行が失敗したため、既存定義を壊さない追加移行を作成。
+  `tests/Feature/Api/ApiRoutesTest`（login 成否・401 ガード・認証済みアクセス）を追加し **9 件 green**。全体は **241 passed**（既知の ContactsTest 3 件のみ失敗）。
+- 2026-06-16: **1-4 完了**。`config/cors.php` の `allowed_origins` に `FRONTEND_URL`（既定 `http://localhost:5173`）を追加（既存の `APP_URL`・`script.google.com` は踏襲）。
+  `config/sanctum.php` を公開し `stateful` を `SANCTUM_STATEFUL_DOMAINS`（既定に Vite 5173 を含む）で env 化、`expiration` を `SANCTUM_TOKEN_EXPIRATION` 化。`.env.example` に `FRONTEND_URL`・`SANCTUM_STATEFUL_DOMAINS` を追記。
+  `ApiRoutesTest` にフロントオリジンの CORS プリフライト確認を追加し全体 **242 passed**（既知の ContactsTest 3 件のみ失敗）。
+  補足: 認証は Bearer トークン方式が主のため stateful Cookie は現状必須でないが、将来切替に備え設定済み。
+- 2026-06-16: **1-5 完了**。`bootstrap/app.php` の例外レンダリングを API 対応化。
+  `$request->is('api/*') || expectsJson()` の場合、`DeviceException`・`ImageProcessingException` を `redirect()->back()` でなく **422 JSON（`message`/`context`）** で返す。419 のログインリダイレクトは Blade のみに限定（API はトークン方式のため JSON のまま）。
+  Blade 側の既存挙動（redirect back / login）は `HandlerTest` 既存ケースで維持を確認、API JSON ケースを追加し全体 **244 passed**（既知の ContactsTest 3 件のみ失敗）。
+- 次の推奨タスク: **1-6（admin ミドルウェアを API でも利用可）→ 2-1（frontend 初期化）**。
+  - 補足: `admin` alias は `bootstrap/app.php` で登録済み・`AdminMiddleware` は `$request->user()->isAdmin()` 判定でガード非依存のため、1-6 は「admin 必須の API ルートを実際に追加する時に `->middleware('admin')` を付与する」運用で足りる見込み（現状 admin 専用 API ルート未追加）。Blade 同等の admin 画面（users 等）の API 化時に適用すること。
 - 注意: 認証は当初 Sanctum トークン方式で確定。CSV 一括・バーコード・カメラスキャン・ドラッグ並び替え・グラフは移植難度が高いため、対象ドメインの後半で個別設計する。
+
+- 2026-06-16: **2-1 完了**。リポジトリ直下に `frontend/`（Vite5 + React18 + TypeScript）を作成。
+  構成: `package.json`（`dev`/`build`/`preview`/`lint`/`typecheck` スクリプト）・`tsconfig.json`（strict・`@/*`→`src/*` エイリアス）・`vite.config.ts`（`server.host=true`/`port=5173`/`strictPort`・`@` エイリアス）・`index.html`・`src/main.tsx`・`src/App.tsx`（プレースホルダ、`VITE_API_BASE_URL` 表示）・`src/index.css`・`src/vite-env.d.ts`（env 型）・`.eslintrc.cjs`・`.env.example`・`.gitignore`。
+  依存に **React Router / Axios / TanStack Query** を追加済み（2-2〜2-4 で利用）。`npm install`（外部レジストリ到達 OK）→ `npm run typecheck` / `npm run build` / `npm run lint` すべて green、`npm run dev` で 5173 が HTTP 200 応答を確認。`package-lock.json` も追跡（再現性のため）。
+- 2026-06-16: **2-2 完了**。`frontend/src/lib/api.ts`（共有 Axios インスタンス）と `src/lib/token.ts`（localStorage トークン永続化、キー `osm_token`）を追加。
+  baseURL=`${VITE_API_BASE_URL}/api`、リクエスト時に `Authorization: Bearer <token>` を自動付与、401 応答時は token 破棄＋`/login` へ誘導（`/auth/login`・`/auth/me` の 401 はリダイレクトせず呼び出し側で処理）。`typecheck`/`build`/`lint` green（未 import のため現状バンドルからは tree-shake、型検査は通過）。
+- 2026-06-16: **2-3 完了**。`frontend/src/auth/` に認証基盤を追加（lint `react-refresh` 対策でファイル分割）。
+  `context.ts`（`AuthContext`）・`AuthProvider.tsx`（状態供給）・`useAuth.ts`（参照フック）・`types.ts`（`AuthUser`/`AuthContextValue`）。
+  起動時にトークンがあれば `GET /api/auth/me` で復元（失敗時 `clearToken`）、`login()`=`POST /api/auth/login`→`setToken`→user 設定、`logout()`=`POST /api/auth/logout`→`clearToken`。`main.tsx` で全体を `AuthProvider` で包み、`App.tsx` で認証状態を表示。`typecheck`/`build`/`lint` green。
+- 2026-06-16: **2-4 完了**。`frontend/src/router.tsx`（`createBrowserRouter`）と `auth/ProtectedRoute.tsx` を追加。
+  ルート: `/login`（公開）／`ProtectedRoute` 配下に index→`/dashboard` リダイレクト・`/dashboard`／`*`→404。`main.tsx` を `AuthProvider`＋`RouterProvider` 構成へ変更し、未使用化した `App.tsx` を削除。
+  プレースホルダ画面 `pages/`（LoginPage/DashboardPage/NotFoundPage）で骨組みのみ用意（ログインフォーム実体は 3-1、ダッシュボード集計は 3-2）。`ProtectedRoute` は `isLoading` 中ローディング・未認証は `/login` へ `<Navigate replace>`。`api.ts` の 401 リダイレクト先 `/login` と一致。`typecheck`/`build`/`lint` green、dev で `/login`・`/dashboard` が 200。
+- 次の推奨タスク: **2-5（共通レイアウト：サイドバー/ヘッダー/フッター 移植 `layouts/sidebar.blade.php` 参照）→ 2-6（共通 UI：テーブル/モーダル/トースト等）→ 3-1 認証画面（`/login` フォーム実装）**。
+  - 2-5 メモ: 旧 `resources/views/layouts/sidebar.blade.php`・`app.blade.php`・`footer.blade.php` を参照し `AppLayout`/`Sidebar`/`Footer` を作成。`ProtectedRoute` 配下のレイアウトルートとして差し込み、各保護ページを `<Outlet>` に流す構成が素直。サイドバーのメニュー項目は Blade の権限分岐（admin のみ表示）を踏襲（`useAuth().user.is_admin`）。
+  - 3-1 メモ: `LoginPage` に email/password フォームを実装し `useAuth().login()` を呼ぶ。バリデーション・エラー表示は旧 `auth/login.blade.php` の挙動（422 の `errors` 表示・`auth.failed` メッセージ）を踏襲。
+  - **1-6 について**: `admin` alias は `bootstrap/app.php` で登録済み・`AdminMiddleware` は `$request->user()->isAdmin()` 判定でガード非依存。admin 専用 API ルートを足す回（例: 3-9 設定/ユーザー管理の API 化）に `->middleware('admin')` を付与して実質達成すればよく、単独セッションを割く必要は薄い。
 
 ### 既知の課題（移設前から存在 / 本移行の前提ではない）
 - `tests/Unit/Models/ContactsTest` の3ケースが失敗。直近の「personnel → contact」リファクタで `Contacts` モデルの主キーが `contact_id`→`id`（auto-increment）へ変わった一方、テストが旧仕様（`contact_id` 主キー・非incrementing・fillable に `contact_id`）を期待しているため。**移設とは無関係**。設定（3-5 の担当者画面 / API 化）の際にモデル仕様へ追従させて解消する。

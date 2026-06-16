@@ -1,6 +1,9 @@
 <?php
 
-use Illuminate\Http\Request;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\DeviceController;
+use App\Http\Controllers\Api\InventoryStockController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -8,12 +11,28 @@ use Illuminate\Support\Facades\Route;
 | API Routes
 |--------------------------------------------------------------------------
 |
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| is assigned the "api" middleware group. Enjoy building your API!
+| SPA(React)向けの JSON API ルート。認証は Laravel Sanctum の
+| Personal Access Token 方式（`auth:sanctum`）。フロントは
+| `Authorization: Bearer <token>` を付与する。
 |
 */
 
-Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
+// 認証不要
+Route::post('/auth/login', [AuthController::class, 'login'])->name('api.auth.login');
+
+// 認証必須（Sanctum トークン）
+Route::middleware('auth:sanctum')->group(function () {
+    // 認証
+    Route::get('/auth/me', [AuthController::class, 'me'])->name('api.auth.me');
+    Route::post('/auth/logout', [AuthController::class, 'logout'])->name('api.auth.logout');
+
+    // ダッシュボード
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('api.dashboard');
+
+    // 在庫 - 数量管理
+    Route::get('/inventory/stocks', [InventoryStockController::class, 'index'])->name('api.inventory.stocks');
+
+    // 在庫 - 個別管理（カテゴリ別一覧／端末詳細）
+    Route::get('/devices/category/{code}', [DeviceController::class, 'byCategory'])->name('api.devices.category');
+    Route::get('/devices/{deviceId}', [DeviceController::class, 'show'])->name('api.devices.show');
 });
