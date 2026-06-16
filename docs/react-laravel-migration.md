@@ -56,7 +56,7 @@
 
 | # | タスク | 状態 | 備考 |
 | --- | --- | --- | --- |
-| 2-1 | Vite + React + TS プロジェクト初期化（`package.json`, `tsconfig`, `vite.config.ts`） | ☐ | |
+| 2-1 | Vite + React + TS プロジェクト初期化（`package.json`, `tsconfig`, `vite.config.ts`） | ☑ | `frontend/` 作成。Vite5+React18+TS、Router/Axios/TanStack Query を依存に追加。`npm run build`/`typecheck`/`lint` green、dev は 5173 で 200 応答 |
 | 2-2 | Axios クライアント（baseURL, トークン注入, 401 ハンドリング） | ☐ | `src/lib/api.ts` |
 | 2-3 | 認証コンテキスト＋トークン永続化（localStorage） | ☐ | `src/auth/` |
 | 2-4 | React Router 設定＋認証ガード（ProtectedRoute） | ☐ | `src/router.tsx` |
@@ -258,17 +258,12 @@
   - 補足: `admin` alias は `bootstrap/app.php` で登録済み・`AdminMiddleware` は `$request->user()->isAdmin()` 判定でガード非依存のため、1-6 は「admin 必須の API ルートを実際に追加する時に `->middleware('admin')` を付与する」運用で足りる見込み（現状 admin 専用 API ルート未追加）。Blade 同等の admin 画面（users 等）の API 化時に適用すること。
 - 注意: 認証は当初 Sanctum トークン方式で確定。CSV 一括・バーコード・カメラスキャン・ドラッグ並び替え・グラフは移植難度が高いため、対象ドメインの後半で個別設計する。
 
-### 次セッション向け指示書（2-1: frontend 初期化）
-> Phase 1 のバックエンド基盤（API ルート/CORS/Sanctum/例外 JSON 化）は完了。次は `frontend/` の Vite + React + TS 雛形を作る。
-
-- **作成場所**: リポジトリ直下に `frontend/`（`api/` と並列のモノレポ。`docker-compose.yml` の `frontend` サービスが `./frontend:/app` をマウント、`npm install && npm run dev -- --host`、ポート 5173 を期待）。
-- **スタック**（§1 アーキテクチャ決定に準拠）: React 18 + TypeScript + Vite + React Router + Axios + TanStack Query。
-- **最低限のスキャフォルド**: `package.json` / `tsconfig.json` / `vite.config.ts`（`server.port=5173`, `server.host=true`）/ `index.html` / `src/main.tsx` / `src/App.tsx`。`.gitignore` に `node_modules`・`dist`。
-- **env 連携**: API ベース URL は `VITE_API_BASE_URL`（docker-compose 既定 `http://localhost`）。`src/lib/api.ts`（2-2）で使う前提で `import.meta.env.VITE_API_BASE_URL` を読む方針。CORS 許可オリジンは API 側 `FRONTEND_URL=http://localhost:5173`（設定済み）。
-- **検証（DoD）**: `cd frontend && npm install && npm run build` が通ること（型・ビルド）。`npm run dev` で 5173 起動確認できればなお良い。
-- **コミット**: 1タスク=1コミット。`feat(react-migration): frontend(Vite+React+TS) を初期化 (2-1)`。
-- **注意**: この環境ではネットワークポリシー次第で `npm install` が外部レジストリにアクセスできない場合がある。失敗したら package.json 等の雛形だけ用意し、§5 に「依存インストール未検証」を明記して申し送ること。
-- **1-6 について**: 上述の通り alias は登録済み・middleware はガード非依存。admin 専用 API ルートを足す回（例: 3-9 設定/ユーザー管理の API 化）に `->middleware('admin')` を付けて実質達成すればよい。単独セッションを割く必要は薄い。
+- 2026-06-16: **2-1 完了**。リポジトリ直下に `frontend/`（Vite5 + React18 + TypeScript）を作成。
+  構成: `package.json`（`dev`/`build`/`preview`/`lint`/`typecheck` スクリプト）・`tsconfig.json`（strict・`@/*`→`src/*` エイリアス）・`vite.config.ts`（`server.host=true`/`port=5173`/`strictPort`・`@` エイリアス）・`index.html`・`src/main.tsx`・`src/App.tsx`（プレースホルダ、`VITE_API_BASE_URL` 表示）・`src/index.css`・`src/vite-env.d.ts`（env 型）・`.eslintrc.cjs`・`.env.example`・`.gitignore`。
+  依存に **React Router / Axios / TanStack Query** を追加済み（2-2〜2-4 で利用）。`npm install`（外部レジストリ到達 OK）→ `npm run typecheck` / `npm run build` / `npm run lint` すべて green、`npm run dev` で 5173 が HTTP 200 応答を確認。`package-lock.json` も追跡（再現性のため）。
+- 次の推奨タスク: **2-2（Axios クライアント `src/lib/api.ts`：baseURL=`VITE_API_BASE_URL`／Bearer トークン注入／401 ハンドリング）→ 2-3（認証コンテキスト＋localStorage 永続化）→ 2-4（React Router＋ProtectedRoute）**。
+  - 2-2 メモ: トークンキーは localStorage（例 `osm_token`）。401 時はトークン破棄＋ログインへ誘導。対応 API は実装済み `POST /api/auth/login`・`GET /api/auth/me`・`POST /api/auth/logout`。
+  - **1-6 について**: `admin` alias は `bootstrap/app.php` で登録済み・`AdminMiddleware` は `$request->user()->isAdmin()` 判定でガード非依存。admin 専用 API ルートを足す回（例: 3-9 設定/ユーザー管理の API 化）に `->middleware('admin')` を付与して実質達成すればよく、単独セッションを割く必要は薄い。
 
 ### 既知の課題（移設前から存在 / 本移行の前提ではない）
 - `tests/Unit/Models/ContactsTest` の3ケースが失敗。直近の「personnel → contact」リファクタで `Contacts` モデルの主キーが `contact_id`→`id`（auto-increment）へ変わった一方、テストが旧仕様（`contact_id` 主キー・非incrementing・fillable に `contact_id`）を期待しているため。**移設とは無関係**。設定（3-5 の担当者画面 / API 化）の際にモデル仕様へ追従させて解消する。
