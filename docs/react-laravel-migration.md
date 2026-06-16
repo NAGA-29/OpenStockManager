@@ -70,7 +70,7 @@
 
 | # | ドメイン | 状態 | 主担当画面数 |
 | --- | --- | --- | --- |
-| 3-1 | 認証（ログイン／パスワード／メール認証） | ☐ | 7 |
+| 3-1 | 認証（ログイン／パスワード／メール認証） | ◐ | 7（ログインのみ完了） |
 | 3-2 | ダッシュボード | ◐ | 1（API済・UI未） |
 | 3-3 | 在庫（数量管理／個別管理／端末詳細／バーコード） | ◐ | 7（一部API済） |
 | 3-4 | 端末登録（単体／CSV一括／確認） | ☐ | 5 |
@@ -102,7 +102,7 @@
 ### 3-1 認証
 | Blade | React ルート | API | 状態 |
 | --- | --- | --- | --- |
-| `auth/login` | `/login` | `POST /api/auth/login` | ☐ |
+| `auth/login` | `/login` | `POST /api/auth/login` | ☑ |
 | `auth/passwords/email` | `/password/forgot` | `POST /api/auth/password/email` | ☐ |
 | `auth/passwords/reset` | `/password/reset` | `POST /api/auth/password/reset` | ☐ |
 | `auth/passwords/confirm` | `/password/confirm` | `POST /api/auth/password/confirm` | ☐ |
@@ -275,9 +275,17 @@
   - **admin 権限踏襲**: 旧 `web.php` で `admin` ミドルウェア保護のルート（`user.list`・`device_categories.*`・`device_fields.*`）に対応するサイドバー項目（ユーザー／機材カテゴリ／カスタムフィールド）を `useAuth().user.is_admin` で出し分け。`設定 > 外部連携` は非 admin でも表示（プレースホルダ）。
   - 各メニューの遷移先は §3 の React ルートに合わせて設定済み（多くは Phase 3 で未実装のため現状 404。レイアウト骨組みとしては機能）。`DashboardPage` はレイアウト配下に収まるよう `app-shell`/重複ログアウトボタンを除去。`index.html` に FontAwesome v5.15.1 CDN を追加（アイコン表示）。
   - DoD: `cd frontend && npm run typecheck && npm run build && npm run lint` すべて green（lint `--max-warnings 0` 通過）。
-- 次の推奨タスク: **3-1（`/login` フォーム実装）→ 2-6（共通 UI：テーブル/モーダル/トースト等）→ 2-7（TanStack Query 導入）**。
-  - 3-1 メモ: `LoginPage` に email/password フォームを実装し `useAuth().login()` を呼ぶ。バリデーション・エラー表示は旧 `auth/login.blade.php` の挙動（422 の `errors` 表示・`auth.failed` メッセージ）を踏襲。
-  - 2-5 残課題（後続で対応）: 上部バーのカートボタン（旧 `InCartModal`）は Phase 3-10 で配線するため未実装。`AuthLayout`（ログイン画面用レイアウト）は 3-1 で必要に応じて追加。ドロップダウンの外側クリックで閉じる挙動は未実装（トグルのみ）。
+- 2026-06-16: **3-1 ログインフォーム 完了**（認証ドメインのうちログイン画面のみ）。`frontend/src/pages/LoginPage.tsx` を実装＋`login.css` 追加。
+  - 旧 `auth/login.blade.php` の二分割カード（左：説明アサイド／右：フォーム）を Tailwind 非導入のため素の CSS で再現。email/password 制御入力＋送信中の無効化（`ログイン中…`）。
+  - 送信は `useAuth().login(email, password)`。成功時は `isAuthenticated` が true になり画面冒頭の `<Navigate to="/dashboard">` で遷移。
+  - **エラー踏襲**: 422 応答の `errors`（`auth.failed` は `errors.email` に入る）をフィールド単位で各入力欄下に表示（`is-invalid` 装飾）。その他の応答エラーは `message`、ネットワーク不通は接続エラーを上部 `login-alert` に表示。
+  - DoD: `typecheck`/`build`/`lint` すべて green。
+  - 残課題: `remember`（Remember Me）はトークン方式では効果がないため UI から省略（旧 Blade にはチェックボックスあり）。パスワードリセット／メール認証／メール変更／ユーザー登録（3-1 の残り 6 画面）は API 未実装のため未着手。
+- 次の推奨タスク: **2-6（共通 UI：テーブル/モーダル/トースト/ローディング/アラート）→ 2-7（TanStack Query 導入：`QueryClientProvider` を `main.tsx` に追加）→ 3-2 ダッシュボード本体（`GET /api/dashboard`）**。
+  - 2-6 メモ: 旧は sweetalert2/toastr 相当。React では軽量な自前トースト or ライブラリ選定。テーブルは旧 `table.css` の見た目を踏襲。
+  - 2-7 メモ: `@tanstack/react-query` は依存追加済み・未配線。`main.tsx` に `QueryClientProvider` を追加し、エラーハンドリング（401 は api.ts 側で処理済み）を共通化。
+  - 2-5 残課題（後続で対応）: 上部バーのカートボタン（旧 `InCartModal`）は Phase 3-10 で配線するため未実装。ナビのドロップダウンは外側クリックで閉じる挙動は未実装（トグルのみ）。
+  - **1-6 について**: `admin` alias 登録済み・`AdminMiddleware` はガード非依存。admin 専用 API ルートを足す回（3-9 設定等）で `->middleware('admin')` を付与すれば実質達成。
   - **1-6 について**: `admin` alias は `bootstrap/app.php` で登録済み・`AdminMiddleware` は `$request->user()->isAdmin()` 判定でガード非依存。admin 専用 API ルートを足す回（例: 3-9 設定/ユーザー管理の API 化）に `->middleware('admin')` を付与して実質達成すればよく、単独セッションを割く必要は薄い。
 
 ### 既知の課題（移設前から存在 / 本移行の前提ではない）
