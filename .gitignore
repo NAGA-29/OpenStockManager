@@ -1,36 +1,21 @@
-/node_modules
-/public/js
-/public/css
-/public/hot
-/public/storage
-/public/build/assets
-/public/build/manifest.json
-/storage/*.key
-/vendor
-.env
-.env.s3
-.env.backup
-.env.old
-.phpunit.result.cache
-docker-compose.override.yml
-Homestead.json
-Homestead.yaml
-npm-debug.log
-yarn-error.log
+# Monorepo root ignores
+# Backend ignores are in api/.gitignore, frontend in frontend/.gitignore
 
-# IDE 関連
+# OS / IDE
 /.idea
 /.vscode
+.DS_Store
 
-# AI 関連
+# AI tooling
 /.claude
 /.serena
 /.kiro
 /.agents
 
-# macOS 関連
-/.DS_Store
+# Docker override
+docker-compose.override.yml
 
-# pnpm セキュリティチェックキャッシュ（ローカル環境固有のため除外）
-.pnpm-age-cache.json
-/.pnpm-store
+# Node (root-level, just in case)
+node_modules
+npm-debug.log
+yarn-error.log
