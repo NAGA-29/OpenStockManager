@@ -74,7 +74,7 @@
 | 3-2 | ダッシュボード | ☑ | API済・UI実装済 |
 | 3-3 | 在庫（数量管理／個別管理／端末詳細／バーコード） | ◐ | 7（数量管理／個別管理／端末詳細 完了。バーコード/検索 残） |
 | 3-4 | 端末登録（単体／CSV一括／確認） | ◐ | 5（単体登録 完了。画像/CSV一括/確認 残） |
-| 3-5 | データ（スペック／ベンチマーク／企業／担当者） | ☐ | 8 |
+| 3-5 | データ（スペック／ベンチマーク／企業／担当者） | ◐ | 8（クライアント一覧/詳細 完了。登録/担当者/ファイル 残） |
 | 3-6 | 手続き・レンタル（カート／CSV／一括返却） | ☐ | 7 |
 | 3-7 | 手続き・販売（カート／CSV） | ☐ | 6 |
 | 3-8 | 履歴（レンタル／販売／詳細） | ☐ | 5 |
@@ -140,9 +140,9 @@
 | --- | --- | --- | --- |
 | `devices/device_spec_file` | `/device/file/spec` | `GET/POST /api/devices/file/spec` | ☐ |
 | `devices/device_benchmark_file` | `/device/file/benchmark` | `GET/POST /api/devices/file/benchmark` | ☐ |
-| `client/index` | `/clients` | `GET /api/clients` | ☐ |
+| `client/index` | `/clients` | `GET /api/clients` ✅実装済 | ☑ |
 | `client/register` | `/clients/register` | `POST /api/clients` | ☐ |
-| `client/client_detail` | `/clients/:id` | `GET /api/clients/:id` | ☐ |
+| `client/client_detail` | `/clients/:id` | `GET /api/clients/:id` ✅実装済 | ☑（読取。担当者一覧込み） |
 | `contacts/lists` | `/contacts` | `GET /api/contacts` | ☐ |
 | `contacts/register` | `/contacts/register` | `POST /api/contacts` | ☐ |
 | `contacts/detail` | `/contacts/:id` | `GET /api/contacts/:id` | ☐ |
@@ -315,7 +315,13 @@
   - **フロント**: `features/inventory/useDeviceFormOptions.ts`（query）・`useRegisterDevice.ts`（mutation）、`pages/RegisterDevicePage.tsx`（カテゴリ選択で動的カスタムフィールド描画・422 をフィールド単位表示・成功時トースト＋登録 ID バナー＋詳細リンク・フォームリセット）。`router.tsx` に `/device/register` を追加（サイドバー「登録 > 機材」と一致）。
   - 検証: `php artisan test` → **252 passed**（`DeviceApiTest` 計 8 件に。既知 ContactsTest 3 件のみ失敗）。`npm run typecheck && npm run build && npm run lint` すべて green。
   - **未実装（意図的）**: 端末写真アップロード（旧 `device_image`＝ImageProcessor/Storage、難度高につき後回し。UI に「準備中」表記）、`sale_date_at`（旧 `storeDevice` も未保存のため踏襲して省略）、CSV 一括登録／確認（`register_device_multi`／`confirmMulti`＝3-4 残）。コンディション選択肢は conditions テーブル（id 1-4）由来、バリデーションは `DeviceEnum::CONDITIONS`（1-5）由来。
-- 次の推奨タスク: **3-4 残（CSV 一括登録）** か **3-5 データ系**（`ContactsTest` 既知不整合の解消を兼ねる）。または 3-3 残（バーコード/検索）。いずれも「対応 API 実装済みか」を先に確認。CSV 一括・バーコード・カメラスキャンは難度が高いので個別設計回で。
+- 2026-06-16: **3-5 クライアント一覧＋詳細 完了**（データ系のうちクライアント読取部）。
+  - **API 追加**（`Api\ClientController`）: `GET /api/clients`（`{ data }` 包み・`word` クエリで会社名 like 検索・soft-delete 除外）、`GET /api/clients/:id`（企業情報＋担当者一覧 `contacts` を含む。未知 ID は 404）。
+  - **フロント**: `features/clients/useClients.ts`・`useClient.ts`、`pages/ClientsPage.tsx`（検索ボックス＋一覧＋詳細リンク）、`pages/ClientDetailPage.tsx`（企業情報テーブル＋担当者 `DataTable`、CRM 変更前提の注記）。`router.tsx` に `/clients`・`/clients/:id` を追加（サイドバー「データ一覧 > クライアント」と一致）。`device-card`/`device-info-table` 系スタイルは inventory.css を共有。
+  - 検証: `php artisan test` → **257 passed**（新規 `ClientApiTest` 5 件。既知 ContactsTest 3 件のみ失敗）。`npm run typecheck && npm run build && npm run lint` すべて green。
+  - **未実装（意図的）**: クライアント登録 `POST /api/clients`（`client/register`＝3-5 残）、CRM 同期ボタン（`syncFromCRM`＝3-9 外部連携）、ページネーション（一覧は全件取得・`word` 検索のみ）。担当者の詳細リンクは contacts ドメイン未実装のため未配線（一覧表示のみ）。
+- 次の推奨タスク: **3-5 残**（担当者 contacts 一覧/詳細＝`ContactsTest` 既知不整合の解消を兼ねる／クライアント登録／スペック・ベンチマークファイル）。または 3-4 残（CSV 一括）、3-3 残（バーコード/検索）。いずれも「対応 API 実装済みか」を先に確認。CSV 一括・バーコード・カメラスキャンは難度が高いので個別設計回で。
+  - **contacts 着手時の注意**: `tests/Unit/Models/ContactsTest` の 3 件失敗は `Contacts` の主キーが `contact_id`→`id`（auto-increment）へ変わったのにテストが旧仕様を期待しているため。contacts の API 化に合わせてモデル仕様（fillable/primaryKey）へテストを追従させて解消すること。
 
 ### 既知の課題（移設前から存在 / 本移行の前提ではない）
 - `tests/Unit/Models/ContactsTest` の3ケースが失敗。直近の「personnel → contact」リファクタで `Contacts` モデルの主キーが `contact_id`→`id`（auto-increment）へ変わった一方、テストが旧仕様（`contact_id` 主キー・非incrementing・fillable に `contact_id`）を期待しているため。**移設とは無関係**。設定（3-5 の担当者画面 / API 化）の際にモデル仕様へ追従させて解消する。
