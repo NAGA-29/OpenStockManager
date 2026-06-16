@@ -114,4 +114,86 @@ class DeviceApiTest extends TestCase
 
         $this->getJson('/api/devices/NO_SUCH_DEVICE')->assertStatus(404);
     }
+
+    public function test_form_options_returns_categories_with_fields_and_conditions(): void
+    {
+        Sanctum::actingAs(User::factory()->create());
+
+        DeviceCategory::create(['code' => 'STB', 'name' => 'STB機器', 'icon' => 'fa-tv', 'sort_order' => 1, 'is_active' => true]);
+        DeviceCategory::create(['code' => 'OLD', 'name' => '旧機器', 'icon' => 'fa-box', 'sort_order' => 2, 'is_active' => false]);
+        DeviceTypeField::create([
+            'device_category_code' => 'STB',
+            'field_key'            => 'color',
+            'label'                => '色',
+            'field_type'           => 'text',
+            'is_required'          => true,
+            'sort_order'           => 1,
+        ]);
+
+        $response = $this->getJson('/api/devices/form-options');
+
+        $response->assertStatus(200)
+            ->assertJsonStructure([
+                'categories' => [['code', 'name', 'fields' => [['field_key', 'label', 'field_type', 'is_required', 'options']]]],
+                'conditions' => [['id', 'label']],
+            ])
+            // is_active=false は除外される。
+            ->assertJsonCount(1, 'categories')
+            ->assertJsonPath('categories.0.code', 'STB')
+            ->assertJsonPath('categories.0.fields.0.field_key', 'color')
+            // conditions テーブルはマイグレーションで 4 件投入済み。
+            ->assertJsonCount(4, 'conditions');
+    }
+
+    public function test_store_creates_device_with_generated_id(): void
+    {
+        Sanctum::actingAs(User::factory()->create());
+
+        DeviceCategory::create(['code' => 'STB', 'name' => 'STB機器', 'icon' => 'fa-tv', 'sort_order' => 1, 'is_active' => true]);
+
+        $response = $this->postJson('/api/devices', [
+            'device_type'   => 'STB',
+            'device_name'   => 'BOX',
+            'device_serial' => 'SERIAL-001',
+            'condition'     => 1,
+            'defective'     => true,
+            'note'          => 'メモ',
+        ]);
+
+        $response->assertStatus(201)
+            ->assertJsonPath('data.device_id', 'STB_BOX_000001');
+
+        $this->assertDatabaseHas('devices', [
+            'device_serial' => 'SERIAL-001',
+            'condition_id'  => 1,
+            'defective'     => 1,
+        ]);
+    }
+
+    public function test_store_validates_required_fields(): void
+    {
+        Sanctum::actingAs(User::factory()->create());
+
+        $response = $this->postJson('/api/devices', []);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['device_type', 'device_name', 'device_serial', 'condition']);
+    }
+
+    public function test_store_rejects_duplicate_serial(): void
+    {
+        Sanctum::actingAs(User::factory()->create());
+
+        DeviceCategory::create(['code' => 'STB', 'name' => 'STB機器', 'icon' => 'fa-tv', 'sort_order' => 1, 'is_active' => true]);
+        $this->makeDevice(['device_id' => 'STB_X_000001', 'device_serial' => 'DUP-001']);
+
+        $response = $this->postJson('/api/devices', [
+            'device_type'   => 'STB',
+            'device_name'   => 'Y',
+            'device_serial' => 'DUP-001',
+            'condition'     => 1,
+        ]);
+
+        $response->assertStatus(422)->assertJsonValidationErrors('device_serial');
+    }
 }

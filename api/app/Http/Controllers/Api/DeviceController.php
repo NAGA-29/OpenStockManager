@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreDeviceApiRequest;
+use App\Models\Condition;
 use App\Models\Device;
 use App\Models\DeviceCategory;
 use App\Models\DeviceTypeField;
@@ -129,6 +131,78 @@ class DeviceController extends Controller
                 'sale_hists'   => $saleHists,
             ]),
         ]);
+    }
+
+    /**
+     * 端末登録フォームの選択肢を返す。
+     *
+     * 旧 `register_device` の動的フォーム相当。カテゴリ（種別ごとのカスタム
+     * フィールド定義込み）とコンディション一覧を返し、フロントは選択カテゴリに
+     * 応じてカスタムフィールドを描画する。
+     */
+    public function formOptions(): JsonResponse
+    {
+        $categories = DeviceCategory::active()
+            ->ordered()
+            ->with('fields')
+            ->get()
+            ->map(fn (DeviceCategory $cat) => [
+                'code'   => $cat->code,
+                'name'   => $cat->name,
+                'fields' => $cat->fields->map(fn (DeviceTypeField $field) => [
+                    'field_key'   => $field->field_key,
+                    'label'       => $field->label,
+                    'field_type'  => $field->field_type,
+                    'is_required' => (bool) $field->is_required,
+                    'options'     => $field->options,
+                ])->values(),
+            ])->values();
+
+        $conditions = Condition::orderBy('id')
+            ->get()
+            ->map(fn (Condition $condition) => [
+                'id'    => $condition->id,
+                'label' => $condition->condition,
+            ])->values();
+
+        return response()->json([
+            'categories' => $categories,
+            'conditions' => $conditions,
+        ]);
+    }
+
+    /**
+     * 端末を単体登録する。
+     *
+     * 旧 `DevicesController::storeDevice` の保存ロジックを踏襲（device_id 自動採番）。
+     * 画像アップロードは未対応（後続フェーズ）。
+     */
+    public function store(StoreDeviceApiRequest $request): JsonResponse
+    {
+        $safe = $request->validated();
+
+        $deviceId = Device::generateDeviceId($safe['device_type'], $safe['device_name']);
+
+        $device = Device::create([
+            'device_id'          => $deviceId,
+            'device_type'        => $safe['device_type'],
+            'device_name'        => $safe['device_name'],
+            'device_serial'      => $safe['device_serial'],
+            'custom_fields'      => $safe['custom_fields'] ?? null,
+            'first_work_date_at' => $safe['first_work_date_at'] ?? null,
+            'purchase_date_at'   => $safe['purchase_date_at'] ?? null,
+            'client'             => $safe['client'] ?? null,
+            'condition_id'       => $safe['condition'],
+            'defective'          => ! empty($safe['defective']),
+            'not_for_sale'       => ! empty($safe['not_for_sale']),
+            'note'               => $safe['note'] ?? null,
+        ]);
+
+        return response()->json([
+            'data' => [
+                'device_id' => $device->device_id,
+            ],
+        ], 201);
     }
 
     /**

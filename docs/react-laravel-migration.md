@@ -73,7 +73,7 @@
 | 3-1 | 認証（ログイン／パスワード／メール認証） | ◐ | 7（ログインのみ完了） |
 | 3-2 | ダッシュボード | ☑ | API済・UI実装済 |
 | 3-3 | 在庫（数量管理／個別管理／端末詳細／バーコード） | ◐ | 7（数量管理／個別管理／端末詳細 完了。バーコード/検索 残） |
-| 3-4 | 端末登録（単体／CSV一括／確認） | ☐ | 5 |
+| 3-4 | 端末登録（単体／CSV一括／確認） | ◐ | 5（単体登録 完了。画像/CSV一括/確認 残） |
 | 3-5 | データ（スペック／ベンチマーク／企業／担当者） | ☐ | 8 |
 | 3-6 | 手続き・レンタル（カート／CSV／一括返却） | ☐ | 7 |
 | 3-7 | 手続き・販売（カート／CSV） | ☐ | 6 |
@@ -129,8 +129,8 @@
 ### 3-4 端末登録
 | Blade | React ルート | API | 状態 |
 | --- | --- | --- | --- |
-| `register_device/register_device` | `/device/register` | `POST /api/devices` | ☐ |
-| `devices/components/register_device` | フォーム部品 | — | ☐ |
+| `register_device/register_device` | `/device/register` | `GET /api/devices/form-options` ✅ + `POST /api/devices` ✅ | ☑（単体。画像は未対応） |
+| `devices/components/register_device` | フォーム部品（ページ内に統合） | — | ☑ |
 | `devices/components/register_device_multi` | `/device/register/multi` | `POST /api/devices/multi/upload` | ☐ |
 | `devices/components/register_device_confirm_multi` | 確認ステップ | `POST /api/devices/multi/store` | ☐ |
 | `register_device/register_device_confirm_multi` | 確認ステップ | 同上 | ☐ |
@@ -310,7 +310,12 @@
   - **サマリーカード**は `dashboard.css` の `.summary-card*` を共有（router で全ページ静的 import のため CSS は単一バンドルに同梱）。
   - 検証: `cd api && php artisan test` → **248 passed**（新規 `tests/Feature/Api/DeviceApiTest` 4 件含む。既知 ContactsTest 3 件のみ失敗、risky 1 は移行前から）。`cd frontend && npm run typecheck && npm run build && npm run lint` すべて green。
   - **未実装（意図的に後回し）**: 端末詳細の操作ボタン（編集モーダル＝3-10／貸出・販売・返却＝3-6/3-7／バーコード印刷）、一覧の一括選択チェックボックス（カート＝3-10）、検索フォーム（カメラ/バーコードスキャン含む）、ページネーション。一覧は現状全件取得（旧 Blade は 10 件ページング）。
-- 次の推奨タスク: **3-4 端末登録**（API 未実装のため `POST /api/devices` から）、または **3-5 データ系**で `ContactsTest` 既知不整合の解消を兼ねる。いずれも「対応 API 実装済みか」を先に確認。バーコード/検索（3-3 残）は移植難度が高いので個別設計回で。
+- 2026-06-16: **3-4 端末登録（単体）完了**（画像アップロード・CSV 一括は後回し）。
+  - **API 追加**（`Api\DeviceController`）: `GET /api/devices/form-options`（カテゴリ＝種別ごとのカスタムフィールド定義込み＋コンディション一覧。`/devices/{deviceId}` より**前**にルート定義）、`POST /api/devices`（単体登録、`device_id` 自動採番）。バリデーションは新規 `StoreDeviceApiRequest`（旧 `StoreDeviceRequest` を踏襲しつつ失敗時は 422 JSON。`defective`/`not_for_sale` は真偽値、`device_serial` は `unique` 追加で 500 でなく 422 に）。保存ロジックは旧 `storeDevice` 準拠。
+  - **フロント**: `features/inventory/useDeviceFormOptions.ts`（query）・`useRegisterDevice.ts`（mutation）、`pages/RegisterDevicePage.tsx`（カテゴリ選択で動的カスタムフィールド描画・422 をフィールド単位表示・成功時トースト＋登録 ID バナー＋詳細リンク・フォームリセット）。`router.tsx` に `/device/register` を追加（サイドバー「登録 > 機材」と一致）。
+  - 検証: `php artisan test` → **252 passed**（`DeviceApiTest` 計 8 件に。既知 ContactsTest 3 件のみ失敗）。`npm run typecheck && npm run build && npm run lint` すべて green。
+  - **未実装（意図的）**: 端末写真アップロード（旧 `device_image`＝ImageProcessor/Storage、難度高につき後回し。UI に「準備中」表記）、`sale_date_at`（旧 `storeDevice` も未保存のため踏襲して省略）、CSV 一括登録／確認（`register_device_multi`／`confirmMulti`＝3-4 残）。コンディション選択肢は conditions テーブル（id 1-4）由来、バリデーションは `DeviceEnum::CONDITIONS`（1-5）由来。
+- 次の推奨タスク: **3-4 残（CSV 一括登録）** か **3-5 データ系**（`ContactsTest` 既知不整合の解消を兼ねる）。または 3-3 残（バーコード/検索）。いずれも「対応 API 実装済みか」を先に確認。CSV 一括・バーコード・カメラスキャンは難度が高いので個別設計回で。
 
 ### 既知の課題（移設前から存在 / 本移行の前提ではない）
 - `tests/Unit/Models/ContactsTest` の3ケースが失敗。直近の「personnel → contact」リファクタで `Contacts` モデルの主キーが `contact_id`→`id`（auto-increment）へ変わった一方、テストが旧仕様（`contact_id` 主キー・非incrementing・fillable に `contact_id`）を期待しているため。**移設とは無関係**。設定（3-5 の担当者画面 / API 化）の際にモデル仕様へ追従させて解消する。

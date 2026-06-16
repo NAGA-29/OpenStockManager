@@ -6,6 +6,7 @@ import DashboardPage from './pages/DashboardPage';
 import InventoryStocksPage from './pages/InventoryStocksPage';
 import InventoryUnitsPage from './pages/InventoryUnitsPage';
 import DeviceDetailPage from './pages/DeviceDetailPage';
+import RegisterDevicePage from './pages/RegisterDevicePage';
 import NotFoundPage from './pages/NotFoundPage';
 
 /**
@@ -31,6 +32,7 @@ export const router = createBrowserRouter([
           { path: '/inventory/stocks', element: <InventoryStocksPage /> },
           { path: '/inventory/units/:code', element: <InventoryUnitsPage /> },
           { path: '/devices/:id', element: <DeviceDetailPage /> },
+          { path: '/device/register', element: <RegisterDevicePage /> },
         ],
       },
     ],
