@@ -60,7 +60,7 @@
 | 2-2 | Axios クライアント（baseURL, トークン注入, 401 ハンドリング） | ☑ | `src/lib/api.ts`＋`src/lib/token.ts`。baseURL=`${VITE_API_BASE_URL}/api`、Bearer 自動付与、401 で token 破棄＋`/login` 誘導 |
 | 2-3 | 認証コンテキスト＋トークン永続化（localStorage） | ☑ | `src/auth/`（context/AuthProvider/useAuth/types）。起動時 `me` 復元・`login`/`logout`。`main.tsx` で全体を Provider 包み |
 | 2-4 | React Router 設定＋認証ガード（ProtectedRoute） | ☑ | `src/router.tsx`（createBrowserRouter）＋`auth/ProtectedRoute`。`/login`公開・保護下に`/dashboard`・`*`→404。プレースホルダ画面で骨組み |
-| 2-5 | 共通レイアウト（サイドバー／ヘッダー／フッター）移植 | ☐ | `layouts/sidebar.blade.php` 参照 |
+| 2-5 | 共通レイアウト（サイドバー／ヘッダー／フッター）移植 | ☑ | `AppLayout`/`Sidebar`/`Footer`。`ProtectedRoute`→`AppLayout`→各ページの構成 |
 | 2-6 | 共通 UI（テーブル, モーダル, トースト, ローディング, アラート） | ☐ | sweetalert2/toastr 相当を選定 |
 | 2-7 | TanStack Query 導入＋エラーハンドリング共通化 | ☐ | |
 
@@ -190,7 +190,7 @@
 ### 3-10 共通コンポーネント・モーダル
 | Blade | React コンポーネント | 状態 |
 | --- | --- | --- |
-| `layouts/app` / `sidebar` / `footer` | `AppLayout` / `Sidebar` / `Footer` | ☐ |
+| `layouts/app` / `sidebar` / `footer` | `AppLayout` / `Sidebar` / `Footer` | ☑ |
 | `layouts/auth` | `AuthLayout` | ☐ |
 | `component/alert` | `<Alert>` | ☐ |
 | `component/cart_list` | `<CartList>` | ☐ |
@@ -269,9 +269,15 @@
 - 2026-06-16: **2-4 完了**。`frontend/src/router.tsx`（`createBrowserRouter`）と `auth/ProtectedRoute.tsx` を追加。
   ルート: `/login`（公開）／`ProtectedRoute` 配下に index→`/dashboard` リダイレクト・`/dashboard`／`*`→404。`main.tsx` を `AuthProvider`＋`RouterProvider` 構成へ変更し、未使用化した `App.tsx` を削除。
   プレースホルダ画面 `pages/`（LoginPage/DashboardPage/NotFoundPage）で骨組みのみ用意（ログインフォーム実体は 3-1、ダッシュボード集計は 3-2）。`ProtectedRoute` は `isLoading` 中ローディング・未認証は `/login` へ `<Navigate replace>`。`api.ts` の 401 リダイレクト先 `/login` と一致。`typecheck`/`build`/`lint` green、dev で `/login`・`/dashboard` が 200。
-- 次の推奨タスク: **2-5（共通レイアウト：サイドバー/ヘッダー/フッター 移植 `layouts/sidebar.blade.php` 参照）→ 2-6（共通 UI：テーブル/モーダル/トースト等）→ 3-1 認証画面（`/login` フォーム実装）**。
-  - 2-5 メモ: 旧 `resources/views/layouts/sidebar.blade.php`・`app.blade.php`・`footer.blade.php` を参照し `AppLayout`/`Sidebar`/`Footer` を作成。`ProtectedRoute` 配下のレイアウトルートとして差し込み、各保護ページを `<Outlet>` に流す構成が素直。サイドバーのメニュー項目は Blade の権限分岐（admin のみ表示）を踏襲（`useAuth().user.is_admin`）。
+- 2026-06-16: **2-5 完了**。`frontend/src/layouts/` に `AppLayout.tsx`・`Sidebar.tsx`・`Footer.tsx`＋`layout.css` を追加し、旧 `layouts/app・sidebar・footer.blade.php` の見た目（ダークテーマ＋アクセント `#2c22bd`）を踏襲。
+  - 組込み: `router.tsx` で `ProtectedRoute`（認証ガード）→ `AppLayout`（共通レイアウト）→ 各保護ページの 2 段構成に変更。各ページは `AppLayout` の `<Outlet>` に流れる。
+  - ナビ: 上部バー（ブランド `OpenStockManager`＋ユーザードロップダウン：マイページ `/profile`・ログアウト `useAuth().logout()`→`/login`）。サイドバーは折りたたみ可（縦長トグル）＋セクション開閉（現在パスを含むセクションは初期展開）。
+  - **admin 権限踏襲**: 旧 `web.php` で `admin` ミドルウェア保護のルート（`user.list`・`device_categories.*`・`device_fields.*`）に対応するサイドバー項目（ユーザー／機材カテゴリ／カスタムフィールド）を `useAuth().user.is_admin` で出し分け。`設定 > 外部連携` は非 admin でも表示（プレースホルダ）。
+  - 各メニューの遷移先は §3 の React ルートに合わせて設定済み（多くは Phase 3 で未実装のため現状 404。レイアウト骨組みとしては機能）。`DashboardPage` はレイアウト配下に収まるよう `app-shell`/重複ログアウトボタンを除去。`index.html` に FontAwesome v5.15.1 CDN を追加（アイコン表示）。
+  - DoD: `cd frontend && npm run typecheck && npm run build && npm run lint` すべて green（lint `--max-warnings 0` 通過）。
+- 次の推奨タスク: **3-1（`/login` フォーム実装）→ 2-6（共通 UI：テーブル/モーダル/トースト等）→ 2-7（TanStack Query 導入）**。
   - 3-1 メモ: `LoginPage` に email/password フォームを実装し `useAuth().login()` を呼ぶ。バリデーション・エラー表示は旧 `auth/login.blade.php` の挙動（422 の `errors` 表示・`auth.failed` メッセージ）を踏襲。
+  - 2-5 残課題（後続で対応）: 上部バーのカートボタン（旧 `InCartModal`）は Phase 3-10 で配線するため未実装。`AuthLayout`（ログイン画面用レイアウト）は 3-1 で必要に応じて追加。ドロップダウンの外側クリックで閉じる挙動は未実装（トグルのみ）。
   - **1-6 について**: `admin` alias は `bootstrap/app.php` で登録済み・`AdminMiddleware` は `$request->user()->isAdmin()` 判定でガード非依存。admin 専用 API ルートを足す回（例: 3-9 設定/ユーザー管理の API 化）に `->middleware('admin')` を付与して実質達成すればよく、単独セッションを割く必要は薄い。
 
 ### 既知の課題（移設前から存在 / 本移行の前提ではない）
