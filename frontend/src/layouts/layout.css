@@ -1,0 +1,257 @@
+/*
+ * 共通レイアウトのスタイル（旧 Blade の app/sidebar/footer の見た目を踏襲）。
+ * 配色は旧 sidebar.css のダークテーマ＋アクセント #2c22bd を流用。
+ */
+
+:root {
+  --osm-sidebar-bg: #212529;
+  --osm-sidebar-accent: #2c22bd;
+  --osm-sidebar-accent-hover: #3d30e0;
+  --osm-navbar-bg: #212529;
+  --osm-sidebar-width: 220px;
+  --osm-sidebar-width-collapsed: 56px;
+}
+
+.layout-root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------------- Navbar ---------------- */
+.osm-navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1.5rem;
+  background-color: var(--osm-navbar-bg);
+  color: #fff;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.2);
+}
+
+.osm-navbar__brand {
+  font-size: 1.5rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.osm-navbar__brand .brand-open {
+  color: #3b82f6;
+}
+
+.osm-navbar__brand .brand-rest {
+  color: #fff;
+}
+
+.osm-navbar__menu {
+  position: relative;
+}
+
+.osm-navbar__user {
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.osm-navbar__dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.4rem);
+  min-width: 180px;
+  background: #fff;
+  border-radius: 0.375rem;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.18);
+  padding: 0.4rem 0;
+  z-index: 1000;
+}
+
+.osm-navbar__dropdown a,
+.osm-navbar__dropdown button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.5rem 1.25rem;
+  color: #1f2933;
+  text-decoration: none;
+  background: none;
+  border: none;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.osm-navbar__dropdown a:hover,
+.osm-navbar__dropdown button:hover {
+  background-color: #f1f3f5;
+}
+
+/* ---------------- Body (sidebar + main) ---------------- */
+.osm-body {
+  flex: 1;
+  display: flex;
+  align-items: stretch;
+}
+
+/* ---------------- Sidebar ---------------- */
+.osm-sidebar {
+  position: relative;
+  width: var(--osm-sidebar-width);
+  min-width: var(--osm-sidebar-width);
+  background-color: var(--osm-sidebar-bg);
+  color: #fff;
+  transition: width 0.25s ease, min-width 0.25s ease;
+  overflow-x: hidden;
+}
+
+.osm-sidebar.collapsed {
+  width: var(--osm-sidebar-width-collapsed);
+  min-width: var(--osm-sidebar-width-collapsed);
+}
+
+.osm-sidebar__nav {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.osm-sidebar__nav li {
+  width: 100%;
+}
+
+.osm-sidebar__link,
+.osm-sidebar__section-toggle {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 1.75rem;
+  color: #fff;
+  font-size: 0.875rem;
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.osm-sidebar__link i,
+.osm-sidebar__section-toggle i:first-child {
+  margin-right: 0.75rem;
+  width: 1rem;
+  text-align: center;
+}
+
+.osm-sidebar__section-toggle .osm-sidebar__caret {
+  margin-left: auto;
+  margin-right: 0;
+  transition: transform 0.2s ease;
+}
+
+.osm-sidebar__section-toggle[aria-expanded='true'] .osm-sidebar__caret {
+  transform: rotate(180deg);
+}
+
+.osm-sidebar__link:hover,
+.osm-sidebar__section-toggle:hover {
+  background-color: var(--osm-sidebar-accent);
+}
+
+.osm-sidebar__link.active {
+  background-color: var(--osm-sidebar-accent);
+  font-weight: 600;
+}
+
+.osm-sidebar__sublist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.osm-sidebar__sublist .osm-sidebar__link {
+  padding-left: 3.25rem;
+}
+
+/* 折りたたみ時はラベルとサブメニューを隠す */
+.osm-sidebar.collapsed .osm-sidebar__label,
+.osm-sidebar.collapsed .osm-sidebar__caret,
+.osm-sidebar.collapsed .osm-sidebar__sublist {
+  display: none;
+}
+
+.osm-sidebar.collapsed .osm-sidebar__link,
+.osm-sidebar.collapsed .osm-sidebar__section-toggle {
+  justify-content: center;
+  padding: 0.75rem 0;
+}
+
+.osm-sidebar.collapsed .osm-sidebar__link i,
+.osm-sidebar.collapsed .osm-sidebar__section-toggle i:first-child {
+  margin-right: 0;
+}
+
+/* トグルボタン（縦長タブ型） */
+.osm-sidebar__toggle {
+  position: absolute;
+  top: 50%;
+  right: -10px;
+  transform: translateY(-50%);
+  z-index: 200;
+  width: 10px;
+  height: 64px;
+  border-radius: 0 6px 6px 0;
+  background-color: var(--osm-sidebar-accent);
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background-color 0.15s ease, width 0.15s ease;
+}
+
+.osm-sidebar__toggle:hover {
+  width: 14px;
+  background-color: var(--osm-sidebar-accent-hover);
+}
+
+.osm-sidebar__toggle i {
+  font-size: 8px;
+  transition: transform 0.25s ease;
+}
+
+.osm-sidebar.collapsed .osm-sidebar__toggle i {
+  transform: rotate(180deg);
+}
+
+/* ---------------- Main content ---------------- */
+.osm-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 1.5rem;
+}
+
+.osm-main__content {
+  flex: 1;
+}
+
+/* ---------------- Footer ---------------- */
+.osm-footer {
+  margin-top: 2rem;
+  padding: 1rem 0;
+  border-top: 1px solid #e2e8f0;
+  text-align: center;
+  color: #647488;
+  font-size: 0.85rem;
+}
+
+.osm-footer a {
+  color: inherit;
+  text-decoration: none;
+}

@@ -60,9 +60,9 @@
 | 2-2 | Axios クライアント（baseURL, トークン注入, 401 ハンドリング） | ☑ | `src/lib/api.ts`＋`src/lib/token.ts`。baseURL=`${VITE_API_BASE_URL}/api`、Bearer 自動付与、401 で token 破棄＋`/login` 誘導 |
 | 2-3 | 認証コンテキスト＋トークン永続化（localStorage） | ☑ | `src/auth/`（context/AuthProvider/useAuth/types）。起動時 `me` 復元・`login`/`logout`。`main.tsx` で全体を Provider 包み |
 | 2-4 | React Router 設定＋認証ガード（ProtectedRoute） | ☑ | `src/router.tsx`（createBrowserRouter）＋`auth/ProtectedRoute`。`/login`公開・保護下に`/dashboard`・`*`→404。プレースホルダ画面で骨組み |
-| 2-5 | 共通レイアウト（サイドバー／ヘッダー／フッター）移植 | ☐ | `layouts/sidebar.blade.php` 参照 |
-| 2-6 | 共通 UI（テーブル, モーダル, トースト, ローディング, アラート） | ☐ | sweetalert2/toastr 相当を選定 |
-| 2-7 | TanStack Query 導入＋エラーハンドリング共通化 | ☐ | |
+| 2-5 | 共通レイアウト（サイドバー／ヘッダー／フッター）移植 | ☑ | `AppLayout`/`Sidebar`/`Footer`。`ProtectedRoute`→`AppLayout`→各ページの構成 |
+| 2-6 | 共通 UI（テーブル, モーダル, トースト, ローディング, アラート） | ☑ | `components/ui/`。自前実装（外部UIライブラリ不採用） |
+| 2-7 | TanStack Query 導入＋エラーハンドリング共通化 | ☑ | `QueryClientProvider` を `main.tsx` に配線。`lib/queryClient.ts` |
 
 ### Phase 3 — 画面移行（ドメイン別）
 
@@ -70,9 +70,9 @@
 
 | # | ドメイン | 状態 | 主担当画面数 |
 | --- | --- | --- | --- |
-| 3-1 | 認証（ログイン／パスワード／メール認証） | ☐ | 7 |
-| 3-2 | ダッシュボード | ◐ | 1（API済・UI未） |
-| 3-3 | 在庫（数量管理／個別管理／端末詳細／バーコード） | ◐ | 7（一部API済） |
+| 3-1 | 認証（ログイン／パスワード／メール認証） | ◐ | 7（ログインのみ完了） |
+| 3-2 | ダッシュボード | ☑ | API済・UI実装済 |
+| 3-3 | 在庫（数量管理／個別管理／端末詳細／バーコード） | ◐ | 7（数量管理 完了。個別管理/端末詳細 残） |
 | 3-4 | 端末登録（単体／CSV一括／確認） | ☐ | 5 |
 | 3-5 | データ（スペック／ベンチマーク／企業／担当者） | ☐ | 8 |
 | 3-6 | 手続き・レンタル（カート／CSV／一括返却） | ☐ | 7 |
@@ -102,7 +102,7 @@
 ### 3-1 認証
 | Blade | React ルート | API | 状態 |
 | --- | --- | --- | --- |
-| `auth/login` | `/login` | `POST /api/auth/login` | ☐ |
+| `auth/login` | `/login` | `POST /api/auth/login` | ☑ |
 | `auth/passwords/email` | `/password/forgot` | `POST /api/auth/password/email` | ☐ |
 | `auth/passwords/reset` | `/password/reset` | `POST /api/auth/password/reset` | ☐ |
 | `auth/passwords/confirm` | `/password/confirm` | `POST /api/auth/password/confirm` | ☐ |
@@ -113,12 +113,12 @@
 ### 3-2 ダッシュボード
 | Blade | React ルート | API | 状態 |
 | --- | --- | --- | --- |
-| `dashboard/index` | `/dashboard` | `GET /api/dashboard` ✅実装済 | ◐ |
+| `dashboard/index` | `/dashboard` | `GET /api/dashboard` ✅実装済 | ☑ |
 
 ### 3-3 在庫
 | Blade | React ルート | API | 状態 |
 | --- | --- | --- | --- |
-| `inventory/stocks/index` | `/inventory/stocks` | `GET /api/inventory/stocks` ✅実装済 | ◐ |
+| `inventory/stocks/index` | `/inventory/stocks` | `GET /api/inventory/stocks` ✅実装済 | ☑ |
 | `inventory/units/index` | `/inventory/units/:code` | `GET /api/devices/category/:code` ✅実装済 | ◐ |
 | `devices/device_list` | （上記内のテーブル） | 同上 | ☐ |
 | `devices/show` | `/devices/:id` | `GET /api/devices/:id` ✅実装済 | ◐ |
@@ -190,7 +190,7 @@
 ### 3-10 共通コンポーネント・モーダル
 | Blade | React コンポーネント | 状態 |
 | --- | --- | --- |
-| `layouts/app` / `sidebar` / `footer` | `AppLayout` / `Sidebar` / `Footer` | ☐ |
+| `layouts/app` / `sidebar` / `footer` | `AppLayout` / `Sidebar` / `Footer` | ☑ |
 | `layouts/auth` | `AuthLayout` | ☐ |
 | `component/alert` | `<Alert>` | ☐ |
 | `component/cart_list` | `<CartList>` | ☐ |
@@ -269,9 +269,39 @@
 - 2026-06-16: **2-4 完了**。`frontend/src/router.tsx`（`createBrowserRouter`）と `auth/ProtectedRoute.tsx` を追加。
   ルート: `/login`（公開）／`ProtectedRoute` 配下に index→`/dashboard` リダイレクト・`/dashboard`／`*`→404。`main.tsx` を `AuthProvider`＋`RouterProvider` 構成へ変更し、未使用化した `App.tsx` を削除。
   プレースホルダ画面 `pages/`（LoginPage/DashboardPage/NotFoundPage）で骨組みのみ用意（ログインフォーム実体は 3-1、ダッシュボード集計は 3-2）。`ProtectedRoute` は `isLoading` 中ローディング・未認証は `/login` へ `<Navigate replace>`。`api.ts` の 401 リダイレクト先 `/login` と一致。`typecheck`/`build`/`lint` green、dev で `/login`・`/dashboard` が 200。
-- 次の推奨タスク: **2-5（共通レイアウト：サイドバー/ヘッダー/フッター 移植 `layouts/sidebar.blade.php` 参照）→ 2-6（共通 UI：テーブル/モーダル/トースト等）→ 3-1 認証画面（`/login` フォーム実装）**。
-  - 2-5 メモ: 旧 `resources/views/layouts/sidebar.blade.php`・`app.blade.php`・`footer.blade.php` を参照し `AppLayout`/`Sidebar`/`Footer` を作成。`ProtectedRoute` 配下のレイアウトルートとして差し込み、各保護ページを `<Outlet>` に流す構成が素直。サイドバーのメニュー項目は Blade の権限分岐（admin のみ表示）を踏襲（`useAuth().user.is_admin`）。
-  - 3-1 メモ: `LoginPage` に email/password フォームを実装し `useAuth().login()` を呼ぶ。バリデーション・エラー表示は旧 `auth/login.blade.php` の挙動（422 の `errors` 表示・`auth.failed` メッセージ）を踏襲。
+- 2026-06-16: **2-5 完了**。`frontend/src/layouts/` に `AppLayout.tsx`・`Sidebar.tsx`・`Footer.tsx`＋`layout.css` を追加し、旧 `layouts/app・sidebar・footer.blade.php` の見た目（ダークテーマ＋アクセント `#2c22bd`）を踏襲。
+  - 組込み: `router.tsx` で `ProtectedRoute`（認証ガード）→ `AppLayout`（共通レイアウト）→ 各保護ページの 2 段構成に変更。各ページは `AppLayout` の `<Outlet>` に流れる。
+  - ナビ: 上部バー（ブランド `OpenStockManager`＋ユーザードロップダウン：マイページ `/profile`・ログアウト `useAuth().logout()`→`/login`）。サイドバーは折りたたみ可（縦長トグル）＋セクション開閉（現在パスを含むセクションは初期展開）。
+  - **admin 権限踏襲**: 旧 `web.php` で `admin` ミドルウェア保護のルート（`user.list`・`device_categories.*`・`device_fields.*`）に対応するサイドバー項目（ユーザー／機材カテゴリ／カスタムフィールド）を `useAuth().user.is_admin` で出し分け。`設定 > 外部連携` は非 admin でも表示（プレースホルダ）。
+  - 各メニューの遷移先は §3 の React ルートに合わせて設定済み（多くは Phase 3 で未実装のため現状 404。レイアウト骨組みとしては機能）。`DashboardPage` はレイアウト配下に収まるよう `app-shell`/重複ログアウトボタンを除去。`index.html` に FontAwesome v5.15.1 CDN を追加（アイコン表示）。
+  - DoD: `cd frontend && npm run typecheck && npm run build && npm run lint` すべて green（lint `--max-warnings 0` 通過）。
+- 2026-06-16: **3-1 ログインフォーム 完了**（認証ドメインのうちログイン画面のみ）。`frontend/src/pages/LoginPage.tsx` を実装＋`login.css` 追加。
+  - 旧 `auth/login.blade.php` の二分割カード（左：説明アサイド／右：フォーム）を Tailwind 非導入のため素の CSS で再現。email/password 制御入力＋送信中の無効化（`ログイン中…`）。
+  - 送信は `useAuth().login(email, password)`。成功時は `isAuthenticated` が true になり画面冒頭の `<Navigate to="/dashboard">` で遷移。
+  - **エラー踏襲**: 422 応答の `errors`（`auth.failed` は `errors.email` に入る）をフィールド単位で各入力欄下に表示（`is-invalid` 装飾）。その他の応答エラーは `message`、ネットワーク不通は接続エラーを上部 `login-alert` に表示。
+  - DoD: `typecheck`/`build`/`lint` すべて green。
+  - 残課題: `remember`（Remember Me）はトークン方式では効果がないため UI から省略（旧 Blade にはチェックボックスあり）。パスワードリセット／メール認証／メール変更／ユーザー登録（3-1 の残り 6 画面）は API 未実装のため未着手。
+- 2026-06-16: **2-7 完了**。`frontend/src/lib/queryClient.ts` に `QueryClient`（`retry:1`・`staleTime:30s`・`refetchOnWindowFocus:false`）を定義し、`main.tsx` を `QueryClientProvider`（最外）→ `AuthProvider` → `RouterProvider` 構成へ変更。401 は `lib/api.ts` のインターセプタで処理するため query 側の retry は控えめ。
+- 2026-06-16: **3-2 ダッシュボード 完了**。`features/dashboard/useDashboard.ts`（`useQuery` フック＋型）と `pages/DashboardPage.tsx`＋`dashboard.css` を実装し、旧 `dashboard/index.blade.php` を移植。
+  - 内容: サマリーカード（貸出中台数／延滞中／期限間近）＋延滞・期限間近の 2 テーブル（レンタルID→`/rental/history/:id` リンク・クライアント・デバイス・返却予定日・超過/残日数）。ローディング／エラー（再読込ボタン）／空状態を処理。
+  - **API レスポンス注意**: `GET /api/dashboard` は `{ data: ... }` 包みでなく **フラットなキー**（`lending_count`/`near_deadline`/`overdue`）を返す。各行は `device_count`（台数）のみで個別 device 一覧は含まないため、デバイス列は「N台」表示（旧 Blade の device_id バッジ羅列は API 非対応）。必要なら API 側で device 一覧を足す検討を。
+  - DoD: `typecheck`/`build`/`lint` すべて green。
+- 2026-06-16: **2-6 完了**。`frontend/src/components/ui/` に共通 UI を自前実装（外部 UI ライブラリ不採用）。`ui.css` に全スタイル＋ユーティリティ（`.page-bar`/`.text-danger`/`.text-warning`/`.text-success`）。
+  - `Loading.tsx`（スピナー）・`Alert.tsx`（`info/success/warning/danger`、`AlertVariant` 型 export）・`DataTable.tsx`（ジェネリック `Column<T>` 定義・`render`/`empty`/`rowKey`）・`Modal.tsx`（背景クリック/×/Esc 閉じ）。
+  - トースト: `toast/`（`types.ts`/`context.ts`/`useToast.ts`/`ToastProvider.tsx`）。`main.tsx` に `ToastProvider` を配線（`QueryClientProvider`→`ToastProvider`→`AuthProvider`→`RouterProvider`）。`show(message, variant)` で右上に表示・4 秒で自動消去。
+  - dogfooding: `DashboardPage` を `Loading`/`Alert`/`DataTable` 利用へリファクタ（`dashboard.css` から重複テーブル/状態スタイルを削除）。lint の型 export（`Column`/`AlertVariant`）は `react-refresh/only-export-components` を通過。
+- 2026-06-16: **3-3 数量管理 完了**（在庫ドメインの 1 画面目）。`features/inventory/useStocks.ts`＋`pages/InventoryStocksPage.tsx`、ルート `/inventory/stocks` を追加。
+  - 旧 `inventory/stocks/index.blade.php` は「開発中」プレースホルダだが `GET /api/inventory/stocks` が実データ（`{ data: [...] }` 包み・`location`/`item_name`/`quantity`/`min_stock`/`below_min`）を返すため、実テーブルとして実装。`below_min` を赤字＋状態列で強調。ローディング/エラー/空を共通 UI で処理。
+  - DoD: `typecheck`/`build`/`lint` すべて green。
+- 次の推奨タスク: **3-3 の残り（個別管理 `/inventory/units/:code`＝`GET /api/devices/category/:code`、端末詳細 `/devices/:id`＝`GET /api/devices/:id`）→ 3-2/3-3 で作った feature パターンを横展開**。
+  - 3-3 残メモ: 個別管理は category code（STB 等）でデバイス一覧、端末詳細は device 単体。`useStocks` と同じ要領で `features/inventory/` に query フックを追加し `DataTable` で一覧化。端末詳細は編集モーダル（旧 `edit_device_info`）が絡むため、まず読み取り表示→編集は Phase 3-10 のモーダルと合わせて。バーコード/検索は移植難度が高く後回し（§注意参照）。
+  - 共通 UI 活用: 一覧は `DataTable`、フィードバックは `useToast`（mutation 成功/失敗時）、確認ダイアログは `Modal` を利用する。
+  - 2-5 残課題: 上部バーのカートボタン（旧 `InCartModal`）は Phase 3-10、ナビのドロップダウン外側クリック閉じは未実装。
+  - 3-1 残課題: パスワードリセット／メール認証／メール変更／ユーザー登録（残 6 画面）は対応 API 未実装のため未着手。
+  - **1-6 について**: `admin` alias 登録済み・`AdminMiddleware` はガード非依存。admin 専用 API ルートを足す回（3-9 設定等）で `->middleware('admin')` を付与すれば実質達成。
+  - 2-5 残課題（後続で対応）: 上部バーのカートボタン（旧 `InCartModal`）は Phase 3-10 で配線するため未実装。ナビのドロップダウンは外側クリックで閉じる挙動は未実装（トグルのみ）。
+  - 3-1 残課題: パスワードリセット／メール認証／メール変更／ユーザー登録（残 6 画面）は対応 API 未実装のため未着手。
+  - **1-6 について**: `admin` alias 登録済み・`AdminMiddleware` はガード非依存。admin 専用 API ルートを足す回（3-9 設定等）で `->middleware('admin')` を付与すれば実質達成。
   - **1-6 について**: `admin` alias は `bootstrap/app.php` で登録済み・`AdminMiddleware` は `$request->user()->isAdmin()` 判定でガード非依存。admin 専用 API ルートを足す回（例: 3-9 設定/ユーザー管理の API 化）に `->middleware('admin')` を付与して実質達成すればよく、単独セッションを割く必要は薄い。
 
 ### 既知の課題（移設前から存在 / 本移行の前提ではない）
