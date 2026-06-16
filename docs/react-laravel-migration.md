@@ -72,7 +72,7 @@
 | --- | --- | --- | --- |
 | 3-1 | 認証（ログイン／パスワード／メール認証） | ◐ | 7（ログインのみ完了） |
 | 3-2 | ダッシュボード | ☑ | API済・UI実装済 |
-| 3-3 | 在庫（数量管理／個別管理／端末詳細／バーコード） | ◐ | 7（数量管理 完了。個別管理/端末詳細 残） |
+| 3-3 | 在庫（数量管理／個別管理／端末詳細／バーコード） | ◐ | 7（数量管理／個別管理／端末詳細 完了。バーコード/検索 残） |
 | 3-4 | 端末登録（単体／CSV一括／確認） | ☐ | 5 |
 | 3-5 | データ（スペック／ベンチマーク／企業／担当者） | ☐ | 8 |
 | 3-6 | 手続き・レンタル（カート／CSV／一括返却） | ☐ | 7 |
@@ -119,12 +119,12 @@
 | Blade | React ルート | API | 状態 |
 | --- | --- | --- | --- |
 | `inventory/stocks/index` | `/inventory/stocks` | `GET /api/inventory/stocks` ✅実装済 | ☑ |
-| `inventory/units/index` | `/inventory/units/:code` | `GET /api/devices/category/:code` ✅実装済 | ◐ |
-| `devices/device_list` | （上記内のテーブル） | 同上 | ☐ |
-| `devices/show` | `/devices/:id` | `GET /api/devices/:id` ✅実装済 | ◐ |
+| `inventory/units/index` | `/inventory/units/:code` | `GET /api/devices/category/:code` ✅実装済 | ☑ |
+| `devices/device_list` | （上記内のテーブル） | 同上 | ☑ |
+| `devices/show` | `/devices/:id` | `GET /api/devices/:id` ✅実装済 | ☑（読取表示。編集は 3-10） |
 | `devices/barcode_print` | `/devices/:id/barcode` | `GET /api/devices/:id/barcode` | ☐ |
 | `devices/search_results` | `/devices/search` | `GET /api/devices/search` | ☐ |
-| `devices/status_legend`(部品) | コンポーネント | — | ☐ |
+| `devices/status_legend`(部品) | `<StatusLegend>` | — | ☑ |
 
 ### 3-4 端末登録
 | Blade | React ルート | API | 状態 |
@@ -303,6 +303,14 @@
   - 3-1 残課題: パスワードリセット／メール認証／メール変更／ユーザー登録（残 6 画面）は対応 API 未実装のため未着手。
   - **1-6 について**: `admin` alias 登録済み・`AdminMiddleware` はガード非依存。admin 専用 API ルートを足す回（3-9 設定等）で `->middleware('admin')` を付与すれば実質達成。
   - **1-6 について**: `admin` alias は `bootstrap/app.php` で登録済み・`AdminMiddleware` は `$request->user()->isAdmin()` 判定でガード非依存。admin 専用 API ルートを足す回（例: 3-9 設定/ユーザー管理の API 化）に `->middleware('admin')` を付与して実質達成すればよく、単独セッションを割く必要は薄い。
+
+- 2026-06-16: **3-3 個別管理＋端末詳細 完了**（在庫ドメインの残り。バーコード/検索を除く）。
+  - **API 拡張**（`Api\DeviceController`）: `byCategory` を旧 `device_list` 相当に拡充——`categories`（タブ用）・`current`・`counts`（all/lending/defective、いずれも soft-delete 除外）・行に `note`/`sale_id`/`has_images` を追加。未知カテゴリは 404。`show` を旧 `show` の読取部に拡充——`option`/`using_user_id`/各日付（Y-m-d）/`modified_at`/`images`/`rental_hists`/`sale_hists` と、**定義解決済み** `custom_fields`（`{key,label,type,value,display}`、select はラベル解決・boolean は値そのまま）を返す。共通 `resource()` の `condition` が `condition->name`（存在しない列）を参照していた**既存バグを `condition->condition` に修正**。
+  - **フロント**: `features/inventory/useDeviceCategory.ts`・`useDevice.ts`（query フック＋型）、`pages/InventoryUnitsPage.tsx`（カテゴリタブ＝NavLink・サマリーカード・ステータスアイコン・端末IDリンク→詳細）、`pages/DeviceDetailPage.tsx`（情報テーブル＋カスタムフィールド＋画像＋貸出/販売履歴テーブル、読取のみ）、共通 `components/StatusLegend.tsx`（旧 `status_legend` 部品）。`router.tsx` に `/inventory/units/:code`・`/devices/:id` を追加。
+  - **サマリーカード**は `dashboard.css` の `.summary-card*` を共有（router で全ページ静的 import のため CSS は単一バンドルに同梱）。
+  - 検証: `cd api && php artisan test` → **248 passed**（新規 `tests/Feature/Api/DeviceApiTest` 4 件含む。既知 ContactsTest 3 件のみ失敗、risky 1 は移行前から）。`cd frontend && npm run typecheck && npm run build && npm run lint` すべて green。
+  - **未実装（意図的に後回し）**: 端末詳細の操作ボタン（編集モーダル＝3-10／貸出・販売・返却＝3-6/3-7／バーコード印刷）、一覧の一括選択チェックボックス（カート＝3-10）、検索フォーム（カメラ/バーコードスキャン含む）、ページネーション。一覧は現状全件取得（旧 Blade は 10 件ページング）。
+- 次の推奨タスク: **3-4 端末登録**（API 未実装のため `POST /api/devices` から）、または **3-5 データ系**で `ContactsTest` 既知不整合の解消を兼ねる。いずれも「対応 API 実装済みか」を先に確認。バーコード/検索（3-3 残）は移植難度が高いので個別設計回で。
 
 ### 既知の課題（移設前から存在 / 本移行の前提ではない）
 - `tests/Unit/Models/ContactsTest` の3ケースが失敗。直近の「personnel → contact」リファクタで `Contacts` モデルの主キーが `contact_id`→`id`（auto-increment）へ変わった一方、テストが旧仕様（`contact_id` 主キー・非incrementing・fillable に `contact_id`）を期待しているため。**移設とは無関係**。設定（3-5 の担当者画面 / API 化）の際にモデル仕様へ追従させて解消する。
