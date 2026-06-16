@@ -8,6 +8,10 @@ on:
       - feat/*
       - hotfix/*
 
+defaults:
+  run:
+    working-directory: api
+
 jobs:
   security-check:
     runs-on: ubuntu-24.04

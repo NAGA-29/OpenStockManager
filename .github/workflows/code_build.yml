@@ -5,6 +5,10 @@ on:
     branches:
       - main
 
+defaults:
+  run:
+    working-directory: api
+
 jobs:
   resource-build:
     runs-on: ubuntu-24.04
@@ -31,19 +35,19 @@ jobs:
         with:
           node-version: "20"
 
-      # JavaScript & CSSのビルド（Laravel Mix）
+      # JavaScript & CSSのビルド（Vite）
       - name: Build assets
         run: |
           npm ci
-          npm run prod
+          npm run build
 
-      # アセットをZIPに圧縮
+      # アセットをZIPに圧縮（Vite 出力先）
       - name: Zip build assets
-        run: zip -r build-assets.zip public/js/ public/css/
+        run: zip -r build-assets.zip public/build/
 
       # アーティファクトのアップロード
       - name: Upload build assets
         uses: actions/upload-artifact@v4
         with:
           name: build-assets
-          path: build-assets.zip
+          path: api/build-assets.zip
