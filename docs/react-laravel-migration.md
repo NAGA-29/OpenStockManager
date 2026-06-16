@@ -47,7 +47,7 @@
 | --- | --- | --- | --- |
 | 1-1 | `User` に `HasApiTokens` 追加 | ☑ | Sanctum |
 | 1-2 | `Api\AuthController`（login / me / logout） | ☑ | トークン発行 |
-| 1-3 | `routes/api.php` に認証＋保護ルートを登録 | ☐ | `auth:sanctum` グループ |
+| 1-3 | `routes/api.php` に認証＋保護ルートを登録 | ☑ | `auth:sanctum` グループ。login（公開）/ me・logout・dashboard・inventory/stocks・devices を登録。Sanctum 用 `expires_at` 列追加移行も実施 |
 | 1-4 | CORS / Sanctum 設定をフロントのオリジンに合わせる | ☐ | `config/cors.php`, `SANCTUM_STATEFUL_DOMAINS` |
 | 1-5 | 例外を API では JSON で返すよう調整（419 リダイレクト除去等） | ☐ | `bootstrap/app.php` |
 | 1-6 | `admin` ミドルウェアを API ルートでも利用可能に | ☐ | 既存 alias 流用 |
@@ -243,7 +243,11 @@
   移設後の健全性確認（0-4）として `composer install`＋`php artisan test` を実施し **232 passed** を確認。
   CI 4 ワークフロー（0-5）を `api/` 基準へ更新。
 - 2026-06-16: Phase 1 で `User` に `HasApiTokens`、`Api\AuthController`・`Api\DashboardController`・`Api\InventoryStockController`・`Api\DeviceController` を実装（**`routes/api.php` への登録は未**＝1-3 で実施）。
-- 次の推奨タスク: **1-3（API ルート登録）→ 1-4（CORS/Sanctum）→ 2-1（frontend 初期化）**。
+- 2026-06-16: **1-3 完了**。`routes/api.php` に Sanctum トークン認証ルートを登録。
+  公開: `POST /api/auth/login`。`auth:sanctum` 保護: `GET /api/auth/me`・`POST /api/auth/logout`・`GET /api/dashboard`・`GET /api/inventory/stocks`・`GET /api/devices/category/{code}`・`GET /api/devices/{deviceId}`。
+  既存の `personal_access_tokens` 移行（2019 年・tokenable_id 文字列化のカスタム版）に Sanctum v4 が要求する `expires_at` 列が無くトークン発行が失敗したため、既存定義を壊さない追加移行を作成。
+  `tests/Feature/Api/ApiRoutesTest`（login 成否・401 ガード・認証済みアクセス）を追加し **9 件 green**。全体は **241 passed**（既知の ContactsTest 3 件のみ失敗）。
+- 次の推奨タスク: **1-4（CORS/Sanctum）→ 1-5（API 例外 JSON 化）→ 2-1（frontend 初期化）**。
 - 注意: 認証は当初 Sanctum トークン方式で確定。CSV 一括・バーコード・カメラスキャン・ドラッグ並び替え・グラフは移植難度が高いため、対象ドメインの後半で個別設計する。
 
 ### 既知の課題（移設前から存在 / 本移行の前提ではない）
