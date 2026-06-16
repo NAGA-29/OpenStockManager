@@ -258,6 +258,18 @@
   - 補足: `admin` alias は `bootstrap/app.php` で登録済み・`AdminMiddleware` は `$request->user()->isAdmin()` 判定でガード非依存のため、1-6 は「admin 必須の API ルートを実際に追加する時に `->middleware('admin')` を付与する」運用で足りる見込み（現状 admin 専用 API ルート未追加）。Blade 同等の admin 画面（users 等）の API 化時に適用すること。
 - 注意: 認証は当初 Sanctum トークン方式で確定。CSV 一括・バーコード・カメラスキャン・ドラッグ並び替え・グラフは移植難度が高いため、対象ドメインの後半で個別設計する。
 
+### 次セッション向け指示書（2-1: frontend 初期化）
+> Phase 1 のバックエンド基盤（API ルート/CORS/Sanctum/例外 JSON 化）は完了。次は `frontend/` の Vite + React + TS 雛形を作る。
+
+- **作成場所**: リポジトリ直下に `frontend/`（`api/` と並列のモノレポ。`docker-compose.yml` の `frontend` サービスが `./frontend:/app` をマウント、`npm install && npm run dev -- --host`、ポート 5173 を期待）。
+- **スタック**（§1 アーキテクチャ決定に準拠）: React 18 + TypeScript + Vite + React Router + Axios + TanStack Query。
+- **最低限のスキャフォルド**: `package.json` / `tsconfig.json` / `vite.config.ts`（`server.port=5173`, `server.host=true`）/ `index.html` / `src/main.tsx` / `src/App.tsx`。`.gitignore` に `node_modules`・`dist`。
+- **env 連携**: API ベース URL は `VITE_API_BASE_URL`（docker-compose 既定 `http://localhost`）。`src/lib/api.ts`（2-2）で使う前提で `import.meta.env.VITE_API_BASE_URL` を読む方針。CORS 許可オリジンは API 側 `FRONTEND_URL=http://localhost:5173`（設定済み）。
+- **検証（DoD）**: `cd frontend && npm install && npm run build` が通ること（型・ビルド）。`npm run dev` で 5173 起動確認できればなお良い。
+- **コミット**: 1タスク=1コミット。`feat(react-migration): frontend(Vite+React+TS) を初期化 (2-1)`。
+- **注意**: この環境ではネットワークポリシー次第で `npm install` が外部レジストリにアクセスできない場合がある。失敗したら package.json 等の雛形だけ用意し、§5 に「依存インストール未検証」を明記して申し送ること。
+- **1-6 について**: 上述の通り alias は登録済み・middleware はガード非依存。admin 専用 API ルートを足す回（例: 3-9 設定/ユーザー管理の API 化）に `->middleware('admin')` を付けて実質達成すればよい。単独セッションを割く必要は薄い。
+
 ### 既知の課題（移設前から存在 / 本移行の前提ではない）
 - `tests/Unit/Models/ContactsTest` の3ケースが失敗。直近の「personnel → contact」リファクタで `Contacts` モデルの主キーが `contact_id`→`id`（auto-increment）へ変わった一方、テストが旧仕様（`contact_id` 主キー・非incrementing・fillable に `contact_id`）を期待しているため。**移設とは無関係**。設定（3-5 の担当者画面 / API 化）の際にモデル仕様へ追従させて解消する。
 - `tests/Feature/*` の一部は Blade を描画するため `php artisan test` 前に `npm run build`（Vite manifest 生成）が必要。Blade 全廃（Phase 4-1）まではこの前提を維持。
