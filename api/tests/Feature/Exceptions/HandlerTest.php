@@ -102,4 +102,40 @@ class HandlerTest extends TestCase
 
         $response->assertRedirect('/login');
     }
+
+    // =========================================================================
+    // API (JSON) handling — リダイレクトでなく JSON を返すこと
+    // =========================================================================
+
+    /**
+     * api/* ルートで DeviceException が throw された場合、
+     * リダイレクトせず 422 JSON（message/context）を返すこと
+     */
+    public function test_DeviceException_on_api_returns_json(): void
+    {
+        $this->app['router']->get('/api/test/device-exception', function () {
+            throw DeviceNotFoundException::forDevice('DEV-001');
+        });
+
+        $response = $this->getJson('/api/test/device-exception');
+
+        $response->assertStatus(422)
+            ->assertJsonStructure(['message', 'context']);
+    }
+
+    /**
+     * api/* ルートで ImageProcessingException が throw された場合、
+     * リダイレクトせず 422 JSON を返すこと
+     */
+    public function test_ImageProcessingException_on_api_returns_json(): void
+    {
+        $this->app['router']->get('/api/test/image-exception', function () {
+            throw ImageProcessingException::analysisFailure('/uploads/photo.png');
+        });
+
+        $response = $this->getJson('/api/test/image-exception');
+
+        $response->assertStatus(422)
+            ->assertJsonStructure(['message', 'context']);
+    }
 }

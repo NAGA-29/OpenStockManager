@@ -49,7 +49,7 @@
 | 1-2 | `Api\AuthController`（login / me / logout） | ☑ | トークン発行 |
 | 1-3 | `routes/api.php` に認証＋保護ルートを登録 | ☑ | `auth:sanctum` グループ。login（公開）/ me・logout・dashboard・inventory/stocks・devices を登録。Sanctum 用 `expires_at` 列追加移行も実施 |
 | 1-4 | CORS / Sanctum 設定をフロントのオリジンに合わせる | ☑ | `config/cors.php` に `FRONTEND_URL`(既定 `http://localhost:5173`)を追加。`config/sanctum.php` を公開し `SANCTUM_STATEFUL_DOMAINS` を env 化。`.env.example` 追記 |
-| 1-5 | 例外を API では JSON で返すよう調整（419 リダイレクト除去等） | ☐ | `bootstrap/app.php` |
+| 1-5 | 例外を API では JSON で返すよう調整（419 リダイレクト除去等） | ☑ | `bootstrap/app.php`。`api/*`/`expectsJson` 時は DeviceException・ImageProcessingException を 422 JSON 化、419 リダイレクトは Blade のみに限定 |
 | 1-6 | `admin` ミドルウェアを API ルートでも利用可能に | ☐ | 既存 alias 流用 |
 
 ### Phase 2 — フロント基盤（`frontend/`）
@@ -251,7 +251,11 @@
   `config/sanctum.php` を公開し `stateful` を `SANCTUM_STATEFUL_DOMAINS`（既定に Vite 5173 を含む）で env 化、`expiration` を `SANCTUM_TOKEN_EXPIRATION` 化。`.env.example` に `FRONTEND_URL`・`SANCTUM_STATEFUL_DOMAINS` を追記。
   `ApiRoutesTest` にフロントオリジンの CORS プリフライト確認を追加し全体 **242 passed**（既知の ContactsTest 3 件のみ失敗）。
   補足: 認証は Bearer トークン方式が主のため stateful Cookie は現状必須でないが、将来切替に備え設定済み。
-- 次の推奨タスク: **1-5（API 例外 JSON 化）→ 1-6（admin ミドルウェアを API でも利用可）→ 2-1（frontend 初期化）**。
+- 2026-06-16: **1-5 完了**。`bootstrap/app.php` の例外レンダリングを API 対応化。
+  `$request->is('api/*') || expectsJson()` の場合、`DeviceException`・`ImageProcessingException` を `redirect()->back()` でなく **422 JSON（`message`/`context`）** で返す。419 のログインリダイレクトは Blade のみに限定（API はトークン方式のため JSON のまま）。
+  Blade 側の既存挙動（redirect back / login）は `HandlerTest` 既存ケースで維持を確認、API JSON ケースを追加し全体 **244 passed**（既知の ContactsTest 3 件のみ失敗）。
+- 次の推奨タスク: **1-6（admin ミドルウェアを API でも利用可）→ 2-1（frontend 初期化）**。
+  - 補足: `admin` alias は `bootstrap/app.php` で登録済み・`AdminMiddleware` は `$request->user()->isAdmin()` 判定でガード非依存のため、1-6 は「admin 必須の API ルートを実際に追加する時に `->middleware('admin')` を付与する」運用で足りる見込み（現状 admin 専用 API ルート未追加）。Blade 同等の admin 画面（users 等）の API 化時に適用すること。
 - 注意: 認証は当初 Sanctum トークン方式で確定。CSV 一括・バーコード・カメラスキャン・ドラッグ並び替え・グラフは移植難度が高いため、対象ドメインの後半で個別設計する。
 
 ### 既知の課題（移設前から存在 / 本移行の前提ではない）
