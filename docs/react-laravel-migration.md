@@ -57,7 +57,7 @@
 | # | タスク | 状態 | 備考 |
 | --- | --- | --- | --- |
 | 2-1 | Vite + React + TS プロジェクト初期化（`package.json`, `tsconfig`, `vite.config.ts`） | ☑ | `frontend/` 作成。Vite5+React18+TS、Router/Axios/TanStack Query を依存に追加。`npm run build`/`typecheck`/`lint` green、dev は 5173 で 200 応答 |
-| 2-2 | Axios クライアント（baseURL, トークン注入, 401 ハンドリング） | ☐ | `src/lib/api.ts` |
+| 2-2 | Axios クライアント（baseURL, トークン注入, 401 ハンドリング） | ☑ | `src/lib/api.ts`＋`src/lib/token.ts`。baseURL=`${VITE_API_BASE_URL}/api`、Bearer 自動付与、401 で token 破棄＋`/login` 誘導 |
 | 2-3 | 認証コンテキスト＋トークン永続化（localStorage） | ☐ | `src/auth/` |
 | 2-4 | React Router 設定＋認証ガード（ProtectedRoute） | ☐ | `src/router.tsx` |
 | 2-5 | 共通レイアウト（サイドバー／ヘッダー／フッター）移植 | ☐ | `layouts/sidebar.blade.php` 参照 |
@@ -261,8 +261,10 @@
 - 2026-06-16: **2-1 完了**。リポジトリ直下に `frontend/`（Vite5 + React18 + TypeScript）を作成。
   構成: `package.json`（`dev`/`build`/`preview`/`lint`/`typecheck` スクリプト）・`tsconfig.json`（strict・`@/*`→`src/*` エイリアス）・`vite.config.ts`（`server.host=true`/`port=5173`/`strictPort`・`@` エイリアス）・`index.html`・`src/main.tsx`・`src/App.tsx`（プレースホルダ、`VITE_API_BASE_URL` 表示）・`src/index.css`・`src/vite-env.d.ts`（env 型）・`.eslintrc.cjs`・`.env.example`・`.gitignore`。
   依存に **React Router / Axios / TanStack Query** を追加済み（2-2〜2-4 で利用）。`npm install`（外部レジストリ到達 OK）→ `npm run typecheck` / `npm run build` / `npm run lint` すべて green、`npm run dev` で 5173 が HTTP 200 応答を確認。`package-lock.json` も追跡（再現性のため）。
-- 次の推奨タスク: **2-2（Axios クライアント `src/lib/api.ts`：baseURL=`VITE_API_BASE_URL`／Bearer トークン注入／401 ハンドリング）→ 2-3（認証コンテキスト＋localStorage 永続化）→ 2-4（React Router＋ProtectedRoute）**。
-  - 2-2 メモ: トークンキーは localStorage（例 `osm_token`）。401 時はトークン破棄＋ログインへ誘導。対応 API は実装済み `POST /api/auth/login`・`GET /api/auth/me`・`POST /api/auth/logout`。
+- 2026-06-16: **2-2 完了**。`frontend/src/lib/api.ts`（共有 Axios インスタンス）と `src/lib/token.ts`（localStorage トークン永続化、キー `osm_token`）を追加。
+  baseURL=`${VITE_API_BASE_URL}/api`、リクエスト時に `Authorization: Bearer <token>` を自動付与、401 応答時は token 破棄＋`/login` へ誘導（`/auth/login`・`/auth/me` の 401 はリダイレクトせず呼び出し側で処理）。`typecheck`/`build`/`lint` green（未 import のため現状バンドルからは tree-shake、型検査は通過）。
+- 次の推奨タスク: **2-3（認証コンテキスト＋トークン永続化 `src/auth/`）→ 2-4（React Router＋ProtectedRoute `src/router.tsx`）→ 2-5（共通レイアウト移植）**。
+  - 2-3 メモ: `AuthContext` で `user`/`login()`/`logout()`/`isLoading` を提供。`login()` は `POST /api/auth/login`→`setToken`→`me` 取得。起動時に token があれば `GET /api/auth/me` で復元、失敗時 `clearToken`。`logout()` は `POST /api/auth/logout`→`clearToken`。token/api ヘルパは `src/lib/` に実装済み。
   - **1-6 について**: `admin` alias は `bootstrap/app.php` で登録済み・`AdminMiddleware` は `$request->user()->isAdmin()` 判定でガード非依存。admin 専用 API ルートを足す回（例: 3-9 設定/ユーザー管理の API 化）に `->middleware('admin')` を付与して実質達成すればよく、単独セッションを割く必要は薄い。
 
 ### 既知の課題（移設前から存在 / 本移行の前提ではない）
