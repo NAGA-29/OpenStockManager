@@ -51,17 +51,22 @@ function ClientsPage() {
         登録クライアント一覧
       </div>
 
-      <form className="clients-search" onSubmit={handleSearch}>
-        <input
-          type="text"
-          placeholder="クライアント名"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-        />
-        <button type="submit" className="osm-btn">
-          <i className="fas fa-search" aria-hidden="true" /> 検索
-        </button>
-      </form>
+      <div className="clients-toolbar">
+        <form className="clients-search" onSubmit={handleSearch}>
+          <input
+            type="text"
+            placeholder="クライアント名"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+          />
+          <button type="submit" className="osm-btn">
+            <i className="fas fa-search" aria-hidden="true" /> 検索
+          </button>
+        </form>
+        <NavLink to="/clients/register" className="osm-btn">
+          <i className="fas fa-plus" aria-hidden="true" /> 新規登録
+        </NavLink>
+      </div>
 
       {isLoading && <Loading />}
 

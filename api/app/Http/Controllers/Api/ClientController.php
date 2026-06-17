@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreClientApiRequest;
 use App\Models\Client;
 use App\Models\Contacts;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Ramsey\Uuid\Uuid;
 
 class ClientController extends Controller
 {
@@ -31,6 +33,30 @@ class ClientController extends Controller
             ->map(fn (Client $client) => $this->resource($client));
 
         return response()->json(['data' => $clients]);
+    }
+
+    /**
+     * クライアント企業を登録する。
+     *
+     * 旧 `client/register.blade.php`（`ClientsController@register`）相当。
+     * `client_id` は UUIDv7 で自動採番する。失敗時は 422 JSON。
+     */
+    public function store(StoreClientApiRequest $request): JsonResponse
+    {
+        $safe = $request->validated();
+
+        $client = Client::create([
+            'client_id'      => (string) Uuid::uuid7(),
+            'company'        => $safe['company'],
+            'url'            => $safe['url'],
+            'tel'            => $safe['tel'],
+            'street_address' => $safe['street_address'],
+            'note'           => $safe['note'] ?? null,
+        ]);
+
+        return response()->json([
+            'data' => $this->resource($client),
+        ], 201);
     }
 
     /**

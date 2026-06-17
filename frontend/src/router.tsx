@@ -8,7 +8,10 @@ import InventoryUnitsPage from './pages/InventoryUnitsPage';
 import DeviceDetailPage from './pages/DeviceDetailPage';
 import RegisterDevicePage from './pages/RegisterDevicePage';
 import ClientsPage from './pages/ClientsPage';
+import ClientRegisterPage from './pages/ClientRegisterPage';
 import ClientDetailPage from './pages/ClientDetailPage';
+import ContactsPage from './pages/ContactsPage';
+import ContactDetailPage from './pages/ContactDetailPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 /**
@@ -36,7 +39,10 @@ export const router = createBrowserRouter([
           { path: '/devices/:id', element: <DeviceDetailPage /> },
           { path: '/device/register', element: <RegisterDevicePage /> },
           { path: '/clients', element: <ClientsPage /> },
+          { path: '/clients/register', element: <ClientRegisterPage /> },
           { path: '/clients/:id', element: <ClientDetailPage /> },
+          { path: '/contacts', element: <ContactsPage /> },
+          { path: '/contacts/:id', element: <ContactDetailPage /> },
         ],
       },
     ],

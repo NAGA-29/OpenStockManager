@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ClientController;
+use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\DeviceController;
 use App\Http\Controllers\Api\InventoryStockController;
@@ -42,5 +43,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // データ - クライアント
     Route::get('/clients', [ClientController::class, 'index'])->name('api.clients.index');
+    Route::post('/clients', [ClientController::class, 'store'])->name('api.clients.store');
     Route::get('/clients/{clientId}', [ClientController::class, 'show'])->name('api.clients.show');
+
+    // データ - 担当者
+    Route::get('/contacts', [ContactController::class, 'index'])->name('api.contacts.index');
+    Route::get('/contacts/{contactId}', [ContactController::class, 'show'])->name('api.contacts.show');
 });

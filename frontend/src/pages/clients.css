@@ -1,4 +1,17 @@
 /* クライアント画面固有スタイル。.osm-btn / .device-card 系は inventory.css を共有。 */
+.clients-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.clients-toolbar .clients-search {
+  margin-bottom: 0;
+}
+
 .clients-search {
   display: flex;
   gap: 0.5rem;

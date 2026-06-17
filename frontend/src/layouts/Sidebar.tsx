@@ -55,13 +55,17 @@ const NAV_SECTIONS: NavSection[] = [
     children: [
       { label: '商品データ', to: '/device/file/benchmark' },
       { label: 'クライアント', to: '/clients' },
+      { label: '担当者', to: '/contacts' },
     ],
   },
   {
     id: 'register',
     label: '登録',
     icon: 'fas fa-address-book',
-    children: [{ label: '機材', to: '/device/register' }],
+    children: [
+      { label: '機材', to: '/device/register' },
+      { label: 'クライアント', to: '/clients/register' },
+    ],
   },
   {
     id: 'system',

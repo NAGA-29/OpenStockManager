@@ -94,4 +94,46 @@ class ClientApiTest extends TestCase
 
         $this->getJson('/api/clients/NO_SUCH')->assertStatus(404);
     }
+
+    public function test_store_requires_authentication(): void
+    {
+        $this->postJson('/api/clients', [])->assertStatus(401);
+    }
+
+    public function test_store_creates_client_and_returns_201(): void
+    {
+        Sanctum::actingAs(User::factory()->create());
+
+        $response = $this->postJson('/api/clients', [
+            'company'        => '新規商事',
+            'url'            => 'https://new.example.com',
+            'tel'            => '0312345678',
+            'street_address' => '大阪府',
+            'note'           => '備考',
+        ]);
+
+        $response->assertStatus(201)
+            ->assertJsonStructure(['data' => ['client_id', 'company', 'url', 'tel', 'street_address', 'note', 'modified_at']])
+            ->assertJsonPath('data.company', '新規商事');
+
+        $this->assertDatabaseHas('clients', [
+            'company'        => '新規商事',
+            'url'            => 'https://new.example.com',
+            'street_address' => '大阪府',
+        ]);
+    }
+
+    public function test_store_validates_required_fields(): void
+    {
+        Sanctum::actingAs(User::factory()->create());
+
+        $response = $this->postJson('/api/clients', [
+            'company' => '',
+            'url'     => 'not-a-url',
+            'tel'     => 'abc',
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['company', 'url', 'tel', 'street_address']);
+    }
 }
