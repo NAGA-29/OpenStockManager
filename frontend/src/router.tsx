@@ -4,6 +4,11 @@ import AppLayout from './layouts/AppLayout';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import InventoryStocksPage from './pages/InventoryStocksPage';
+import InventoryUnitsPage from './pages/InventoryUnitsPage';
+import DeviceDetailPage from './pages/DeviceDetailPage';
+import RegisterDevicePage from './pages/RegisterDevicePage';
+import ClientsPage from './pages/ClientsPage';
+import ClientDetailPage from './pages/ClientDetailPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 /**
@@ -27,6 +32,11 @@ export const router = createBrowserRouter([
           { index: true, element: <Navigate to="/dashboard" replace /> },
           { path: '/dashboard', element: <DashboardPage /> },
           { path: '/inventory/stocks', element: <InventoryStocksPage /> },
+          { path: '/inventory/units/:code', element: <InventoryUnitsPage /> },
+          { path: '/devices/:id', element: <DeviceDetailPage /> },
+          { path: '/device/register', element: <RegisterDevicePage /> },
+          { path: '/clients', element: <ClientsPage /> },
+          { path: '/clients/:id', element: <ClientDetailPage /> },
         ],
       },
     ],

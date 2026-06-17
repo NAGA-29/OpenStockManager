@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\DeviceController;
 use App\Http\Controllers\Api\InventoryStockController;
@@ -34,5 +35,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // 在庫 - 個別管理（カテゴリ別一覧／端末詳細）
     Route::get('/devices/category/{code}', [DeviceController::class, 'byCategory'])->name('api.devices.category');
+    // 端末登録（フォーム選択肢／単体登録）。`/devices/{deviceId}` より前に定義する。
+    Route::get('/devices/form-options', [DeviceController::class, 'formOptions'])->name('api.devices.form_options');
+    Route::post('/devices', [DeviceController::class, 'store'])->name('api.devices.store');
     Route::get('/devices/{deviceId}', [DeviceController::class, 'show'])->name('api.devices.show');
+
+    // データ - クライアント
+    Route::get('/clients', [ClientController::class, 'index'])->name('api.clients.index');
+    Route::get('/clients/{clientId}', [ClientController::class, 'show'])->name('api.clients.show');
 });
