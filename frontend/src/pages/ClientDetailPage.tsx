@@ -18,7 +18,15 @@ function ClientDetailPage() {
   const { data, isLoading, isError, refetch } = useClient(id);
 
   const contactColumns: Column<ClientContact>[] = [
-    { key: 'name', header: '名前', render: (row) => row.name ?? '-' },
+    {
+      key: 'name',
+      header: '名前',
+      render: (row) => (
+        <NavLink to={`/contacts/${encodeURIComponent(String(row.id))}`}>
+          {row.name ?? '-'}
+        </NavLink>
+      ),
+    },
     { key: 'tel', header: '電話番号', render: (row) => row.tel ?? '-' },
     { key: 'email', header: 'Email', render: (row) => row.email ?? '-' },
     { key: 'note', header: 'ノート', render: (row) => row.note ?? '' },

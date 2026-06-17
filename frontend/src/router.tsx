@@ -9,6 +9,8 @@ import DeviceDetailPage from './pages/DeviceDetailPage';
 import RegisterDevicePage from './pages/RegisterDevicePage';
 import ClientsPage from './pages/ClientsPage';
 import ClientDetailPage from './pages/ClientDetailPage';
+import ContactsPage from './pages/ContactsPage';
+import ContactDetailPage from './pages/ContactDetailPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 /**
@@ -37,6 +39,8 @@ export const router = createBrowserRouter([
           { path: '/device/register', element: <RegisterDevicePage /> },
           { path: '/clients', element: <ClientsPage /> },
           { path: '/clients/:id', element: <ClientDetailPage /> },
+          { path: '/contacts', element: <ContactsPage /> },
+          { path: '/contacts/:id', element: <ContactDetailPage /> },
         ],
       },
     ],
