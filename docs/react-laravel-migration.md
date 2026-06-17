@@ -74,7 +74,7 @@
 | 3-2 | ダッシュボード | ☑ | API済・UI実装済 |
 | 3-3 | 在庫（数量管理／個別管理／端末詳細／バーコード） | ◐ | 7（数量管理／個別管理／端末詳細 完了。バーコード/検索 残） |
 | 3-4 | 端末登録（単体／CSV一括／確認） | ◐ | 5（単体登録 完了。画像/CSV一括/確認 残） |
-| 3-5 | データ（スペック／ベンチマーク／企業／担当者） | ◐ | 8（クライアント一覧/詳細・担当者一覧/詳細 完了。登録/ファイル 残） |
+| 3-5 | データ（スペック／ベンチマーク／企業／担当者） | ◐ | 8（クライアント一覧/詳細/登録・担当者一覧/詳細 完了。担当者登録/ファイル 残） |
 | 3-6 | 手続き・レンタル（カート／CSV／一括返却） | ☐ | 7 |
 | 3-7 | 手続き・販売（カート／CSV） | ☐ | 6 |
 | 3-8 | 履歴（レンタル／販売／詳細） | ☐ | 5 |
@@ -141,7 +141,7 @@
 | `devices/device_spec_file` | `/device/file/spec` | `GET/POST /api/devices/file/spec` | ☐ |
 | `devices/device_benchmark_file` | `/device/file/benchmark` | `GET/POST /api/devices/file/benchmark` | ☐ |
 | `client/index` | `/clients` | `GET /api/clients` ✅実装済 | ☑ |
-| `client/register` | `/clients/register` | `POST /api/clients` | ☐ |
+| `client/register` | `/clients/register` | `POST /api/clients` ✅実装済 | ☑（企業フォーム。担当者同時登録は CRM 前提で対象外） |
 | `client/client_detail` | `/clients/:id` | `GET /api/clients/:id` ✅実装済 | ☑（読取。担当者一覧込み） |
 | `contacts/lists` | `/contacts` | `GET /api/contacts` ✅実装済 | ☑（読取。担当者名検索込み） |
 | `contacts/register` | `/contacts/register` | `POST /api/contacts` | ☐ |
@@ -330,6 +330,13 @@
   - 検証: `cd api && php artisan test` → **266 passed / 1 risky**（既知 ContactsTest 3 件が解消、新規 ContactApiTest 6 件を含む。risky 1 は移行前から）。`cd frontend && npm run typecheck && npm run build && npm run lint` すべて green。
   - **未実装（意図的に後回し）**: 担当者登録 `POST /api/contacts`（`contacts/register`＝3-5 残）、クライアント登録（`client/register`）、スペック・ベンチマークファイル画面。CRM 同期は 3-9。一覧は全件取得（ページネーション未実装・`word` 検索のみ）。
 - 次の推奨タスク: **3-5 残**（クライアント登録 `POST /api/clients`／担当者登録 `POST /api/contacts`：旧 `StoreClientRequest`・`StoreContactRequest` 参照、Api 版リクエストで 422 JSON 化／スペック・ベンチマークファイル画面）。または 3-4 残（CSV 一括）、3-3 残（バーコード/検索）。いずれも着手前に「対応 API 実装済みか」を確認。CSV 一括・バーコード・カメラスキャンは難度が高いので個別設計回で。
+
+- 2026-06-17: **3-5 クライアント登録 完了**（企業フォーム）。
+  - **API 追加**（`Api\ClientController@store`）: `POST /api/clients`（`client_id` を UUIDv7 で自動採番、成功時 201＋作成リソース）。バリデーションは新規 `StoreClientApiRequest`（旧 `StoreClientRequest` を踏襲：`company`/`url`(url)/`tel`(numeric・8〜11桁)/`street_address`/`note`(nullable)。失敗時は 422 JSON）。`routes/api.php` に登録。
+  - **フロント**: `features/clients/useRegisterClient.ts`（mutation）、`pages/ClientRegisterPage.tsx`（422 をフィールド単位表示・成功トースト＋詳細リンク・登録後に一覧クエリを invalidate）。`router.tsx` に `/clients/register`（`/clients/:id` より前）を追加、`Sidebar`「登録」へ「クライアント」項目、`ClientsPage` に「新規登録」ボタンを追加。フォーム描画・422 ハンドリングは `RegisterDevicePage` パターンを踏襲。スタイルは `register.css`/`clients.css` を共有。
+  - **意図的な対象外**: 旧 `client/register` は担当者（contact）フォームを同梱するが、担当者情報は CRM 連携前提のため企業フォームのみ移植（担当者登録 `POST /api/contacts` は 3-5 残）。`post_code` は旧フォームに無く踏襲して省略。
+  - 検証: `cd api && php artisan test` → **269 passed / 1 risky**（`ClientApiTest` に store 3 件追加）。`cd frontend && npm run typecheck && npm run build && npm run lint` すべて green。
+- 次の推奨タスク: **3-5 残**（担当者登録 `POST /api/contacts`：旧 `StoreContactRequest` 参照、Api 版で 422 JSON 化・`client_id` の存在検証／スペック・ベンチマークファイル画面＝画像/ファイルアップロードを伴うため難度中）。または 3-4 残（CSV 一括）、3-3 残（バーコード/検索）。着手前に「対応 API 実装済みか」を確認。
 
 ### 既知の課題（移設前から存在 / 本移行の前提ではない）
 - ~~`tests/Unit/Models/ContactsTest` の3ケースが失敗~~ **2026-06-17 解消済み（3-5 担当者対応でテストを現モデル仕様へ追従）**。直近の「personnel → contact」リファクタで `Contacts` モデルの主キーが `contact_id`→`id`（auto-increment）へ変わった一方、テストが旧仕様（`contact_id` 主キー・非incrementing・fillable に `contact_id`）を期待していたのが原因。

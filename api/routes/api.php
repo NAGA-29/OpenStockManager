@@ -43,6 +43,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // データ - クライアント
     Route::get('/clients', [ClientController::class, 'index'])->name('api.clients.index');
+    Route::post('/clients', [ClientController::class, 'store'])->name('api.clients.store');
     Route::get('/clients/{clientId}', [ClientController::class, 'show'])->name('api.clients.show');
 
     // データ - 担当者

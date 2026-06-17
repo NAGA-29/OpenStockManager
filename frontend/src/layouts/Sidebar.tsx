@@ -62,7 +62,10 @@ const NAV_SECTIONS: NavSection[] = [
     id: 'register',
     label: '登録',
     icon: 'fas fa-address-book',
-    children: [{ label: '機材', to: '/device/register' }],
+    children: [
+      { label: '機材', to: '/device/register' },
+      { label: 'クライアント', to: '/clients/register' },
+    ],
   },
   {
     id: 'system',
