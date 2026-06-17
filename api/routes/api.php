@@ -48,5 +48,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // データ - 担当者
     Route::get('/contacts', [ContactController::class, 'index'])->name('api.contacts.index');
+    Route::post('/contacts', [ContactController::class, 'store'])->name('api.contacts.store');
     Route::get('/contacts/{contactId}', [ContactController::class, 'show'])->name('api.contacts.show');
 });

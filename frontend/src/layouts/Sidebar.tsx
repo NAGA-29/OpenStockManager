@@ -65,6 +65,7 @@ const NAV_SECTIONS: NavSection[] = [
     children: [
       { label: '機材', to: '/device/register' },
       { label: 'クライアント', to: '/clients/register' },
+      { label: '担当者', to: '/contacts/register' },
     ],
   },
   {

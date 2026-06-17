@@ -119,4 +119,98 @@ class ContactApiTest extends TestCase
 
         $this->getJson('/api/contacts/999999')->assertStatus(404);
     }
+
+    public function test_store_requires_authentication(): void
+    {
+        $this->postJson('/api/contacts', [])->assertStatus(401);
+    }
+
+    public function test_store_creates_contact_and_returns_201(): void
+    {
+        Sanctum::actingAs(User::factory()->create());
+
+        $client = $this->makeClient();
+
+        $response = $this->postJson('/api/contacts', [
+            'client_id' => $client->client_id,
+            'name'      => '新規担当者',
+            'email'     => 'new@example.com',
+            'tel'       => '09012345678',
+            'note'      => 'メモ',
+        ]);
+
+        $response->assertStatus(201)
+            ->assertJsonStructure(['data' => ['id', 'client_id', 'company', 'name', 'tel', 'email', 'note', 'modified_at']])
+            ->assertJsonPath('data.name', '新規担当者')
+            ->assertJsonPath('data.client_id', $client->client_id);
+
+        $this->assertDatabaseHas('contacts', [
+            'client_id' => $client->client_id,
+            'name'      => '新規担当者',
+            'email'     => 'new@example.com',
+        ]);
+    }
+
+    public function test_store_validates_client_id_required(): void
+    {
+        Sanctum::actingAs(User::factory()->create());
+
+        $response = $this->postJson('/api/contacts', [
+            'name'  => '新規担当者',
+            'email' => 'new@example.com',
+            'tel'   => '09012345678',
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonPath('errors.client_id.0', 'クライアントを選択してください。');
+    }
+
+    public function test_store_validates_client_id_exists(): void
+    {
+        Sanctum::actingAs(User::factory()->create());
+
+        $response = $this->postJson('/api/contacts', [
+            'client_id' => 'non-existent-id',
+            'name'      => '新規担当者',
+            'email'     => 'new@example.com',
+            'tel'       => '09012345678',
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonPath('errors.client_id.0', '指定されたクライアントが見つかりません。');
+    }
+
+    public function test_store_validates_email_format(): void
+    {
+        Sanctum::actingAs(User::factory()->create());
+
+        $client = $this->makeClient();
+
+        $response = $this->postJson('/api/contacts', [
+            'client_id' => $client->client_id,
+            'name'      => '新規担当者',
+            'email'     => 'invalid-email',
+            'tel'       => '09012345678',
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonPath('errors.email.0', '有効なメールアドレスを入力してください。');
+    }
+
+    public function test_store_validates_tel_digits(): void
+    {
+        Sanctum::actingAs(User::factory()->create());
+
+        $client = $this->makeClient();
+
+        $response = $this->postJson('/api/contacts', [
+            'client_id' => $client->client_id,
+            'name'      => '新規担当者',
+            'email'     => 'new@example.com',
+            'tel'       => '123',
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonPath('errors.tel.0', '電話番号は8〜11桁で入力してください。');
+    }
 }
