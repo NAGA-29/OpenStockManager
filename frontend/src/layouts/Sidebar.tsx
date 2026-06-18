@@ -53,7 +53,8 @@ const NAV_SECTIONS: NavSection[] = [
     label: 'データ一覧',
     icon: 'fas fa-chart-pie',
     children: [
-      { label: '商品データ', to: '/device/file/benchmark' },
+      { label: 'スペックデータ', to: '/device/file/spec' },
+      { label: 'ベンチマーク', to: '/device/file/benchmark' },
       { label: 'クライアント', to: '/clients' },
       { label: '担当者', to: '/contacts' },
     ],

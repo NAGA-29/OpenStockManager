@@ -4,11 +4,14 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreDeviceApiRequest;
+use App\Http\Requests\UploadSpecFileApiRequest;
+use App\Http\Requests\UploadBenchmarkFileApiRequest;
 use App\Models\Condition;
 use App\Models\Device;
 use App\Models\DeviceCategory;
 use App\Models\DeviceTypeField;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Storage;
 
 class DeviceController extends Controller
 {
@@ -203,6 +206,111 @@ class DeviceController extends Controller
                 'device_id' => $device->device_id,
             ],
         ], 201);
+    }
+
+    /**
+     * 端末スペックファイル情報を返す。
+     *
+     * ファイルが存在すればファイル名・サイズ・更新日時を返し、
+     * 存在しなければ空オブジェクトを返す。
+     */
+    public function getSpecFile(): JsonResponse
+    {
+        $files = Storage::disk('public')->files('spec/');
+
+        if (empty($files)) {
+            return response()->json(['data' => null]);
+        }
+
+        $filePath = $files[0];
+        $fileInfo = [
+            'filename'   => basename($filePath),
+            'size'       => Storage::disk('public')->size($filePath),
+            'updated_at' => date('Y-m-d H:i:s', Storage::disk('public')->lastModified($filePath)),
+        ];
+
+        return response()->json(['data' => $fileInfo]);
+    }
+
+    /**
+     * 端末スペックファイルをアップロードする。
+     *
+     * 既存ファイルがあれば削除してから新規保存。成功時は 200 ファイル情報を返す。
+     */
+    public function uploadSpecFile(UploadSpecFileApiRequest $request): JsonResponse
+    {
+        $file = $request->file('spec_file');
+        $fileName = $file->getClientOriginalName();
+
+        if (! Storage::disk('public')->exists('spec')) {
+            Storage::disk('public')->makeDirectory('spec');
+        }
+
+        // 既存ファイルを削除
+        $oldFiles = Storage::disk('public')->files('spec/');
+        Storage::disk('public')->delete($oldFiles);
+
+        // 新規ファイルをアップロード
+        $file->storeAs('spec', $fileName, 'public');
+
+        $filePath = 'spec/' . $fileName;
+        $fileInfo = [
+            'filename'   => basename($filePath),
+            'size'       => Storage::disk('public')->size($filePath),
+            'updated_at' => date('Y-m-d H:i:s', Storage::disk('public')->lastModified($filePath)),
+        ];
+
+        return response()->json(['data' => $fileInfo], 200);
+    }
+
+    /**
+     * ベンチマークファイル情報を返す。
+     */
+    public function getBenchmarkFile(): JsonResponse
+    {
+        $files = Storage::disk('public')->files('benchmark/');
+
+        if (empty($files)) {
+            return response()->json(['data' => null]);
+        }
+
+        $filePath = $files[0];
+        $fileInfo = [
+            'filename'   => basename($filePath),
+            'size'       => Storage::disk('public')->size($filePath),
+            'updated_at' => date('Y-m-d H:i:s', Storage::disk('public')->lastModified($filePath)),
+        ];
+
+        return response()->json(['data' => $fileInfo]);
+    }
+
+    /**
+     * ベンチマークファイルをアップロードする。
+     */
+    public function uploadBenchmarkFile(UploadBenchmarkFileApiRequest $request): JsonResponse
+    {
+        $file = $request->file('benchmark_file');
+        $fileName = $file->getClientOriginalName();
+
+        if (! Storage::disk('public')->exists('benchmark')) {
+            Storage::disk('public')->makeDirectory('benchmark');
+        }
+
+        // 既存ファイルを削除
+        $oldFiles = Storage::disk('public')->files('benchmark/');
+        Storage::disk('public')->delete($oldFiles);
+
+        // 新規ファイルをアップロード
+        $file->storeAs('benchmark', $fileName, 'public');
+
+        $filePath = 'benchmark/' . $fileName;
+        $fileInfo = [
+            'filename'   => basename($filePath),
+            'size'       => Storage::disk('public')->size($filePath),
+            'updated_at' => date('Y-m-d H:i:s', Storage::disk('public')->lastModified($filePath)),
+        ];
+
+        return response()->json(['data' => $fileInfo], 200);
     }
 
     /**

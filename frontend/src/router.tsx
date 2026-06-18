@@ -7,6 +7,8 @@ import InventoryStocksPage from './pages/InventoryStocksPage';
 import InventoryUnitsPage from './pages/InventoryUnitsPage';
 import DeviceDetailPage from './pages/DeviceDetailPage';
 import RegisterDevicePage from './pages/RegisterDevicePage';
+import DeviceSpecFilePage from './pages/DeviceSpecFilePage';
+import DeviceBenchmarkFilePage from './pages/DeviceBenchmarkFilePage';
 import ClientsPage from './pages/ClientsPage';
 import ClientRegisterPage from './pages/ClientRegisterPage';
 import ClientDetailPage from './pages/ClientDetailPage';
@@ -39,6 +41,8 @@ export const router = createBrowserRouter([
           { path: '/inventory/units/:code', element: <InventoryUnitsPage /> },
           { path: '/devices/:id', element: <DeviceDetailPage /> },
           { path: '/device/register', element: <RegisterDevicePage /> },
+          { path: '/device/file/spec', element: <DeviceSpecFilePage /> },
+          { path: '/device/file/benchmark', element: <DeviceBenchmarkFilePage /> },
           { path: '/clients', element: <ClientsPage /> },
           { path: '/clients/register', element: <ClientRegisterPage /> },
           { path: '/clients/:id', element: <ClientDetailPage /> },

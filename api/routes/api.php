@@ -39,6 +39,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // 端末登録（フォーム選択肢／単体登録）。`/devices/{deviceId}` より前に定義する。
     Route::get('/devices/form-options', [DeviceController::class, 'formOptions'])->name('api.devices.form_options');
     Route::post('/devices', [DeviceController::class, 'store'])->name('api.devices.store');
+    // ファイルアップロード（スペック・ベンチマーク）。`/devices/{deviceId}` より前に定義する。
+    Route::get('/devices/file/spec', [DeviceController::class, 'getSpecFile'])->name('api.devices.file.spec');
+    Route::post('/devices/file/spec', [DeviceController::class, 'uploadSpecFile'])->name('api.devices.file.spec.upload');
+    Route::get('/devices/file/benchmark', [DeviceController::class, 'getBenchmarkFile'])->name('api.devices.file.benchmark');
+    Route::post('/devices/file/benchmark', [DeviceController::class, 'uploadBenchmarkFile'])->name('api.devices.file.benchmark.upload');
     Route::get('/devices/{deviceId}', [DeviceController::class, 'show'])->name('api.devices.show');
 
     // データ - クライアント
