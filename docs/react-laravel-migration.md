@@ -73,7 +73,7 @@
 | 3-1 | 認証（ログイン／パスワード／メール認証） | ◐ | 7（ログインのみ完了） |
 | 3-2 | ダッシュボード | ☑ | API済・UI実装済 |
 | 3-3 | 在庫（数量管理／個別管理／端末詳細／バーコード） | ◐ | 7（数量管理／個別管理／端末詳細 完了。バーコード/検索 残） |
-| 3-4 | 端末登録（単体／CSV一括／確認） | ◐ | 5（単体登録 完了。画像/CSV一括/確認 残） |
+| 3-4 | 端末登録（単体／CSV一括／確認） | ◐ | 5（単体登録・CSV一括 完了。画像 残） |
 | 3-5 | データ（スペック／ベンチマーク／企業／担当者） | ☑ | 8（全て完了） |
 | 3-6 | 手続き・レンタル（カート／CSV／一括返却） | ☐ | 7 |
 | 3-7 | 手続き・販売（カート／CSV） | ☐ | 6 |
@@ -131,9 +131,9 @@
 | --- | --- | --- | --- |
 | `register_device/register_device` | `/device/register` | `GET /api/devices/form-options` ✅ + `POST /api/devices` ✅ | ☑（単体。画像は未対応） |
 | `devices/components/register_device` | フォーム部品（ページ内に統合） | — | ☑ |
-| `devices/components/register_device_multi` | `/device/register/multi` | `POST /api/devices/multi/upload` | ☐ |
-| `devices/components/register_device_confirm_multi` | 確認ステップ | `POST /api/devices/multi/store` | ☐ |
-| `register_device/register_device_confirm_multi` | 確認ステップ | 同上 | ☐ |
+| `devices/components/register_device_multi` | `/device/register/multi` | `POST /api/devices/multi/upload` ✅実装済 | ☑ |
+| `devices/components/register_device_confirm_multi` | 確認ステップ | `POST /api/devices/multi/store` ✅実装済 | ☑ |
+| `register_device/register_device_confirm_multi` | 確認ステップ | 同上 | ☑ |
 
 ### 3-5 データ（ファイル・企業・担当者）
 | Blade | React ルート | API | 状態 |
@@ -353,7 +353,17 @@
   - 検証: `cd api && php artisan test` → **272 passed / 1 risky** (no changes)。`cd frontend && npm run build` green。
   - **Phase 3-5 完全完了**: クライアント一覧/詳細/登録・担当者一覧/詳細/登録・ファイル計 8 画面すべて React 化。
 
-- 次の推奨タスク: **Phase 3-4 残**（CSV 一括登録・確認）または **Phase 3-3 残**（バーコード・検索）。または **Phase 3-6**（手続き・レンタル）へ進むかは優先度判断で。`GET /api/rental` 等の API が実装済みか要確認。
+- 2026-06-17: **3-4 CSV 一括登録 完了**（複数端末のファイル登録機能）。
+  - **API 追加**: `UploadDeviceMultiApiRequest`・`StoreDeviceMultiApiRequest` + 2 メソッド（`uploadDeviceMulti`/`storeDeviceMulti`）
+    - `POST /api/devices/multi/upload` → CSV 解析・各行検証・device_id 自動生成・プレビューデータ JSON 返却
+    - `POST /api/devices/multi/store` → デバイスデータの配列を受け取り、トランザクション内で一括 DB 保存（201 返却）
+  - **フロント**: 
+    - `useUploadDeviceMulti`・`useStoreDeviceMulti`（mutations）
+    - `DeviceRegisterMultiPage`（3-state: upload → confirm → completed）
+    - Sidebar「登録 > 機材（CSV一括）」追加
+  - **検証**: API テスト・フロント build 共に green。
+
+- 次の推奨タスク: **Phase 3-3 残**（バーコード・検索）。または **Phase 3-6**（手続き・レンタル）へ進むかは優先度判断で。`GET /api/rental`・`POST /api/rental/store` 等の API が実装済みか要確認。
 
 ### 既知の課題（移設前から存在 / 本移行の前提ではない）
 - ~~`tests/Unit/Models/ContactsTest` の3ケースが失敗~~ **2026-06-17 解消済み（3-5 担当者対応でテストを現モデル仕様へ追従）**。直近の「personnel → contact」リファクタで `Contacts` モデルの主キーが `contact_id`→`id`（auto-increment）へ変わった一方、テストが旧仕様（`contact_id` 主キー・非incrementing・fillable に `contact_id`）を期待していたのが原因。
