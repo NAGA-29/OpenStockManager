@@ -6,12 +6,20 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreDeviceApiRequest;
 use App\Http\Requests\UploadSpecFileApiRequest;
 use App\Http\Requests\UploadBenchmarkFileApiRequest;
+use App\Http\Requests\UploadDeviceMultiApiRequest;
+use App\Http\Requests\StoreDeviceMultiApiRequest;
 use App\Models\Condition;
 use App\Models\Device;
 use App\Models\DeviceCategory;
 use App\Models\DeviceTypeField;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
+use League\Csv\Reader;
+use League\Csv\Statement;
+use App\Utilities\GeneralUtil;
 
 class DeviceController extends Controller
 {
@@ -311,6 +319,121 @@ class DeviceController extends Controller
         ];
 
         return response()->json(['data' => $fileInfo], 200);
+    }
+
+    /**
+     * 複数端末 CSV ファイルをアップロード・解析する。
+     *
+     * 旧 `confirmMulti` を API 化。CSV を解析・各行検証し、
+     * プレビューデータを返す（保存はしない）。
+     */
+    public function uploadDeviceMulti(UploadDeviceMultiApiRequest $request): JsonResponse
+    {
+        try {
+            $file = $request->file('device_register_file');
+            $filePath = $file->getPathname();
+
+            // CSV 解析
+            $csv = Reader::createFromPath($filePath, 'r')->setHeaderOffset(0);
+            $stmt = Statement::create();
+            $records = $stmt->process($csv);
+
+            $devices = [];
+            foreach ($records as $record) {
+                $record = GeneralUtil::sanitizeCsvRecord($record);
+
+                // 行単位のバリデーション
+                \Validator::make($record, [
+                    'device_type'           => ['required', 'string', 'max:16', Rule::in(DeviceCategory::activeCodes())],
+                    'device_name'           => ['required', 'string', 'max:255'],
+                    'device_serial'         => ['required', 'string', 'max:32'],
+                    'first_work_date_at'    => ['nullable', 'date'],
+                    'purchase_date_at'      => ['nullable', 'date'],
+                    'option'                => ['nullable', 'string'],
+                    'defective'             => ['nullable', 'integer'],
+                    'not_for_sale'          => ['nullable', 'integer'],
+                    'note'                  => ['nullable', 'string'],
+                ])->validate();
+
+                // device_id を自動生成
+                $samePrefix = collect($devices)->filter(function ($d) use ($record) {
+                    return str_starts_with($d['device_id'], "{$record['device_type']}_{$record['device_name']}_");
+                })->count();
+                $baseId = Device::generateDeviceId($record['device_type'], $record['device_name']);
+                if ($samePrefix > 0) {
+                    $prefix = "{$record['device_type']}_{$record['device_name']}_";
+                    $baseNum = (int) substr($baseId, strlen($prefix));
+                    $record['device_id'] = $prefix . str_pad($baseNum + $samePrefix, 6, '0', STR_PAD_LEFT);
+                } else {
+                    $record['device_id'] = $baseId;
+                }
+
+                $devices[] = $record;
+            }
+
+            return response()->json(['data' => $devices], 200);
+        } catch (\Exception $err) {
+            Log::channel('error')->error('device.upload_multi.failed', [
+                'action'         => 'device_csv_upload',
+                'error_message'  => $err->getMessage(),
+                'error_class'    => get_class($err),
+            ]);
+
+            return response()->json([
+                'message' => 'CSV 解析に失敗しました。形式を確認してください。',
+            ], 422);
+        }
+    }
+
+    /**
+     * 複数端末を一括保存する。
+     *
+     * 旧 `storeDeviceMulti` を API 化。アップロード時に検証済みの
+     * デバイスデータの配列を受け取り、トランザクション内で一括保存。
+     */
+    public function storeDeviceMulti(StoreDeviceMultiApiRequest $request): JsonResponse
+    {
+        try {
+            DB::beginTransaction();
+
+            $devices = $request->validated()['devices'];
+
+            foreach ($devices as $device_data) {
+                Device::create([
+                    'device_id'             => $device_data['device_id'],
+                    'device_type'           => $device_data['device_type'],
+                    'device_name'           => $device_data['device_name'],
+                    'device_serial'         => $device_data['device_serial'],
+                    'first_work_date_at'    => $device_data['first_work_date_at'] ?? null,
+                    'purchase_date_at'      => $device_data['purchase_date_at'] ?? null,
+                    'option'                => $device_data['option'] ?? null,
+                    'condition_id'          => $device_data['condition'] ?? null,
+                    'defective'             => ! empty($device_data['defective']),
+                    'not_for_sale'          => ! empty($device_data['not_for_sale']),
+                    'note'                  => $device_data['note'] ?? null,
+                ]);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'data' => [
+                    'count'   => count($devices),
+                    'message' => count($devices) . '台の端末を登録しました。',
+                ],
+            ], 201);
+        } catch (\Exception $err) {
+            DB::rollBack();
+            Log::channel('error')->error('device.store_multi.failed', [
+                'action'         => 'device_multi_registration',
+                'error_message'  => $err->getMessage(),
+                'error_class'    => get_class($err),
+            ]);
+
+            return response()->json([
+                'message' => '端末の登録に失敗しました。',
+            ], 500);
+        }
     }
 
     /**

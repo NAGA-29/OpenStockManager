@@ -65,6 +65,7 @@ const NAV_SECTIONS: NavSection[] = [
     icon: 'fas fa-address-book',
     children: [
       { label: '機材', to: '/device/register' },
+      { label: '機材（CSV一括）', to: '/device/register/multi' },
       { label: 'クライアント', to: '/clients/register' },
       { label: '担当者', to: '/contacts/register' },
     ],
