@@ -75,8 +75,8 @@
 | 3-3 | 在庫（数量管理／個別管理／端末詳細／バーコード） | ☑ | 7（数量管理／個別管理／端末詳細／バーコード／検索 完了） |
 | 3-4 | 端末登録（単体／CSV一括／確認） | ◐ | 5（単体登録・CSV一括 完了。画像 残） |
 | 3-5 | データ（スペック／ベンチマーク／企業／担当者） | ☑ | 8（全て完了） |
-| 3-6 | 手続き・レンタル（カート／CSV／一括返却） | ☐ | 7 |
-| 3-7 | 手続き・販売（カート／CSV） | ☐ | 6 |
+| 3-6 | 手続き・レンタル（カート／CSV／一括返却） | ☑ | 7（カート検索配線含め完了） |
+| 3-7 | 手続き・販売（カート／CSV） | ☑ | 6（全て完了） |
 | 3-8 | 履歴（レンタル／販売／詳細） | ☐ | 5 |
 | 3-9 | 設定（ユーザー管理／カテゴリ／カスタムフィールド／メール・CRM同期） | ☐ | 6 |
 | 3-10 | 共通コンポーネント・モーダル群 | ☐ | 14 |
@@ -161,12 +161,14 @@
 ### 3-7 手続き・販売
 | Blade | React ルート | API | 状態 |
 | --- | --- | --- | --- |
-| `sales/index` | `/sale` | `GET /api/sale` | ☐ |
-| `sales/sales` | `/sale/cart` | `POST /api/sale/store` | ☐ |
-| `sales/components/cart` | カート部品 | — | ☐ |
-| `sales/components/file` | CSV 部品 | `POST /api/sale/multi/upload` | ☐ |
-| `sales/multi_sale_confirm` | CSV 確認 | `POST /api/sale/multi/store` | ☐ |
+| `sales/index` | `/sale` | `GET /api/sale` ✅実装済 | ☑ |
+| `sales/sales` | `/sale`（カート式タブ） | `POST /api/sale/store` ✅実装済 | ☑ |
+| `sales/components/cart` | `SaleCartForm`（端末検索配線済） | `GET /api/devices/search` | ☑ |
+| `sales/components/file` | `SaleFileForm`（ファイル式タブ） | `POST /api/sale/multi/upload` ✅実装済 | ☑ |
+| `sales/multi_sale_confirm` | CSV 確認（confirm ステート） | `POST /api/sale/multi/store` ✅実装済 | ☑ |
 | `sales/sales_detail`（書込） | `/sale/write/:deviceId` | `GET /api/sale/write/:deviceId` | ☐ |
+
+> 販売は不可逆のため返却処理なし。`device_sale` の pivot は `sale_date_at` のみ、`devices.sale_id` に `sale_id` をセットする。詳細画面（`/sale/history/:saleId`）は返却ボタンを持たず表示のみ。
 
 ### 3-8 履歴
 | Blade | React ルート | API | 状態 |

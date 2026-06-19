@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Alert from '@/components/ui/Alert';
 import DataTable, { type Column } from '@/components/ui/DataTable';
 import { useStoreSale, useSales, type SaleHist } from '@/features/sale/useSale';
 import { useContacts, type Contact } from '@/features/contacts/useContacts';
+import { useDeviceSearch } from '@/features/inventory/useDeviceSearch';
 import type { Client } from '@/features/clients/useClients';
 import type { CategoryDevice } from '@/features/inventory/useDeviceCategory';
 
@@ -31,9 +32,24 @@ function SaleCartForm({ clients }: SaleCartFormProps) {
   });
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [searchResults, setSearchResults] = useState<CategoryDevice[]>([]);
+  const [debouncedTerm, setDebouncedTerm] = useState('');
   const [errors, setErrors] = useState<Record<string, string[]>>({});
   const [successMessage, setSuccessMessage] = useState('');
+
+  // 入力をデバウンスして端末検索 API の呼び出し回数を抑える。
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedTerm(searchTerm.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  const { data: searchData } = useDeviceSearch(debouncedTerm, '', 1);
+  // 選択済み・販売済み・貸出中の端末は販売候補から除外する。
+  const searchResults = (searchData?.data ?? []).filter(
+    (device) =>
+      !form.device_ids.includes(device.device_id) &&
+      !device.sale_id &&
+      !device.lending_now,
+  );
 
   const { data: allContacts } = useContacts('');
   const contactsData = form.client_id
@@ -49,7 +65,6 @@ function SaleCartForm({ clients }: SaleCartFormProps) {
         device_ids: [...prev.device_ids, device.device_id],
       }));
     }
-    setSearchResults([]);
     setSearchTerm('');
   };
 
