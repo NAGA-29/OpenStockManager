@@ -196,4 +196,66 @@ class DeviceApiTest extends TestCase
 
         $response->assertStatus(422)->assertJsonValidationErrors('device_serial');
     }
+
+    public function test_search_requires_authentication(): void
+    {
+        $this->getJson('/api/devices/search?word=STB')->assertStatus(401);
+    }
+
+    public function test_search_requires_word(): void
+    {
+        Sanctum::actingAs(User::factory()->create());
+
+        $this->getJson('/api/devices/search')
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('word');
+    }
+
+    public function test_search_matches_device_id_serial_and_note(): void
+    {
+        Sanctum::actingAs(User::factory()->create());
+
+        $this->makeDevice(['device_id' => 'STB_ALPHA_000001', 'device_serial' => 'SN-AAA']);
+        $this->makeDevice(['device_id' => 'CAM_BETA_000001', 'device_serial' => 'SN-BBB', 'note' => 'ALPHA メモ']);
+        $this->makeDevice(['device_id' => 'CAM_GAMMA_000001', 'device_serial' => 'SN-CCC']);
+
+        // device_id と note の両方に「ALPHA」が含まれる 2 件がヒット
+        $response = $this->getJson('/api/devices/search?word=ALPHA');
+
+        $response->assertStatus(200)
+            ->assertJsonStructure([
+                'data' => [['device_id', 'device_serial', 'condition', 'has_images']],
+                'meta' => ['current_page', 'last_page', 'per_page', 'total', 'keywords'],
+            ])
+            ->assertJsonPath('meta.total', 2);
+    }
+
+    public function test_search_filters_by_hidden_type(): void
+    {
+        Sanctum::actingAs(User::factory()->create());
+
+        $this->makeDevice(['device_id' => 'STB_ONE_000001', 'device_type' => 'STB', 'device_serial' => 'SN-KEY1']);
+        $this->makeDevice(['device_id' => 'CAM_TWO_000001', 'device_type' => 'CAM', 'device_serial' => 'SN-KEY2']);
+
+        // hiddenType=STB で device_type を絶対条件にすると STB 1 件のみ
+        $response = $this->getJson('/api/devices/search?word=SN&hiddenType=STB');
+
+        $response->assertStatus(200)
+            ->assertJsonPath('meta.total', 1)
+            ->assertJsonPath('data.0.device_id', 'STB_ONE_000001');
+    }
+
+    public function test_search_excludes_soft_deleted(): void
+    {
+        Sanctum::actingAs(User::factory()->create());
+
+        $this->makeDevice(['device_id' => 'STB_LIVE_000001', 'device_serial' => 'SN-LIVE']);
+        $this->makeDevice(['device_id' => 'STB_DEAD_000001', 'device_serial' => 'SN-DEAD', 'soft_deleted_at' => now()]);
+
+        $response = $this->getJson('/api/devices/search?word=SN');
+
+        $response->assertStatus(200)
+            ->assertJsonPath('meta.total', 1)
+            ->assertJsonPath('data.0.device_id', 'STB_LIVE_000001');
+    }
 }

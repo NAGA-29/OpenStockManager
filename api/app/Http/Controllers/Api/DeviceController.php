@@ -20,9 +20,13 @@ use Illuminate\Validation\Rule;
 use League\Csv\Reader;
 use League\Csv\Statement;
 use App\Utilities\GeneralUtil;
+use App\Traits\Keyword;
+use Illuminate\Http\Request;
 
 class DeviceController extends Controller
 {
+    use Keyword;
+
     /**
      * カテゴリコードごとの端末一覧（個別管理）を JSON で返す。
      *
@@ -69,6 +73,68 @@ class DeviceController extends Controller
             // 旧レスポンスとの後方互換（カテゴリ名）。
             'category' => $current->name,
             'data'     => $devices,
+        ]);
+    }
+
+    /**
+     * 端末をキーワード検索する。
+     *
+     * 旧 `devices/search_results.blade.php`（`searchDevice`）相当。
+     * `word`（必須）で device_id / device_serial / note を AND 部分一致、
+     * `hiddenType` 指定時は device_type を絶対条件にする。全角→半角変換・
+     * スペース分割で複数キーワード化し、10 件ページネーションして返す。
+     */
+    public function search(Request $request): JsonResponse
+    {
+        $word = $request->query('word');
+
+        if (! is_string($word) || trim($word) === '') {
+            return response()->json([
+                'message' => '検索キーワードを入力してください。',
+                'errors'  => ['word' => ['検索キーワードを入力してください。']],
+            ], 422);
+        }
+
+        $hiddenType = $request->query('hiddenType');
+
+        // 全角→半角変換し、スペース区切りで複数キーワード化
+        $keywords = $this->extractKeywords(mb_convert_kana($word, 'r'));
+
+        $query = Device::query()->whereNull('soft_deleted_at');
+
+        if (is_string($hiddenType) && $hiddenType !== '') {
+            $query->where('device_type', $hiddenType);
+        }
+
+        foreach ($keywords as $key) {
+            $escapedKey = addcslashes($key, '%_\\');
+            $query->where(function ($subQuery) use ($escapedKey) {
+                $subQuery->orWhere('device_id', 'like', '%' . $escapedKey . '%')
+                    ->orWhere('device_serial', 'like', '%' . $escapedKey . '%')
+                    ->orWhere('note', 'like', '%' . $escapedKey . '%');
+            });
+        }
+
+        $paginator = $query->with('condition')
+            ->withCount('contents')
+            ->orderBy('device_id', 'desc')
+            ->paginate(10);
+
+        $data = collect($paginator->items())
+            ->map(fn (Device $device) => array_merge($this->resource($device), [
+                'has_images' => $device->contents_count > 0,
+            ]))
+            ->values();
+
+        return response()->json([
+            'data' => $data,
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page'    => $paginator->lastPage(),
+                'per_page'     => $paginator->perPage(),
+                'total'        => $paginator->total(),
+                'keywords'     => trim(($hiddenType ?? '') . ' ' . $word),
+            ],
         ]);
     }
 

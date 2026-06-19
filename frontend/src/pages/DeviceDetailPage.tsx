@@ -87,6 +87,12 @@ function DeviceDetailPage() {
                 <i className="fas fa-arrow-left" aria-hidden="true" /> 一覧へ戻る
               </NavLink>
             )}
+            <NavLink
+              to={`/devices/${encodeURIComponent(data.device_id)}/barcode`}
+              className="osm-btn"
+            >
+              <i className="fas fa-barcode" aria-hidden="true" /> バーコード印刷
+            </NavLink>
           </div>
 
           <div className="device-detail__grid">

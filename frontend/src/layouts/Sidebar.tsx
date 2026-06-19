@@ -28,6 +28,7 @@ const NAV_SECTIONS: NavSection[] = [
     children: [
       { label: '個別管理', to: '/inventory/units/STB' },
       { label: '数量管理', to: '/inventory/stocks' },
+      { label: '端末検索', to: '/devices/search' },
     ],
   },
   {
