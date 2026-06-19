@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\DeviceController;
 use App\Http\Controllers\Api\InventoryStockController;
+use App\Http\Controllers\Api\RentalController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -60,4 +61,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/contacts', [ContactController::class, 'index'])->name('api.contacts.index');
     Route::post('/contacts', [ContactController::class, 'store'])->name('api.contacts.store');
     Route::get('/contacts/{contactId}', [ContactController::class, 'show'])->name('api.contacts.show');
+
+    // 手続き - レンタル
+    Route::get('/rental', [RentalController::class, 'index'])->name('api.rental.index');
+    Route::post('/rental/store', [RentalController::class, 'store'])->name('api.rental.store');
+    Route::post('/rental/multi/upload', [RentalController::class, 'uploadMulti'])->name('api.rental.multi.upload');
+    Route::post('/rental/multi/store', [RentalController::class, 'storeMulti'])->name('api.rental.multi.store');
+    Route::post('/rental/multi/return/{lendId}', [RentalController::class, 'returnDevice'])->name('api.rental.return');
+    Route::get('/rental/history', [RentalController::class, 'history'])->name('api.rental.history');
+    Route::get('/rental/history/{lendId}', [RentalController::class, 'historyDetail'])->name('api.rental.history.detail');
 });

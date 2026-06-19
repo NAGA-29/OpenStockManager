@@ -18,6 +18,9 @@ import ClientDetailPage from './pages/ClientDetailPage';
 import ContactsPage from './pages/ContactsPage';
 import ContactRegisterPage from './pages/ContactRegisterPage';
 import ContactDetailPage from './pages/ContactDetailPage';
+import RentalPage from './pages/RentalPage';
+import RentalHistoryPage from './pages/RentalHistoryPage';
+import RentalHistoryDetailPage from './pages/RentalHistoryDetailPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 /**
@@ -55,6 +58,9 @@ export const router = createBrowserRouter([
           { path: '/contacts', element: <ContactsPage /> },
           { path: '/contacts/register', element: <ContactRegisterPage /> },
           { path: '/contacts/:id', element: <ContactDetailPage /> },
+          { path: '/rental', element: <RentalPage /> },
+          { path: '/rental/history', element: <RentalHistoryPage /> },
+          { path: '/rental/history/:lendId', element: <RentalHistoryDetailPage /> },
         ],
       },
     ],

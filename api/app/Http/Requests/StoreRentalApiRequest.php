@@ -1,0 +1,52 @@
+<?php
+
+namespace App\Http\Requests;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+/**
+ * レンタル登録（API）のバリデーション。
+ */
+class StoreRentalApiRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function rules(): array
+    {
+        return [
+            'device_ids'          => ['required', 'array', 'min:1'],
+            'device_ids.*'        => ['string', 'exists:devices,device_id'],
+            'client_id'           => ['required', 'exists:clients,client_id'],
+            'contact_id'          => ['required', 'exists:contacts,id'],
+            'checkout_at'         => ['required', 'date'],
+            'schedule_return_at'  => ['required', 'date'],
+            'note'                => ['nullable', 'string'],
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'device_ids.required'           => '端末を選択してください。',
+            'device_ids.min'                => '端末を選択してください。',
+            'device_ids.*.exists'           => '指定された端末が見つかりません。',
+            'client_id.required'            => 'クライアントを選択してください。',
+            'client_id.exists'              => '指定されたクライアントが見つかりません。',
+            'contact_id.required'           => '担当者を選択してください。',
+            'contact_id.exists'             => '指定された担当者が見つかりません。',
+            'checkout_at.required'          => '貸出日を入力してください。',
+            'checkout_at.date'              => '貸出日は有効な日付を入力してください。',
+            'schedule_return_at.required'   => '返却予定日を入力してください。',
+            'schedule_return_at.date'       => '返却予定日は有効な日付を入力してください。',
+        ];
+    }
+}
