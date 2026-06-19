@@ -4,6 +4,7 @@ import Alert from '@/components/ui/Alert';
 import DataTable, { type Column } from '@/components/ui/DataTable';
 import { useStoreRental, useRentals, type RentalHist } from '@/features/rental/useRental';
 import { useContacts, type Contact } from '@/features/contacts/useContacts';
+import { useDeviceSearch } from '@/features/inventory/useDeviceSearch';
 import type { Client } from '@/features/clients/useClients';
 import type { CategoryDevice } from '@/features/inventory/useDeviceCategory';
 
@@ -35,7 +36,6 @@ function RentalCartForm({ clients }: RentalCartFormProps) {
   });
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [searchResults, setSearchResults] = useState<CategoryDevice[]>([]);
   const [errors, setErrors] = useState<Record<string, string[]>>({});
   const [successMessage, setSuccessMessage] = useState('');
 
@@ -43,6 +43,8 @@ function RentalCartForm({ clients }: RentalCartFormProps) {
   const contactsData = form.client_id
     ? allContacts?.filter((c) => c.client_id === form.client_id) ?? []
     : [];
+  const { data: searchResponse } = useDeviceSearch(searchTerm, '', 1);
+  const searchResults = searchResponse?.data ?? [];
   const { mutateAsync: storeRental, isPending } = useStoreRental();
   const { refetch: refetchRentals } = useRentals();
 
@@ -53,7 +55,6 @@ function RentalCartForm({ clients }: RentalCartFormProps) {
         device_ids: [...prev.device_ids, device.device_id],
       }));
     }
-    setSearchResults([]);
     setSearchTerm('');
   };
 
