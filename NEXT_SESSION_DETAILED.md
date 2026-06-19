@@ -25,11 +25,6 @@ API:      289 passed / 1 risky / 3 pre-existing failures（Blade Vite manifest �
 Frontend: build / typecheck / lint  すべて green
 ```
 
-### ⚠️ 既知の課題（3-6 レンタルの未完部分）
-- **`RentalCartForm.tsx` の端末検索が未配線**。`searchTerm` / `searchResults` の state はあるが、`useDeviceSearch` フックに繋いでいないため、検索ボックスに入力しても候補が出ない。
-  - → 次セッションで `frontend/src/features/inventory/useDeviceSearch.ts` を import し、`searchTerm` を渡して `searchResults` を埋める配線が必要。
-  - 販売（3-7）でも同じカート UI を使うので、**先にこの検索配線を共通部品化してから 3-7 に進む**のが効率的。
-
 ---
 
 ## §2. 次セッションで読むべきファイル（3-7 販売を実装する場合）
