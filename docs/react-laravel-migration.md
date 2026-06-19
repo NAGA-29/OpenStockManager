@@ -77,7 +77,7 @@
 | 3-5 | データ（スペック／ベンチマーク／企業／担当者） | ☑ | 8（全て完了） |
 | 3-6 | 手続き・レンタル（カート／CSV／一括返却） | ☑ | 7（カート検索配線含め完了） |
 | 3-7 | 手続き・販売（カート／CSV） | ☑ | 6（全て完了） |
-| 3-8 | 履歴（レンタル／販売／詳細） | ☐ | 5 |
+| 3-8 | 履歴（レンタル／販売／詳細／統合ビュー） | ☑ | 5（全体履歴 `/history` で統合） |
 | 3-9 | 設定（ユーザー管理／カテゴリ／カスタムフィールド／メール・CRM同期） | ☐ | 6 |
 | 3-10 | 共通コンポーネント・モーダル群 | ☐ | 14 |
 | 3-11 | エラーページ（400/404/500/503） | ☐ | 4 |
@@ -173,11 +173,14 @@
 ### 3-8 履歴
 | Blade | React ルート | API | 状態 |
 | --- | --- | --- | --- |
-| `history/all_rental_historys` | `/rental/history` | `GET /api/rental/history` | ☐ |
-| `rental/rental_detail` | `/rental/history/:id` | `GET /api/rental/history/:id` | ☐ |
-| `history/all_sales_historys` | `/sale/history` | `GET /api/sale/history` | ☐ |
-| `sales/sales_detail` | `/sale/history/:id` | `GET /api/sale/history/:id` | ☐ |
-| `history/checkout` | 詳細内 | — | ☐ |
+| `history/all_rental_historys` | `/rental/history` | `GET /api/rental/history` ✅ | ☑ |
+| `rental/rental_detail` | `/rental/history/:id` | `GET /api/rental/history/:id` ✅ | ☑ |
+| `history/all_sales_historys` | `/sale/history` | `GET /api/sale/history` ✅ | ☑ |
+| `sales/sales_detail` | `/sale/history/:id` | `GET /api/sale/history/:id` ✅ | ☑ |
+| （統合） | `/history` | `GET /api/history?type=&word=&page=` ✅ | ☑ |
+| `history/checkout` | — | — | ☐（旧 Blade は未完成のスキャフォールド。移植対象外） |
+
+> 全体履歴 `/history` はレンタル/販売を統合した一覧。種別フィルタ（すべて/レンタル/販売）・キーワード検索・ページネーションを持ち、各行は既存の per-type 詳細（`/rental/history/:id`・`/sale/history/:id`）へリンクする。API は `HistoryController@index` が両モデルを正規化・マージして 10 件ページングで返す。
 
 ### 3-9 設定
 | Blade | React ルート | API | 状態 |

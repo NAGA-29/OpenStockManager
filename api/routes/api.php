@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\DeviceController;
+use App\Http\Controllers\Api\HistoryController;
 use App\Http\Controllers\Api\InventoryStockController;
 use App\Http\Controllers\Api\RentalController;
 use App\Http\Controllers\Api\SaleController;
@@ -79,4 +80,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/sale/multi/store', [SaleController::class, 'storeMulti'])->name('api.sale.multi.store');
     Route::get('/sale/history', [SaleController::class, 'history'])->name('api.sale.history');
     Route::get('/sale/history/{saleId}', [SaleController::class, 'historyDetail'])->name('api.sale.history.detail');
+
+    // 履歴 - レンタル／販売 統合
+    Route::get('/history', [HistoryController::class, 'index'])->name('api.history.index');
 });

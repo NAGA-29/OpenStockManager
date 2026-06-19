@@ -1,4 +1,4 @@
-# 次セッション引き継ぎ指示書（OpenStockManager React 移行 / 3-7 販売完了後）
+# 次セッション引き継ぎ指示書（OpenStockManager React 移行 / 3-8 履歴完了後）
 
 > このドキュメントは「次の AI セッションが最短で作業に入れること」を目的としています。
 > **まず §1 で現状把握 → §2 で読むべきファイルを開く → §3 の手順で実装** の順に進めてください。
@@ -15,59 +15,63 @@
 | 3-4 | 端末登録（単体+CSV一括） | ✅（画像のみ残） |
 | 3-5 | データ（クライアント/担当者/ファイル 全8画面） | ✅ |
 | 3-6 | レンタル手続き | ✅（カート端末検索の配線も完了） |
-| **3-7** | **販売手続き** | ✅ **今セッションで完了** |
-| 3-8 | 履歴（レンタル/販売の統合・絞り込み強化） | ☐ **← 次の最有力タスク** |
-| 3-9 | 設定（admin: ユーザー/カテゴリ/カスタムフィールド） | ☐ |
+| 3-7 | 販売手続き | ✅ |
+| **3-8** | **履歴（レンタル/販売 統合ビュー）** | ✅ **今セッションで完了** |
+| 3-9 | 設定（admin: ユーザー/カテゴリ/カスタムフィールド） | ☐ **← 次の最有力タスク** |
 
 ### テスト状況
 ```
-API:      301 passed / 1 risky / 3 pre-existing failures（Blade Vite manifest 由来。React 移行とは無関係）
+API:      307 passed / 1 risky / 3 pre-existing failures（Blade Vite manifest 由来。React 移行とは無関係）
 Frontend: build / typecheck  すべて green
 ```
 
-### このセッションで実装した内容（3-7 販売 + カート検索修正）
-- **API**: `Api\SaleController`（index/store/uploadMulti/storeMulti/history/historyDetail。返却なし）、
-  `StoreSaleApiRequest`/`UploadSaleMultiApiRequest`/`StoreSaleMultiApiRequest`、`/sale*` ルート、
-  `Device` モデルの `$fillable` に `sale_id` 追加、`SaleApiTest`（12 tests）
-- **フロント**: `features/sale/useSale.ts`、`SalePage`/`SaleCartForm`/`SaleFileForm`/
-  `SaleHistoryPage`/`SaleHistoryDetailPage`（返却ボタンなし・表示のみ）、`sale.css`、router に 3 ルート
-- **既知バグ修正**: `RentalCartForm`/`SaleCartForm` の端末検索が未配線だった問題を解消。
-  `useDeviceSearch` をデバウンス（300ms）付きで配線し、`searchTerm` 入力で候補が出るように。
-  販売側は販売済み(`sale_id`)・貸出中(`lending_now`)・選択済みの端末を候補から除外。
+### 直近セッションで実装した内容
+**3-8 履歴（統合ビュー）**
+- **API**: `Api\HistoryController@index`（`GET /api/history?type=all|rental|sale&word=&page=`）。
+  RentalHist / SaleHist を共通フォーマット（id/type/company/contact/date/status/note）に正規化・マージし、
+  日付降順で 10 件ページング（`Collection::forPage` による手動ページネーション）。`HistoryApiTest`（6 tests）
+- **フロント**: `features/history/useHistory.ts`、`pages/HistoryPage.tsx`（種別タブ すべて/レンタル/販売 ＋
+  キーワード検索 ＋ ページング。各行は既存 per-type 詳細へリンク）、router に `/history`、Sidebar「履歴 > 全体」追加
+- **方針メモ**: 旧 `history/checkout.blade.php` は未完成スキャフォールドのため移植対象外と判断。
+
+**3-7 販売（前段）**
+- `Api\SaleController`（返却なし）、Sale 系 FormRequest 3 種、`/sale*` ルート、`Device::$fillable` に `sale_id`、`SaleApiTest`（12 tests）
+- フロント: `features/sale/useSale.ts`、`SalePage`/`SaleCartForm`/`SaleFileForm`/`SaleHistoryPage`/`SaleHistoryDetailPage`、`sale.css`
+- カート端末検索の未配線バグを `useDeviceSearch`（300ms デバウンス）で修正（rental/sale 両方）
 
 ---
 
-## §2. 次セッションで読むべきファイル（3-8 履歴を実装/強化する場合）
+## §2. 次セッションで読むべきファイル（3-9 設定/admin を実装する場合）
 
 ### 2-1. 旧 Laravel 実装（ロジック・仕様の正解）
 ```
-api/app/Http/Controllers/RentalHistsController.php   ← レンタル履歴
-api/app/Http/Controllers/SalesHistsController.php    ← 販売履歴
-api/resources/views/history/all_rental_historys.blade.php
-api/resources/views/history/all_sales_historys.blade.php
-api/resources/views/history/checkout.blade.php       ← 貸出明細（未移植）
+api/app/Http/Controllers/UsersController.php          ← ユーザー管理（一覧/登録/プロフィール）
+api/app/Http/Controllers/DeviceCategoryController.php ← 機材カテゴリ（存在すれば）
+api/resources/views/user/*.blade.php                  ← ユーザー画面
+api/routes/web.php                                    ← admin ミドルウェアのルート（grep -n "admin\|user" で確認）
 ```
 
-### 2-2. 今あるお手本（履歴ページは既に per-type で実装済）
+### 2-2. 今あるお手本・関連実装
 | 既存ファイル | 内容 |
 |-------------|------|
-| `frontend/src/pages/RentalHistoryPage.tsx` | レンタル履歴一覧（検索/ページング） |
-| `frontend/src/pages/RentalHistoryDetailPage.tsx` | レンタル履歴詳細（返却ボタンあり） |
-| `frontend/src/pages/SaleHistoryPage.tsx` | 販売履歴一覧 |
-| `frontend/src/pages/SaleHistoryDetailPage.tsx` | 販売履歴詳細（表示のみ） |
-| API: `GET /api/rental/history{,/{lendId}}` / `GET /api/sale/history{,/{saleId}}` | いずれも実装済 |
+| `api/app/Http/Middleware/*Admin*` + `tests/Feature/Middleware/AdminMiddlewareTest.php` | admin 判定（既存・ただし 3 failures はこの周辺の Blade ルート由来） |
+| `frontend/src/auth/useAuth.ts` | `user.is_admin` を保持（Sidebar の adminOnly 出し分けで使用済み） |
+| `frontend/src/layouts/Sidebar.tsx` | 「設定」セクションに `/users`・`/settings/categories`・`/settings/fields`（adminOnly）リンクが既にある＝リンク先を実装するだけ |
+| 各種 CRUD のお手本 | `Api\ClientController` / `Api\ContactController`（一覧+登録+詳細の典型形） |
 
-→ **3-8 の本体は「レンタル/販売を 1 画面に統合し、種別フィルタ・期間/ステータス絞り込みを足す」こと。**
-   per-type の一覧/詳細は既にあるので、統合ビューを新設するか、既存ページに種別タブを足す方針を決めて着手。
-   軽く進めたい場合は、未移植の「貸出明細（checkout）」画面の移植だけでも 1 タスクになる。
+→ **3-9 の本体はユーザー管理 CRUD（admin 限定）**。`auth:sanctum` に加え admin 認可をどう表現するか
+   （Policy / Gate / ミドルウェア）を最初に決める。カテゴリ・カスタムフィールド管理も同セクション。
 
 ### 2-3. 変更が必要になりうる既存ファイル
 ```
-api/routes/api.php          ← 統合履歴 API を足すなら（例: GET /api/history?type=rental|sale）
-frontend/src/router.tsx     ← 統合履歴ルートを足すなら
-frontend/src/layouts/Sidebar.tsx ← 「履歴」セクション（既にレンタル/販売リンクあり）
-docs/react-laravel-migration.md  ← 3-8 を更新
+api/routes/api.php          ← /users 系などを admin 認可付きで追加
+frontend/src/router.tsx     ← /users, /settings/* ルート追加
+frontend/src/layouts/Sidebar.tsx ← 設定セクション（リンクは既にあり）
+docs/react-laravel-migration.md  ← 3-9 を更新
 ```
+
+> ⚠️ 既存の 3 failures は `tests/Feature/Middleware/AdminMiddlewareTest.php` 等の **Blade ルート（`/users` GET）** が
+> Vite manifest を要求して落ちているもの。3-9 で `/users` を React 化し API へ寄せる過程で解消できる可能性がある。
 
 ---
 
@@ -118,6 +122,7 @@ docs/react-laravel-migration.md  ← 3-8 を更新
 | POST | `/api/sale/store` | 販売登録 | ✅ |
 | POST | `/api/sale/multi/{upload,store}` | CSV一括販売 | ✅ |
 | GET | `/api/sale/history{,/{saleId}}` | 販売履歴 | ✅ |
+| GET | `/api/history?type=&word=&page=` | 統合履歴（レンタル+販売） | ✅ |
 
 ---
 
@@ -125,9 +130,9 @@ docs/react-laravel-migration.md  ← 3-8 を更新
 
 ```bash
 git branch                       # → claude/funny-galileo-6fgy3o
-git log --oneline -5             # → 最新が "feat: 3-7 販売手続き..." 系
+git log --oneline -5             # → 最新が "feat: 3-8 履歴..." 系
 cd api && composer install       # 依存が無ければ
-cd api && php artisan test 2>&1 | grep "Tests:"    # → 301 passed / 1 risky / 3 failures
+cd api && php artisan test 2>&1 | grep "Tests:"    # → 307 passed / 1 risky / 3 failures
 cd ../frontend && npm ci          # node_modules が無ければ（lockfile は TS 5.9.3 を固定）
 cd ../frontend && npm run build && npm run typecheck   # → green
 ```
@@ -138,14 +143,15 @@ cd ../frontend && npm run build && npm run typecheck   # → green
 
 ---
 
-## §6. 代替タスク（履歴以外で進めたい場合）
+## §6. 代替タスク（設定以外で進めたい場合）
 
-- **3-9 設定/admin**（難度🟠中、4-5h）: ユーザー管理・カテゴリ・カスタムフィールド。`admin` ミドルウェア検証含む。
 - **3-4 残（端末画像）**（難度🟢低）: 端末登録の画像アップロードのみ未実装。
 - **販売バリデーション強化**（難度🟢低）: 旧 `StoreSaleCartRequest` は「販売済み/貸出中/不良/販売不可」を弾く。
   現状の API は端末状態チェック未実装（レンタルと同形にしてある）。必要なら `StoreSaleApiRequest::withValidator` で追加。
+- **3-10 共通モーダル群 / 3-11 エラーページ**（難度🟢〜🟠）。
 
 ---
 
 **ブランチ**: `claude/funny-galileo-6fgy3o`
-**次セッション目標**: 3-8 履歴（統合ビュー or 貸出明細移植）。per-type の履歴一覧/詳細は実装済みなので統合方針を決めて着手。
+**次セッション目標**: 3-9 設定/admin（ユーザー管理 CRUD を admin 認可付きで API 化＋React 化）。
+既存の 3 failures（Blade `/users` ルート）を React 移行で解消できる可能性あり。
