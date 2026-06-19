@@ -72,7 +72,7 @@
 | --- | --- | --- | --- |
 | 3-1 | 認証（ログイン／パスワード／メール認証） | ◐ | 7（ログインのみ完了） |
 | 3-2 | ダッシュボード | ☑ | API済・UI実装済 |
-| 3-3 | 在庫（数量管理／個別管理／端末詳細／バーコード） | ◐ | 7（数量管理／個別管理／端末詳細 完了。バーコード/検索 残） |
+| 3-3 | 在庫（数量管理／個別管理／端末詳細／バーコード） | ☑ | 7（数量管理／個別管理／端末詳細／バーコード／検索 完了） |
 | 3-4 | 端末登録（単体／CSV一括／確認） | ◐ | 5（単体登録・CSV一括 完了。画像 残） |
 | 3-5 | データ（スペック／ベンチマーク／企業／担当者） | ☑ | 8（全て完了） |
 | 3-6 | 手続き・レンタル（カート／CSV／一括返却） | ☐ | 7 |
@@ -122,8 +122,8 @@
 | `inventory/units/index` | `/inventory/units/:code` | `GET /api/devices/category/:code` ✅実装済 | ☑ |
 | `devices/device_list` | （上記内のテーブル） | 同上 | ☑ |
 | `devices/show` | `/devices/:id` | `GET /api/devices/:id` ✅実装済 | ☑（読取表示。編集は 3-10） |
-| `devices/barcode_print` | `/devices/:id/barcode` | `GET /api/devices/:id/barcode` | ☐ |
-| `devices/search_results` | `/devices/search` | `GET /api/devices/search` | ☐ |
+| `devices/barcode_print` | `/devices/:id/barcode` | `GET /api/devices/:id`（既存・jsbarcode 描画） | ☑ |
+| `devices/search_results` | `/devices/search` | `GET /api/devices/search` ✅実装済 | ☑ |
 | `devices/status_legend`(部品) | `<StatusLegend>` | — | ☑ |
 
 ### 3-4 端末登録
@@ -363,7 +363,15 @@
     - Sidebar「登録 > 機材（CSV一括）」追加
   - **検証**: API テスト・フロント build 共に green。
 
-- 次の推奨タスク: **Phase 3-3 残**（バーコード・検索）。または **Phase 3-6**（手続き・レンタル）へ進むかは優先度判断で。`GET /api/rental`・`POST /api/rental/store` 等の API が実装済みか要確認。
+- 2026-06-19: **3-3 バーコード印刷・端末検索 完了**（在庫ドメインの残り。これで 3-3 完了）。
+  - **API 追加**（`Api\DeviceController@search`）: `GET /api/devices/search?word=...&hiddenType=...`。
+    - 旧 `searchDevice` を踏襲。`Keyword` trait で全角→半角変換・スペース分割の複数キーワードを生成し、`device_id`/`device_serial`/`note` を **AND 部分一致**。`hiddenType` 指定時は `device_type` を絶対条件に。soft-delete 除外・10 件ページネーション・`meta`（current_page/last_page/total/keywords）を返す。`word` 未指定は 422。
+    - `routes/api.php` に `/devices/search`（`/devices/{deviceId}` より前）登録。`DeviceApiTest` に search 5 件追加（認証・word 必須・複数キーワード・hiddenType 絞り込み・soft-delete 除外）。
+  - **バーコードは API 追加不要**: 既存 `GET /api/devices/:id` が device_id/name/serial/type を返すため再利用。フロントで `jsbarcode`（CODE128 SVG）描画。
+  - **フロント**: `features/inventory/useDeviceSearch.ts`（URL クエリ `word`/`page` 連動）、`pages/DeviceSearchPage.tsx`（検索フォーム・ステータスアイコン付き結果テーブル・前/次ページネーション）、`pages/DeviceBarcodePage.tsx`（`useEffect` で jsbarcode 描画・`window.print()`・印刷時 `@media print` でボタン非表示）、`barcode.css`。`DeviceDetailPage` に「バーコード印刷」ボタン、`Sidebar`「在庫一覧」へ「端末検索」、`router.tsx` に `/devices/search`・`/devices/:id/barcode` 追加。`jsbarcode` を依存に追加。
+  - 検証: `cd api && php artisan test` → **277 passed / 1 risky**。`cd frontend && npm run typecheck && npm run build && npm run lint` すべて green。
+  - **未実装（意図的）**: 検索フォームのカテゴリ絞り込み UI（API は `hiddenType` 対応済みだが UI 未配線。個別管理一覧からの絞り込み検索導線は 3-10 で検討）、カメラ/バーコードスキャン入力（難度高・後続）。バーコード印刷の一括印刷（複数端末）は未対応。
+- 次の推奨タスク: **Phase 3-6（手続き・レンタル）** または **3-7（販売）**。いずれも API 未実装（`GET/POST /api/rental`・`/api/sale` 系）のため、まず旧 `RentalHistsController`/`SalesHistsController` を読み API 化から着手。カート UI・日付入力・CSV 一括が絡むため難度中～高。詳細は `NEXT_SESSION_DETAILED.md` 参照。残るは 3-1（認証残 6 画面・API 未実装）/ 3-8（履歴）/ 3-9（設定）/ 3-10（モーダル群）/ 3-11（エラー）。
 
 ### 既知の課題（移設前から存在 / 本移行の前提ではない）
 - ~~`tests/Unit/Models/ContactsTest` の3ケースが失敗~~ **2026-06-17 解消済み（3-5 担当者対応でテストを現モデル仕様へ追従）**。直近の「personnel → contact」リファクタで `Contacts` モデルの主キーが `contact_id`→`id`（auto-increment）へ変わった一方、テストが旧仕様（`contact_id` 主キー・非incrementing・fillable に `contact_id`）を期待していたのが原因。
