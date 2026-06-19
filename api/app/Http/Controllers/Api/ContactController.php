@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreContactApiRequest;
 use App\Models\Contacts;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -33,6 +34,28 @@ class ContactController extends Controller
             ->map(fn (Contacts $contact) => $this->resource($contact));
 
         return response()->json(['data' => $contacts]);
+    }
+
+    /**
+     * 担当者を登録する。
+     *
+     * 旧 `contacts/register.blade.php` 相当。成功時は 201＋作成リソース。
+     */
+    public function store(StoreContactApiRequest $request): JsonResponse
+    {
+        $safe = $request->validated();
+
+        $contact = Contacts::create([
+            'client_id' => $safe['client_id'],
+            'name'      => $safe['name'],
+            'email'     => $safe['email'],
+            'tel'       => $safe['tel'],
+            'note'      => $safe['note'] ?? null,
+        ]);
+
+        return response()->json([
+            'data' => $this->resource($contact),
+        ], 201);
     }
 
     /**

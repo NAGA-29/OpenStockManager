@@ -1,0 +1,71 @@
+/* バーコード印刷画面（旧 barcode-print.css を踏襲） */
+.barcode-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.25rem;
+}
+
+.barcode-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.osm-btn--secondary {
+  background: #fff;
+  color: #333;
+  border: 1px solid #ccc;
+}
+
+.osm-btn--secondary:hover {
+  background: #f0f0f0;
+}
+
+.barcode-label {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1.5rem 2rem;
+  margin-bottom: 1.25rem;
+  text-align: center;
+  max-width: 480px;
+  width: 100%;
+}
+
+.barcode-device-info {
+  margin-bottom: 0.75rem;
+  font-size: 0.8rem;
+  color: #333;
+  line-height: 1.6;
+}
+
+.barcode-device-name {
+  font-size: 1rem;
+  font-weight: bold;
+  margin-bottom: 0.25rem;
+}
+
+.barcode-device-detail {
+  color: #666;
+}
+
+.barcode-label svg {
+  display: block;
+  margin: 0 auto;
+}
+
+@media print {
+  .barcode-actions {
+    display: none !important;
+  }
+
+  .barcode-label {
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0.5rem;
+    margin: 0;
+    page-break-inside: avoid;
+  }
+}

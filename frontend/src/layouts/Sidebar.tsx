@@ -28,6 +28,7 @@ const NAV_SECTIONS: NavSection[] = [
     children: [
       { label: '個別管理', to: '/inventory/units/STB' },
       { label: '数量管理', to: '/inventory/stocks' },
+      { label: '端末検索', to: '/devices/search' },
     ],
   },
   {
@@ -53,7 +54,8 @@ const NAV_SECTIONS: NavSection[] = [
     label: 'データ一覧',
     icon: 'fas fa-chart-pie',
     children: [
-      { label: '商品データ', to: '/device/file/benchmark' },
+      { label: 'スペックデータ', to: '/device/file/spec' },
+      { label: 'ベンチマーク', to: '/device/file/benchmark' },
       { label: 'クライアント', to: '/clients' },
       { label: '担当者', to: '/contacts' },
     ],
@@ -64,7 +66,9 @@ const NAV_SECTIONS: NavSection[] = [
     icon: 'fas fa-address-book',
     children: [
       { label: '機材', to: '/device/register' },
+      { label: '機材（CSV一括）', to: '/device/register/multi' },
       { label: 'クライアント', to: '/clients/register' },
+      { label: '担当者', to: '/contacts/register' },
     ],
   },
   {

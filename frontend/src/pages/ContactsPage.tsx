@@ -48,17 +48,22 @@ function ContactsPage() {
         担当者一覧
       </div>
 
-      <form className="clients-search" onSubmit={handleSearch}>
-        <input
-          type="text"
-          placeholder="担当者名"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-        />
-        <button type="submit" className="osm-btn">
-          <i className="fas fa-search" aria-hidden="true" /> 検索
-        </button>
-      </form>
+      <div className="clients-toolbar">
+        <form className="clients-search" onSubmit={handleSearch}>
+          <input
+            type="text"
+            placeholder="担当者名"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+          />
+          <button type="submit" className="osm-btn">
+            <i className="fas fa-search" aria-hidden="true" /> 検索
+          </button>
+        </form>
+        <NavLink to="/contacts/register" className="osm-btn">
+          <i className="fas fa-plus" aria-hidden="true" /> 新規登録
+        </NavLink>
+      </div>
 
       {isLoading && <Loading />}
 

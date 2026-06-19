@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\DeviceController;
 use App\Http\Controllers\Api\InventoryStockController;
+use App\Http\Controllers\Api\RentalController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -36,9 +37,19 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // 在庫 - 個別管理（カテゴリ別一覧／端末詳細）
     Route::get('/devices/category/{code}', [DeviceController::class, 'byCategory'])->name('api.devices.category');
+    // 端末検索。`/devices/{deviceId}` より前に定義する。
+    Route::get('/devices/search', [DeviceController::class, 'search'])->name('api.devices.search');
     // 端末登録（フォーム選択肢／単体登録）。`/devices/{deviceId}` より前に定義する。
     Route::get('/devices/form-options', [DeviceController::class, 'formOptions'])->name('api.devices.form_options');
     Route::post('/devices', [DeviceController::class, 'store'])->name('api.devices.store');
+    // 複数端末 CSV 登録（アップロード・確認）。`/devices/{deviceId}` より前に定義する。
+    Route::post('/devices/multi/upload', [DeviceController::class, 'uploadDeviceMulti'])->name('api.devices.multi.upload');
+    Route::post('/devices/multi/store', [DeviceController::class, 'storeDeviceMulti'])->name('api.devices.multi.store');
+    // ファイルアップロード（スペック・ベンチマーク）。`/devices/{deviceId}` より前に定義する。
+    Route::get('/devices/file/spec', [DeviceController::class, 'getSpecFile'])->name('api.devices.file.spec');
+    Route::post('/devices/file/spec', [DeviceController::class, 'uploadSpecFile'])->name('api.devices.file.spec.upload');
+    Route::get('/devices/file/benchmark', [DeviceController::class, 'getBenchmarkFile'])->name('api.devices.file.benchmark');
+    Route::post('/devices/file/benchmark', [DeviceController::class, 'uploadBenchmarkFile'])->name('api.devices.file.benchmark.upload');
     Route::get('/devices/{deviceId}', [DeviceController::class, 'show'])->name('api.devices.show');
 
     // データ - クライアント
@@ -48,5 +59,15 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // データ - 担当者
     Route::get('/contacts', [ContactController::class, 'index'])->name('api.contacts.index');
+    Route::post('/contacts', [ContactController::class, 'store'])->name('api.contacts.store');
     Route::get('/contacts/{contactId}', [ContactController::class, 'show'])->name('api.contacts.show');
+
+    // 手続き - レンタル
+    Route::get('/rental', [RentalController::class, 'index'])->name('api.rental.index');
+    Route::post('/rental/store', [RentalController::class, 'store'])->name('api.rental.store');
+    Route::post('/rental/multi/upload', [RentalController::class, 'uploadMulti'])->name('api.rental.multi.upload');
+    Route::post('/rental/multi/store', [RentalController::class, 'storeMulti'])->name('api.rental.multi.store');
+    Route::post('/rental/multi/return/{lendId}', [RentalController::class, 'returnDevice'])->name('api.rental.return');
+    Route::get('/rental/history', [RentalController::class, 'history'])->name('api.rental.history');
+    Route::get('/rental/history/{lendId}', [RentalController::class, 'historyDetail'])->name('api.rental.history.detail');
 });

@@ -4,14 +4,29 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreDeviceApiRequest;
+use App\Http\Requests\UploadSpecFileApiRequest;
+use App\Http\Requests\UploadBenchmarkFileApiRequest;
+use App\Http\Requests\UploadDeviceMultiApiRequest;
+use App\Http\Requests\StoreDeviceMultiApiRequest;
 use App\Models\Condition;
 use App\Models\Device;
 use App\Models\DeviceCategory;
 use App\Models\DeviceTypeField;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
+use League\Csv\Reader;
+use League\Csv\Statement;
+use App\Utilities\GeneralUtil;
+use App\Traits\Keyword;
+use Illuminate\Http\Request;
 
 class DeviceController extends Controller
 {
+    use Keyword;
+
     /**
      * カテゴリコードごとの端末一覧（個別管理）を JSON で返す。
      *
@@ -58,6 +73,68 @@ class DeviceController extends Controller
             // 旧レスポンスとの後方互換（カテゴリ名）。
             'category' => $current->name,
             'data'     => $devices,
+        ]);
+    }
+
+    /**
+     * 端末をキーワード検索する。
+     *
+     * 旧 `devices/search_results.blade.php`（`searchDevice`）相当。
+     * `word`（必須）で device_id / device_serial / note を AND 部分一致、
+     * `hiddenType` 指定時は device_type を絶対条件にする。全角→半角変換・
+     * スペース分割で複数キーワード化し、10 件ページネーションして返す。
+     */
+    public function search(Request $request): JsonResponse
+    {
+        $word = $request->query('word');
+
+        if (! is_string($word) || trim($word) === '') {
+            return response()->json([
+                'message' => '検索キーワードを入力してください。',
+                'errors'  => ['word' => ['検索キーワードを入力してください。']],
+            ], 422);
+        }
+
+        $hiddenType = $request->query('hiddenType');
+
+        // 全角→半角変換し、スペース区切りで複数キーワード化
+        $keywords = $this->extractKeywords(mb_convert_kana($word, 'r'));
+
+        $query = Device::query()->whereNull('soft_deleted_at');
+
+        if (is_string($hiddenType) && $hiddenType !== '') {
+            $query->where('device_type', $hiddenType);
+        }
+
+        foreach ($keywords as $key) {
+            $escapedKey = addcslashes($key, '%_\\');
+            $query->where(function ($subQuery) use ($escapedKey) {
+                $subQuery->orWhere('device_id', 'like', '%' . $escapedKey . '%')
+                    ->orWhere('device_serial', 'like', '%' . $escapedKey . '%')
+                    ->orWhere('note', 'like', '%' . $escapedKey . '%');
+            });
+        }
+
+        $paginator = $query->with('condition')
+            ->withCount('contents')
+            ->orderBy('device_id', 'desc')
+            ->paginate(10);
+
+        $data = collect($paginator->items())
+            ->map(fn (Device $device) => array_merge($this->resource($device), [
+                'has_images' => $device->contents_count > 0,
+            ]))
+            ->values();
+
+        return response()->json([
+            'data' => $data,
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page'    => $paginator->lastPage(),
+                'per_page'     => $paginator->perPage(),
+                'total'        => $paginator->total(),
+                'keywords'     => trim(($hiddenType ?? '') . ' ' . $word),
+            ],
         ]);
     }
 
@@ -203,6 +280,226 @@ class DeviceController extends Controller
                 'device_id' => $device->device_id,
             ],
         ], 201);
+    }
+
+    /**
+     * 端末スペックファイル情報を返す。
+     *
+     * ファイルが存在すればファイル名・サイズ・更新日時を返し、
+     * 存在しなければ空オブジェクトを返す。
+     */
+    public function getSpecFile(): JsonResponse
+    {
+        $files = Storage::disk('public')->files('spec/');
+
+        if (empty($files)) {
+            return response()->json(['data' => null]);
+        }
+
+        $filePath = $files[0];
+        $fileInfo = [
+            'filename'   => basename($filePath),
+            'size'       => Storage::disk('public')->size($filePath),
+            'updated_at' => date('Y-m-d H:i:s', Storage::disk('public')->lastModified($filePath)),
+        ];
+
+        return response()->json(['data' => $fileInfo]);
+    }
+
+    /**
+     * 端末スペックファイルをアップロードする。
+     *
+     * 既存ファイルがあれば削除してから新規保存。成功時は 200 ファイル情報を返す。
+     */
+    public function uploadSpecFile(UploadSpecFileApiRequest $request): JsonResponse
+    {
+        $file = $request->file('spec_file');
+        $fileName = $file->getClientOriginalName();
+
+        if (! Storage::disk('public')->exists('spec')) {
+            Storage::disk('public')->makeDirectory('spec');
+        }
+
+        // 既存ファイルを削除
+        $oldFiles = Storage::disk('public')->files('spec/');
+        Storage::disk('public')->delete($oldFiles);
+
+        // 新規ファイルをアップロード
+        $file->storeAs('spec', $fileName, 'public');
+
+        $filePath = 'spec/' . $fileName;
+        $fileInfo = [
+            'filename'   => basename($filePath),
+            'size'       => Storage::disk('public')->size($filePath),
+            'updated_at' => date('Y-m-d H:i:s', Storage::disk('public')->lastModified($filePath)),
+        ];
+
+        return response()->json(['data' => $fileInfo], 200);
+    }
+
+    /**
+     * ベンチマークファイル情報を返す。
+     */
+    public function getBenchmarkFile(): JsonResponse
+    {
+        $files = Storage::disk('public')->files('benchmark/');
+
+        if (empty($files)) {
+            return response()->json(['data' => null]);
+        }
+
+        $filePath = $files[0];
+        $fileInfo = [
+            'filename'   => basename($filePath),
+            'size'       => Storage::disk('public')->size($filePath),
+            'updated_at' => date('Y-m-d H:i:s', Storage::disk('public')->lastModified($filePath)),
+        ];
+
+        return response()->json(['data' => $fileInfo]);
+    }
+
+    /**
+     * ベンチマークファイルをアップロードする。
+     */
+    public function uploadBenchmarkFile(UploadBenchmarkFileApiRequest $request): JsonResponse
+    {
+        $file = $request->file('benchmark_file');
+        $fileName = $file->getClientOriginalName();
+
+        if (! Storage::disk('public')->exists('benchmark')) {
+            Storage::disk('public')->makeDirectory('benchmark');
+        }
+
+        // 既存ファイルを削除
+        $oldFiles = Storage::disk('public')->files('benchmark/');
+        Storage::disk('public')->delete($oldFiles);
+
+        // 新規ファイルをアップロード
+        $file->storeAs('benchmark', $fileName, 'public');
+
+        $filePath = 'benchmark/' . $fileName;
+        $fileInfo = [
+            'filename'   => basename($filePath),
+            'size'       => Storage::disk('public')->size($filePath),
+            'updated_at' => date('Y-m-d H:i:s', Storage::disk('public')->lastModified($filePath)),
+        ];
+
+        return response()->json(['data' => $fileInfo], 200);
+    }
+
+    /**
+     * 複数端末 CSV ファイルをアップロード・解析する。
+     *
+     * 旧 `confirmMulti` を API 化。CSV を解析・各行検証し、
+     * プレビューデータを返す（保存はしない）。
+     */
+    public function uploadDeviceMulti(UploadDeviceMultiApiRequest $request): JsonResponse
+    {
+        try {
+            $file = $request->file('device_register_file');
+            $filePath = $file->getPathname();
+
+            // CSV 解析
+            $csv = Reader::createFromPath($filePath, 'r')->setHeaderOffset(0);
+            $stmt = Statement::create();
+            $records = $stmt->process($csv);
+
+            $devices = [];
+            foreach ($records as $record) {
+                $record = GeneralUtil::sanitizeCsvRecord($record);
+
+                // 行単位のバリデーション
+                \Validator::make($record, [
+                    'device_type'           => ['required', 'string', 'max:16', Rule::in(DeviceCategory::activeCodes())],
+                    'device_name'           => ['required', 'string', 'max:255'],
+                    'device_serial'         => ['required', 'string', 'max:32'],
+                    'first_work_date_at'    => ['nullable', 'date'],
+                    'purchase_date_at'      => ['nullable', 'date'],
+                    'option'                => ['nullable', 'string'],
+                    'defective'             => ['nullable', 'integer'],
+                    'not_for_sale'          => ['nullable', 'integer'],
+                    'note'                  => ['nullable', 'string'],
+                ])->validate();
+
+                // device_id を自動生成
+                $samePrefix = collect($devices)->filter(function ($d) use ($record) {
+                    return str_starts_with($d['device_id'], "{$record['device_type']}_{$record['device_name']}_");
+                })->count();
+                $baseId = Device::generateDeviceId($record['device_type'], $record['device_name']);
+                if ($samePrefix > 0) {
+                    $prefix = "{$record['device_type']}_{$record['device_name']}_";
+                    $baseNum = (int) substr($baseId, strlen($prefix));
+                    $record['device_id'] = $prefix . str_pad($baseNum + $samePrefix, 6, '0', STR_PAD_LEFT);
+                } else {
+                    $record['device_id'] = $baseId;
+                }
+
+                $devices[] = $record;
+            }
+
+            return response()->json(['data' => $devices], 200);
+        } catch (\Exception $err) {
+            Log::channel('error')->error('device.upload_multi.failed', [
+                'action'         => 'device_csv_upload',
+                'error_message'  => $err->getMessage(),
+                'error_class'    => get_class($err),
+            ]);
+
+            return response()->json([
+                'message' => 'CSV 解析に失敗しました。形式を確認してください。',
+            ], 422);
+        }
+    }
+
+    /**
+     * 複数端末を一括保存する。
+     *
+     * 旧 `storeDeviceMulti` を API 化。アップロード時に検証済みの
+     * デバイスデータの配列を受け取り、トランザクション内で一括保存。
+     */
+    public function storeDeviceMulti(StoreDeviceMultiApiRequest $request): JsonResponse
+    {
+        try {
+            DB::beginTransaction();
+
+            $devices = $request->validated()['devices'];
+
+            foreach ($devices as $device_data) {
+                Device::create([
+                    'device_id'             => $device_data['device_id'],
+                    'device_type'           => $device_data['device_type'],
+                    'device_name'           => $device_data['device_name'],
+                    'device_serial'         => $device_data['device_serial'],
+                    'first_work_date_at'    => $device_data['first_work_date_at'] ?? null,
+                    'purchase_date_at'      => $device_data['purchase_date_at'] ?? null,
+                    'option'                => $device_data['option'] ?? null,
+                    'condition_id'          => $device_data['condition'] ?? null,
+                    'defective'             => ! empty($device_data['defective']),
+                    'not_for_sale'          => ! empty($device_data['not_for_sale']),
+                    'note'                  => $device_data['note'] ?? null,
+                ]);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'data' => [
+                    'count'   => count($devices),
+                    'message' => count($devices) . '台の端末を登録しました。',
+                ],
+            ], 201);
+        } catch (\Exception $err) {
+            DB::rollBack();
+            Log::channel('error')->error('device.store_multi.failed', [
+                'action'         => 'device_multi_registration',
+                'error_message'  => $err->getMessage(),
+                'error_class'    => get_class($err),
+            ]);
+
+            return response()->json([
+                'message' => '端末の登録に失敗しました。',
+            ], 500);
+        }
     }
 
     /**
