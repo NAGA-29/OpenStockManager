@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\DeviceController;
 use App\Http\Controllers\Api\InventoryStockController;
 use App\Http\Controllers\Api\RentalController;
+use App\Http\Controllers\Api\SaleController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -70,4 +71,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/rental/multi/return/{lendId}', [RentalController::class, 'returnDevice'])->name('api.rental.return');
     Route::get('/rental/history', [RentalController::class, 'history'])->name('api.rental.history');
     Route::get('/rental/history/{lendId}', [RentalController::class, 'historyDetail'])->name('api.rental.history.detail');
+
+    // 手続き - 販売
+    Route::get('/sale', [SaleController::class, 'index'])->name('api.sale.index');
+    Route::post('/sale/store', [SaleController::class, 'store'])->name('api.sale.store');
+    Route::post('/sale/multi/upload', [SaleController::class, 'uploadMulti'])->name('api.sale.multi.upload');
+    Route::post('/sale/multi/store', [SaleController::class, 'storeMulti'])->name('api.sale.multi.store');
+    Route::get('/sale/history', [SaleController::class, 'history'])->name('api.sale.history');
+    Route::get('/sale/history/{saleId}', [SaleController::class, 'historyDetail'])->name('api.sale.history.detail');
 });

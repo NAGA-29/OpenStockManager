@@ -35,6 +35,7 @@ class Device extends Model
         'first_work_date_at',
         'purchase_date_at',
         'client',
+        'sale_id',
         'sale_date_at',
         'option',
         'condition_id',

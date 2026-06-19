@@ -21,6 +21,9 @@ import ContactDetailPage from './pages/ContactDetailPage';
 import RentalPage from './pages/RentalPage';
 import RentalHistoryPage from './pages/RentalHistoryPage';
 import RentalHistoryDetailPage from './pages/RentalHistoryDetailPage';
+import SalePage from './pages/SalePage';
+import SaleHistoryPage from './pages/SaleHistoryPage';
+import SaleHistoryDetailPage from './pages/SaleHistoryDetailPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 /**
@@ -61,6 +64,9 @@ export const router = createBrowserRouter([
           { path: '/rental', element: <RentalPage /> },
           { path: '/rental/history', element: <RentalHistoryPage /> },
           { path: '/rental/history/:lendId', element: <RentalHistoryDetailPage /> },
+          { path: '/sale', element: <SalePage /> },
+          { path: '/sale/history', element: <SaleHistoryPage /> },
+          { path: '/sale/history/:saleId', element: <SaleHistoryDetailPage /> },
         ],
       },
     ],
