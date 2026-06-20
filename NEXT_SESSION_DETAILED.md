@@ -1,4 +1,4 @@
-# 次セッション引き継ぎ指示書（OpenStockManager React 移行 / 3-9 カスタムフィールド完了後）
+# 次セッション引き継ぎ指示書（OpenStockManager React 移行 / 3-11 エラーページ完了後）
 
 > このドキュメントは「次の AI セッションが最短で作業に入れること」を目的としています。
 > **まず §1 で現状把握 → §2 で読むべきファイルを開く → §3 の手順で実装** の順に進めてください。
@@ -17,9 +17,11 @@
 | 3-6 | レンタル手続き | ✅（カート端末検索の配線も完了） |
 | 3-7 | 販売手続き | ✅ |
 | 3-8 | 履歴（レンタル/販売 統合ビュー） | ✅ |
-| **3-9** | **設定 - ユーザー管理 + 機材カテゴリ + カスタムフィールド（admin）** | ✅ **今セッションで完了**（メール・CRM は残） |
-| 3-9残 | メール送信・CRM 同期 / プロフィール（任意） | ☐ **← 次タスク（外部依存あり）** |
-| 3-10 | 共通コンポーネント・モーダル群 | ☐ |
+| 3-9 | 設定 - ユーザー管理 + 機材カテゴリ + カスタムフィールド（admin） | ✅（メール・CRM は残） |
+| **3-11** | **エラーページ（400/404/500/503）** | ✅ **今セッションで完了** |
+| 3-9残 | メール送信・CRM 同期 / プロフィール（任意） | ☐（外部依存あり） |
+| 3-10 | 共通コンポーネント・モーダル群 | ☐ **← 次の有力タスク** |
+| 3-1残 | 認証まわりの残画面 | ☐ |
 
 ### テスト状況
 ```
@@ -28,6 +30,13 @@ Frontend: build / typecheck  すべて green
 ```
 
 ### 直近セッションで実装した内容
+**3-11 エラーページ（400/404/500/503）**
+- 共通 `pages/errors/ErrorPage.tsx`（+ `error.css`）を 4 ページで共有。認証/共通レイアウト外でも単体表示できる自前シェル。
+- `NotFoundPage`(404, 既存をリファクタ) / `errors/BadRequestPage`(400) / `errors/ServerErrorPage`(500) / `errors/ServiceUnavailablePage`(503)。
+- router: `/error/400`・`/error/500`・`/error/503` を公開ルートに追加。`ProtectedRoute` に `errorElement: <ServerErrorPage/>` を付与し描画例外を 500 で捕捉。catch-all `*`→404 は従来どおり。
+- `lib/api.ts`: 応答 503 で `/error/503` へ自動誘導（401 と同様の window.location 誘導）。
+- フロントのみの変更（API 変更なし）。
+
 **3-9 設定 - カスタムフィールド（admin 限定）**
 - **API**: `Api\DeviceFieldController`（index/store/update/destroy/reorder）。`DeviceFieldApiTest`（12 tests）
   - `GET/POST /api/device-fields`（`?category=` 絞り込み・`field_types` も返す）、`PUT/DELETE /api/device-fields/{id}`、`POST /api/device-fields/reorder`
@@ -70,35 +79,36 @@ Frontend: build / typecheck  すべて green
 
 ---
 
-## §2. 次セッションで読むべきファイル（3-9 残：メール/CRM、または 3-10 共通部品へ）
+## §2. 次セッションで読むべきファイル（3-10 共通部品 / 3-9 残メール / 3-1 認証残）
 
-### 2-1. 旧 Laravel 実装・既存資産（ロジック・仕様の正解）
-```
-api/resources/views/mailform.blade.php                  ← メールフォーム UI
-api/routes/web.php                                       ← admin ルート（grep -n "mail\|sync\|crm"）
-api/app/Http/Controllers/（メール送信 / CRM 同期コントローラ）, app/Notifications/*, app/Services/*
-.env / config/mail.php / config/services.php            ← メール・外部連携設定（要環境変数）
-```
+### 2-1. 候補タスクと所在
+- **3-10 共通コンポーネント・モーダル群**（推奨・外部依存なし）
+  - 既存 UI: `frontend/src/components/ui/{Modal,Alert,Loading,DataTable}.tsx`、`components/StatusLegend.tsx`、`components/ui/toast/*`
+  - `docs/react-laravel-migration.md` の「### 3-10」表に対象コンポーネント一覧（CartList / SearchBox / SummaryCards / CheckoutModal 等）。
+    まず**既に各ページで重複実装されている部品（検索フォーム・ページネーション・サマリーカード）を共通化**するのが筋。
+  - 旧 Blade: `api/resources/views/component/*`、`layouts/auth.blade.php`（AuthLayout 未移植）。
+- **3-9 残メール/CRM**（外部依存あり）
+  - `api/resources/views/mailform.blade.php`、`config/mail.php`/`config/services.php`、`app/Notifications/*`、`app/Services/*`。
+  - サンドボックスでは実送信不可。`Mail::fake()` 前提でテストする。Sidebar に `/settings/mail`（adminOnly）リンクは既にある。
+- **3-1 認証残**: ログイン以外の認証画面（パスワードリセット等）。`auth/*` と旧 `auth` Blade を参照。
 
-### 2-2. 今あるお手本・関連実装（設定系 CRUD は完成形が揃っている）
+### 2-2. お手本・共通化のヒント
 | 既存ファイル | 内容 |
 |-------------|------|
-| `Api\UserController` / `Api\DeviceCategoryController` / `Api\DeviceFieldController` + 各 ApiTest | **admin 限定 API のお手本**（admin グループ / 403 / 404 / 422 / reorder） |
-| `frontend/src/pages/{UsersPage,DeviceCategoriesPage,DeviceFieldsPage}.tsx` | 一覧＋追加＋編集モーダル＋削除＋並び替え＋選択肢エディタの完成形 |
-| `frontend/src/auth/AdminRoute.tsx` | 非 admin を `/dashboard` へ送るルートガード |
-| `frontend/src/layouts/Sidebar.tsx` | 「設定」に `/settings/mail`（adminOnly）リンクが既にある＝リンク先を実装するだけ |
+| `frontend/src/components/ui/Modal.tsx` | 既存の汎用モーダル（編集モーダルで使用中）。CheckoutModal 等はこれを土台に |
+| `frontend/src/pages/{HistoryPage,UsersPage,SaleHistoryPage}.tsx` | 検索フォーム＋ページネーションの同型コードが各所に重複 → `<SearchBox>`/`<Pagination>` に切り出すと効果大 |
+| `frontend/src/pages/DashboardPage.tsx` | サマリーカードの実装（`<SummaryCards>` 候補） |
+| `Api\*Controller` + 各 ApiTest | API を足す場合のお手本（admin グループ / 403 / 404 / 422 / reorder） |
 
-→ **3-9 残はメール送信・CRM 同期のみ**。これは外部依存（SMTP / 外部 API・環境変数）があるため、
-   このサンドボックス環境では実送信テストがしづらい。先に **3-10 共通コンポーネント・モーダル群**や
-   **3-1 認証残**へ進むのも有力（§6 参照）。メールをやる場合は「フォーム入力 → バリデーション → 送信 API（モック可能に）」の形にし、
-   送信処理は `Mail::fake()` でテストする方針が安全。
+→ **次の有力タスクは 3-10**（外部依存なしで完結）。重複している検索フォーム/ページネーション/サマリーカードの共通部品化から着手すると、
+   既存ページの行数削減にも繋がる。メール/CRM は外部依存があるため後回し推奨。
 
-### 2-3. 変更が必要になりうる既存ファイル
+### 2-3. 変更が必要になりうる既存ファイル（タスクにより）
 ```
-api/routes/api.php          ← メール/CRM エンドポイントを admin グループに追加
-frontend/src/router.tsx     ← /settings/mail を AdminRoute 配下に追加
-frontend/src/layouts/Sidebar.tsx ← 設定セクション（リンクは既にあり）
-docs/react-laravel-migration.md  ← 3-9 を更新
+frontend/src/components/**      ← 共通部品の新設・切り出し
+frontend/src/pages/**           ← 共通部品への置き換え
+api/routes/api.php / frontend/src/router.tsx ← メール等で新ルートを足す場合
+docs/react-laravel-migration.md ← 対象フェーズの表を更新
 ```
 
 > ⚠️ ハマりどころ: API FormRequest の `nullable` フィールドは未送信だと `safe()->all()` に**含まれない**。
@@ -168,7 +178,7 @@ docs/react-laravel-migration.md  ← 3-9 を更新
 
 ```bash
 git branch                       # → claude/funny-galileo-6fgy3o
-git log --oneline -5             # → 最新が "feat: 3-9 カスタムフィールド..." 系
+git log --oneline -5             # → 最新が "feat: 3-11 エラーページ..." 系
 cd api && composer install       # 依存が無ければ
 cd api && php artisan test 2>&1 | grep "Tests:"    # → 343 passed / 1 risky / 3 failures
 cd ../frontend && npm ci          # node_modules が無ければ（lockfile は TS 5.9.3 を固定）
@@ -181,17 +191,18 @@ cd ../frontend && npm run build && npm run typecheck   # → green
 
 ---
 
-## §6. 代替タスク（メール/CRM 以外で進めたい場合）
+## §6. 代替タスク（3-10 以外で進めたい場合）
 
-- **3-11 エラーページ**（難度🟢低）: 400/404/500/503。`NotFoundPage` はあるので他を追加するだけ。外部依存なしで完結しやすい。
 - **プロフィール画面**（難度🟢低）: `/profile`（自分の情報表示）。メール変更はトークン＋通知が絡むので表示のみ先行も可。
 - **3-4 残（端末画像）**（難度🟢低）: 端末登録の画像アップロードのみ未実装。
 - **販売バリデーション強化**（難度🟢低）: 旧 `StoreSaleCartRequest` は「販売済み/貸出中/不良/販売不可」を弾く。
   現状の API は端末状態チェック未実装（レンタルと同形にしてある）。必要なら `StoreSaleApiRequest::withValidator` で追加。
-- **3-10 共通モーダル群**（難度🟠中）。
+- **3-9 残メール/CRM**（難度🟠中・外部依存）: `Mail::fake()` 前提で。
+- **Phase 4（Blade 撤去）**: 既存 3 failures の解消につながる。ただし旧 web ルートの全廃は影響大なので慎重に。
 
 ---
 
 **ブランチ**: `claude/funny-galileo-6fgy3o`
-**次セッション目標**: 3-9 残（メール送信・CRM 同期。外部依存のため `Mail::fake()` 前提で）または 3-11 エラーページ。
-設定系 CRUD（ユーザー/カテゴリ/フィールド）は完了済みで、各 Controller/Page が次の実装のお手本になる。
+**次セッション目標**: 3-10 共通コンポーネント（検索フォーム/ページネーション/サマリーカードの共通部品化）。外部依存なしで完結する。
+設定系 CRUD・履歴・エラーページは完了済みで、各 Controller/Page が次の実装のお手本になる。
+残フェーズ: 3-1（認証残）/ 3-9メール・CRM / 3-10（共通部品）/ Phase 4（Blade 撤去）。

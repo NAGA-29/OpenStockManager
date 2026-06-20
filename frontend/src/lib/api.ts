@@ -38,7 +38,10 @@ function isAuthEndpoint(url: string | undefined): boolean {
   return url.includes('/auth/login') || url.includes('/auth/me');
 }
 
-// レスポンス: 401 はトークン破棄＋ログインへ誘導
+/** サービス停止（503）時の誘導先。 */
+const SERVICE_UNAVAILABLE_PATH = '/error/503';
+
+// レスポンス: 401 はトークン破棄＋ログインへ誘導、503 はメンテ画面へ誘導
 api.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
@@ -52,6 +55,14 @@ api.interceptors.response.use(
       ) {
         window.location.assign(LOGIN_PATH);
       }
+    }
+
+    if (
+      status === 503 &&
+      typeof window !== 'undefined' &&
+      window.location.pathname !== SERVICE_UNAVAILABLE_PATH
+    ) {
+      window.location.assign(SERVICE_UNAVAILABLE_PATH);
     }
 
     return Promise.reject(error);

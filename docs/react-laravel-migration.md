@@ -80,7 +80,7 @@
 | 3-8 | 履歴（レンタル／販売／詳細／統合ビュー） | ☑ | 5（全体履歴 `/history` で統合） |
 | 3-9 | 設定（ユーザー管理／カテゴリ／カスタムフィールド／メール・CRM同期） | ◐ | 6（ユーザー管理・機材カテゴリ・カスタムフィールド 完了。メール・CRM 残） |
 | 3-10 | 共通コンポーネント・モーダル群 | ☐ | 14 |
-| 3-11 | エラーページ（400/404/500/503） | ☐ | 4 |
+| 3-11 | エラーページ（400/404/500/503） | ☑ | 4（全て完了） |
 
 ### Phase 4 — 仕上げ・撤去
 
@@ -223,7 +223,14 @@
 ### 3-11 エラーページ
 | Blade | React ルート | 状態 |
 | --- | --- | --- |
-| `errors/400` `404` `500` `503` | `/error/*`・ErrorBoundary | ☐ |
+| `errors/404` | catch-all `*` → `NotFoundPage` | ☑ |
+| `errors/400` | `/error/400` → `BadRequestPage` | ☑ |
+| `errors/500` | `/error/500` + Router `errorElement` → `ServerErrorPage` | ☑ |
+| `errors/503` | `/error/503` → `ServiceUnavailablePage`（API 503 で自動誘導） | ☑ |
+
+> 共通 `ErrorPage` コンポーネント（`pages/errors/ErrorPage.tsx` + `error.css`）を 4 ページで共有。
+> 認証・共通レイアウトの外側で単体表示できる自前シェルを持つ。レンダリング例外は `ProtectedRoute` の
+> `errorElement`（`ServerErrorPage`）で捕捉。API 応答 503 は axios インターセプタで `/error/503` へ誘導。
 
 ---
 

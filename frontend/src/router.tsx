@@ -31,6 +31,9 @@ import UserRegisterPage from './pages/UserRegisterPage';
 import DeviceCategoriesPage from './pages/DeviceCategoriesPage';
 import DeviceFieldsPage from './pages/DeviceFieldsPage';
 import NotFoundPage from './pages/NotFoundPage';
+import BadRequestPage from './pages/errors/BadRequestPage';
+import ServerErrorPage from './pages/errors/ServerErrorPage';
+import ServiceUnavailablePage from './pages/errors/ServiceUnavailablePage';
 
 /**
  * アプリのルーティング定義。
@@ -44,8 +47,14 @@ export const router = createBrowserRouter([
     path: '/login',
     element: <LoginPage />,
   },
+  // 単体表示するエラーページ（認証・共通レイアウト外）。
+  { path: '/error/400', element: <BadRequestPage /> },
+  { path: '/error/500', element: <ServerErrorPage /> },
+  { path: '/error/503', element: <ServiceUnavailablePage /> },
   {
     element: <ProtectedRoute />,
+    // 配下ルートのレンダリング/ローダー例外は 500 ページで受ける。
+    errorElement: <ServerErrorPage />,
     children: [
       {
         element: <AppLayout />,
