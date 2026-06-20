@@ -1,45 +1,5 @@
-/* ダッシュボード固有のスタイル（サマリーカード＋カード枠）。
- * 見出しバー・テーブル・ローディング/アラートは共通 UI（components/ui）を使用。 */
-
-/* ---- サマリーカード ---- */
-.summary-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.summary-card {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  padding: 1rem 1.25rem;
-  border-radius: 0.5rem;
-  color: #fff;
-  box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.08);
-}
-
-.summary-card__label {
-  font-size: 0.85rem;
-  opacity: 0.9;
-}
-
-.summary-card__value {
-  font-size: 1.75rem;
-  font-weight: 700;
-}
-
-.summary-card--primary {
-  background: linear-gradient(135deg, #2c22bd, #4338ca);
-}
-
-.summary-card--danger {
-  background: linear-gradient(135deg, #dc2626, #b91c1c);
-}
-
-.summary-card--success {
-  background: linear-gradient(135deg, #059669, #047857);
-}
+/* ダッシュボード固有のスタイル（カード枠）。
+ * 見出しバー・テーブル・ローディング/アラート・サマリーカードは共通 UI（components/ui）を使用。 */
 
 /* ---- カード（テーブル枠） ---- */
 .dashboard-grid {
