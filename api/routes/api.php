@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\DeviceCategoryController;
 use App\Http\Controllers\Api\DeviceController;
+use App\Http\Controllers\Api\DeviceFieldController;
 use App\Http\Controllers\Api\HistoryController;
 use App\Http\Controllers\Api\InventoryStockController;
 use App\Http\Controllers\Api\RentalController;
@@ -98,5 +99,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/device-categories/reorder', [DeviceCategoryController::class, 'reorder'])->name('api.device_categories.reorder');
         Route::put('/device-categories/{id}', [DeviceCategoryController::class, 'update'])->name('api.device_categories.update');
         Route::delete('/device-categories/{id}', [DeviceCategoryController::class, 'destroy'])->name('api.device_categories.destroy');
+
+        // 設定 - カスタムフィールド。`reorder` は `{id}` より前に定義する。
+        Route::get('/device-fields', [DeviceFieldController::class, 'index'])->name('api.device_fields.index');
+        Route::post('/device-fields', [DeviceFieldController::class, 'store'])->name('api.device_fields.store');
+        Route::post('/device-fields/reorder', [DeviceFieldController::class, 'reorder'])->name('api.device_fields.reorder');
+        Route::put('/device-fields/{id}', [DeviceFieldController::class, 'update'])->name('api.device_fields.update');
+        Route::delete('/device-fields/{id}', [DeviceFieldController::class, 'destroy'])->name('api.device_fields.destroy');
     });
 });

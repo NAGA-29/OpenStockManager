@@ -1,4 +1,4 @@
-# 次セッション引き継ぎ指示書（OpenStockManager React 移行 / 3-9 機材カテゴリ完了後）
+# 次セッション引き継ぎ指示書（OpenStockManager React 移行 / 3-9 カスタムフィールド完了後）
 
 > このドキュメントは「次の AI セッションが最短で作業に入れること」を目的としています。
 > **まず §1 で現状把握 → §2 で読むべきファイルを開く → §3 の手順で実装** の順に進めてください。
@@ -17,16 +17,26 @@
 | 3-6 | レンタル手続き | ✅（カート端末検索の配線も完了） |
 | 3-7 | 販売手続き | ✅ |
 | 3-8 | 履歴（レンタル/販売 統合ビュー） | ✅ |
-| **3-9** | **設定 - ユーザー管理 + 機材カテゴリ（admin）** | ✅ **今セッションで完了**（カスタムフィールド/メールは残） |
-| 3-9残 | カスタムフィールド（reorder付き） / メール・CRM連携 | ☐ **← 次の最有力タスク** |
+| **3-9** | **設定 - ユーザー管理 + 機材カテゴリ + カスタムフィールド（admin）** | ✅ **今セッションで完了**（メール・CRM は残） |
+| 3-9残 | メール送信・CRM 同期 / プロフィール（任意） | ☐ **← 次タスク（外部依存あり）** |
+| 3-10 | 共通コンポーネント・モーダル群 | ☐ |
 
 ### テスト状況
 ```
-API:      331 passed / 1 risky / 3 pre-existing failures（Blade Vite manifest 由来。React 移行とは無関係）
+API:      343 passed / 1 risky / 3 pre-existing failures（Blade Vite manifest 由来。React 移行とは無関係）
 Frontend: build / typecheck  すべて green
 ```
 
 ### 直近セッションで実装した内容
+**3-9 設定 - カスタムフィールド（admin 限定）**
+- **API**: `Api\DeviceFieldController`（index/store/update/destroy/reorder）。`DeviceFieldApiTest`（12 tests）
+  - `GET/POST /api/device-fields`（`?category=` 絞り込み・`field_types` も返す）、`PUT/DELETE /api/device-fields/{id}`、`POST /api/device-fields/reorder`
+  - `field_key` はラベルから `DeviceTypeField::generateFieldKey()` で自動採番（カテゴリ内一意）。`select` 型のみ `options` を保持。
+  - 更新ではカテゴリ・`field_key` は変更不可。`sort_order` はカテゴリ内 max+1。削除しても端末 JSON 値は残す。
+  - `Store/UpdateDeviceFieldApiRequest`（field_type は `DeviceTypeField::FIELD_TYPES` のキー、options は label/value）
+- **フロント**: `features/settings/useDeviceFields.ts`、`DeviceFieldsPage`（カテゴリ別グルーピング表示＋追加フォーム＋編集モーダル＋削除＋カテゴリ内 上下並び替え。`select` 型は選択肢エディタ `OptionsEditor`）、router の `/settings/fields` を `AdminRoute` 配下に。
+  - 注: `Str::snake('OS Version')` は `o_s_version` になる（連続大文字）。テストのキー期待値に注意。
+
 **3-9 設定 - 機材カテゴリ（admin 限定）**
 - **API**: `Api\DeviceCategoryController`（index/store/update/destroy/reorder）。`DeviceCategoryApiTest`（12 tests）
   - `GET/POST /api/device-categories`、`PUT/DELETE /api/device-categories/{id}`、`POST /api/device-categories/reorder`
@@ -60,35 +70,33 @@ Frontend: build / typecheck  すべて green
 
 ---
 
-## §2. 次セッションで読むべきファイル（3-9 残：カスタムフィールド／メール を実装する場合）
+## §2. 次セッションで読むべきファイル（3-9 残：メール/CRM、または 3-10 共通部品へ）
 
 ### 2-1. 旧 Laravel 実装・既存資産（ロジック・仕様の正解）
 ```
-api/app/Http/Controllers/DeviceTypeFieldController.php   ← カスタムフィールドの CRUD/reorder（旧 Blade）
-api/app/Models/DeviceTypeField.php                       ← フィールド定義モデル（device_category_code で紐づく）
-api/database/migrations/2026_02_19_000001_create_device_type_fields_table.php  ← スキーマ
-api/resources/views/device_fields/*, mailform.blade.php
-api/routes/web.php                                       ← admin ルート（grep -n "fields\|mail"）
+api/resources/views/mailform.blade.php                  ← メールフォーム UI
+api/routes/web.php                                       ← admin ルート（grep -n "mail\|sync\|crm"）
+api/app/Http/Controllers/（メール送信 / CRM 同期コントローラ）, app/Notifications/*, app/Services/*
+.env / config/mail.php / config/services.php            ← メール・外部連携設定（要環境変数）
 ```
 
-### 2-2. 今あるお手本・関連実装（カテゴリ CRUD がほぼそのまま雛形）
+### 2-2. 今あるお手本・関連実装（設定系 CRUD は完成形が揃っている）
 | 既存ファイル | 内容 |
 |-------------|------|
-| `api/app/Http/Controllers/Api/DeviceCategoryController.php` + `DeviceCategoryApiTest` | **CRUD＋reorder の最適なお手本**（admin グループ / 422 / 404 / reorder / 12 tests） |
-| `api/app/Http/Requests/{Store,Update}DeviceCategoryApiRequest.php` | FormRequest 雛形（一意・regex・ignore） |
-| `frontend/src/pages/DeviceCategoriesPage.tsx` + `features/settings/useDeviceCategories.ts` | 一覧＋追加フォーム＋編集モーダル＋削除＋上下並び替えの完成形 |
+| `Api\UserController` / `Api\DeviceCategoryController` / `Api\DeviceFieldController` + 各 ApiTest | **admin 限定 API のお手本**（admin グループ / 403 / 404 / 422 / reorder） |
+| `frontend/src/pages/{UsersPage,DeviceCategoriesPage,DeviceFieldsPage}.tsx` | 一覧＋追加＋編集モーダル＋削除＋並び替え＋選択肢エディタの完成形 |
 | `frontend/src/auth/AdminRoute.tsx` | 非 admin を `/dashboard` へ送るルートガード |
-| `frontend/src/layouts/Sidebar.tsx` | 「設定」に `/settings/fields`・`/settings/mail`（adminOnly）リンクが既にある＝リンク先を実装するだけ |
-| `Device` モデルの `custom_fields`(array cast) | 端末側の値の持ち方 |
+| `frontend/src/layouts/Sidebar.tsx` | 「設定」に `/settings/mail`（adminOnly）リンクが既にある＝リンク先を実装するだけ |
 
-→ **3-9 残の本体は「カスタムフィールド CRUD（＋reorder）」と「メール送信・CRM 同期」**。
-   フィールド CRUD は **DeviceCategory 実装をコピーして DeviceTypeField 用に置換するのが最速**（カテゴリコード単位の絞り込みが増える点に注意）。
-   メール連携は外部依存があるため後回し可。
+→ **3-9 残はメール送信・CRM 同期のみ**。これは外部依存（SMTP / 外部 API・環境変数）があるため、
+   このサンドボックス環境では実送信テストがしづらい。先に **3-10 共通コンポーネント・モーダル群**や
+   **3-1 認証残**へ進むのも有力（§6 参照）。メールをやる場合は「フォーム入力 → バリデーション → 送信 API（モック可能に）」の形にし、
+   送信処理は `Mail::fake()` でテストする方針が安全。
 
 ### 2-3. 変更が必要になりうる既存ファイル
 ```
-api/routes/api.php          ← /device-fields 系を admin グループに追加（reorder は {id} より前）
-frontend/src/router.tsx     ← /settings/fields, /settings/mail を AdminRoute 配下に追加
+api/routes/api.php          ← メール/CRM エンドポイントを admin グループに追加
+frontend/src/router.tsx     ← /settings/mail を AdminRoute 配下に追加
 frontend/src/layouts/Sidebar.tsx ← 設定セクション（リンクは既にあり）
 docs/react-laravel-migration.md  ← 3-9 を更新
 ```
@@ -152,6 +160,7 @@ docs/react-laravel-migration.md  ← 3-9 を更新
 | GET | `/api/history?type=&word=&page=` | 統合履歴（レンタル+販売） | ✅ |
 | GET/POST | `/api/users`, `PUT /api/users/{id}` | ユーザー管理（admin 限定） | ✅ |
 | GET/POST/PUT/DELETE | `/api/device-categories{,/{id}}` + `/reorder` | 機材カテゴリ管理（admin 限定） | ✅ |
+| GET/POST/PUT/DELETE | `/api/device-fields{,/{id}}` + `/reorder` | カスタムフィールド管理（admin 限定） | ✅ |
 
 ---
 
@@ -159,9 +168,9 @@ docs/react-laravel-migration.md  ← 3-9 を更新
 
 ```bash
 git branch                       # → claude/funny-galileo-6fgy3o
-git log --oneline -5             # → 最新が "feat: 3-9 機材カテゴリ..." 系
+git log --oneline -5             # → 最新が "feat: 3-9 カスタムフィールド..." 系
 cd api && composer install       # 依存が無ければ
-cd api && php artisan test 2>&1 | grep "Tests:"    # → 331 passed / 1 risky / 3 failures
+cd api && php artisan test 2>&1 | grep "Tests:"    # → 343 passed / 1 risky / 3 failures
 cd ../frontend && npm ci          # node_modules が無ければ（lockfile は TS 5.9.3 を固定）
 cd ../frontend && npm run build && npm run typecheck   # → green
 ```
@@ -172,16 +181,17 @@ cd ../frontend && npm run build && npm run typecheck   # → green
 
 ---
 
-## §6. 代替タスク（カテゴリ/フィールド以外で進めたい場合）
+## §6. 代替タスク（メール/CRM 以外で進めたい場合）
 
-- **プロフィール画面**（難度🟢低）: `/profile`（自分の情報表示・メール変更）。メール変更はトークン＋通知が絡むので表示のみ先行も可。
+- **3-11 エラーページ**（難度🟢低）: 400/404/500/503。`NotFoundPage` はあるので他を追加するだけ。外部依存なしで完結しやすい。
+- **プロフィール画面**（難度🟢低）: `/profile`（自分の情報表示）。メール変更はトークン＋通知が絡むので表示のみ先行も可。
 - **3-4 残（端末画像）**（難度🟢低）: 端末登録の画像アップロードのみ未実装。
 - **販売バリデーション強化**（難度🟢低）: 旧 `StoreSaleCartRequest` は「販売済み/貸出中/不良/販売不可」を弾く。
   現状の API は端末状態チェック未実装（レンタルと同形にしてある）。必要なら `StoreSaleApiRequest::withValidator` で追加。
-- **3-10 共通モーダル群 / 3-11 エラーページ**（難度🟢〜🟠）。
+- **3-10 共通モーダル群**（難度🟠中）。
 
 ---
 
 **ブランチ**: `claude/funny-galileo-6fgy3o`
-**次セッション目標**: 3-9 残（カスタムフィールド CRUD＋reorder → メール/CRM）。
-`DeviceCategoryController`/`DeviceCategoriesPage`/`useDeviceCategories` をコピー＆置換するのが最速。
+**次セッション目標**: 3-9 残（メール送信・CRM 同期。外部依存のため `Mail::fake()` 前提で）または 3-11 エラーページ。
+設定系 CRUD（ユーザー/カテゴリ/フィールド）は完了済みで、各 Controller/Page が次の実装のお手本になる。

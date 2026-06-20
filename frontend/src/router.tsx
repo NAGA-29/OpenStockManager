@@ -29,6 +29,7 @@ import HistoryPage from './pages/HistoryPage';
 import UsersPage from './pages/UsersPage';
 import UserRegisterPage from './pages/UserRegisterPage';
 import DeviceCategoriesPage from './pages/DeviceCategoriesPage';
+import DeviceFieldsPage from './pages/DeviceFieldsPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 /**
@@ -79,6 +80,7 @@ export const router = createBrowserRouter([
               { path: '/users', element: <UsersPage /> },
               { path: '/users/register', element: <UserRegisterPage /> },
               { path: '/settings/categories', element: <DeviceCategoriesPage /> },
+              { path: '/settings/fields', element: <DeviceFieldsPage /> },
             ],
           },
         ],
