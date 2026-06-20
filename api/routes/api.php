@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\DeviceCategoryController;
 use App\Http\Controllers\Api\DeviceController;
 use App\Http\Controllers\Api\HistoryController;
 use App\Http\Controllers\Api\InventoryStockController;
@@ -90,5 +91,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/users', [UserController::class, 'index'])->name('api.users.index');
         Route::post('/users', [UserController::class, 'store'])->name('api.users.store');
         Route::put('/users/{id}', [UserController::class, 'update'])->name('api.users.update');
+
+        // 設定 - 機材カテゴリ。`reorder` は `{id}` より前に定義する。
+        Route::get('/device-categories', [DeviceCategoryController::class, 'index'])->name('api.device_categories.index');
+        Route::post('/device-categories', [DeviceCategoryController::class, 'store'])->name('api.device_categories.store');
+        Route::post('/device-categories/reorder', [DeviceCategoryController::class, 'reorder'])->name('api.device_categories.reorder');
+        Route::put('/device-categories/{id}', [DeviceCategoryController::class, 'update'])->name('api.device_categories.update');
+        Route::delete('/device-categories/{id}', [DeviceCategoryController::class, 'destroy'])->name('api.device_categories.destroy');
     });
 });

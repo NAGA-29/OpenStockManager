@@ -1,4 +1,4 @@
-# 次セッション引き継ぎ指示書（OpenStockManager React 移行 / 3-9 ユーザー管理完了後）
+# 次セッション引き継ぎ指示書（OpenStockManager React 移行 / 3-9 機材カテゴリ完了後）
 
 > このドキュメントは「次の AI セッションが最短で作業に入れること」を目的としています。
 > **まず §1 で現状把握 → §2 で読むべきファイルを開く → §3 の手順で実装** の順に進めてください。
@@ -17,16 +17,24 @@
 | 3-6 | レンタル手続き | ✅（カート端末検索の配線も完了） |
 | 3-7 | 販売手続き | ✅ |
 | 3-8 | 履歴（レンタル/販売 統合ビュー） | ✅ |
-| **3-9** | **設定 - ユーザー管理（admin）** | ✅ **今セッションで完了**（カテゴリ/フィールド/メールは残） |
-| 3-9残 | カテゴリ / カスタムフィールド / メール・CRM連携 | ☐ **← 次の最有力タスク** |
+| **3-9** | **設定 - ユーザー管理 + 機材カテゴリ（admin）** | ✅ **今セッションで完了**（カスタムフィールド/メールは残） |
+| 3-9残 | カスタムフィールド（reorder付き） / メール・CRM連携 | ☐ **← 次の最有力タスク** |
 
 ### テスト状況
 ```
-API:      319 passed / 1 risky / 3 pre-existing failures（Blade Vite manifest 由来。React 移行とは無関係）
+API:      331 passed / 1 risky / 3 pre-existing failures（Blade Vite manifest 由来。React 移行とは無関係）
 Frontend: build / typecheck  すべて green
 ```
 
 ### 直近セッションで実装した内容
+**3-9 設定 - 機材カテゴリ（admin 限定）**
+- **API**: `Api\DeviceCategoryController`（index/store/update/destroy/reorder）。`DeviceCategoryApiTest`（12 tests）
+  - `GET/POST /api/device-categories`、`PUT/DELETE /api/device-categories/{id}`、`POST /api/device-categories/reorder`
+  - コード変更時は `devices.device_type` を追従更新（トランザクション）。機材が紐づくカテゴリは削除拒否（422）。
+  - ⚠️ `nullable` フィールド（icon）は `safe()->all()` に含まれないため `$safe['icon'] ?? null` で受ける（ハマりどころ）。
+  - `StoreDeviceCategoryApiRequest`/`UpdateDeviceCategoryApiRequest`（code は `regex:/^[A-Z0-9_]+$/`・一意）
+- **フロント**: `features/settings/useDeviceCategories.ts`、`DeviceCategoriesPage`（一覧＋追加フォーム＋編集モーダル＋削除＋上下ボタンで並び替え）、router の `/settings/categories` を `AdminRoute` 配下に。
+
 **3-9 設定 - ユーザー管理（admin 限定）**
 - **API**: `Api\UserController`（index/store/update）。`auth:sanctum` + `admin` ミドルウェアで保護（非 admin は 403）。
   `StoreUserApiRequest`/`UpdateUserApiRequest`（メール一意・パスワード強度・role in[admin,user]）。`UserApiTest`（12 tests）
@@ -52,36 +60,41 @@ Frontend: build / typecheck  すべて green
 
 ---
 
-## §2. 次セッションで読むべきファイル（3-9 残：カテゴリ/フィールド/メール を実装する場合）
+## §2. 次セッションで読むべきファイル（3-9 残：カスタムフィールド／メール を実装する場合）
 
-### 2-1. 旧 Laravel 実装（ロジック・仕様の正解）
+### 2-1. 旧 Laravel 実装・既存資産（ロジック・仕様の正解）
 ```
-api/routes/web.php                                   ← admin ルート（grep -n "categories\|fields\|mail" で確認。54-63行 付近）
-api/app/Http/Controllers/（DeviceCategory/DeviceTypeField 系コントローラ）
-api/app/Models/DeviceCategory.php / DeviceTypeField.php  ← 既存モデル
-api/resources/views/device_categories/*, device_fields/*, mailform.blade.php
+api/app/Http/Controllers/DeviceTypeFieldController.php   ← カスタムフィールドの CRUD/reorder（旧 Blade）
+api/app/Models/DeviceTypeField.php                       ← フィールド定義モデル（device_category_code で紐づく）
+api/database/migrations/2026_02_19_000001_create_device_type_fields_table.php  ← スキーマ
+api/resources/views/device_fields/*, mailform.blade.php
+api/routes/web.php                                       ← admin ルート（grep -n "fields\|mail"）
 ```
 
-### 2-2. 今あるお手本・関連実装
+### 2-2. 今あるお手本・関連実装（カテゴリ CRUD がほぼそのまま雛形）
 | 既存ファイル | 内容 |
 |-------------|------|
-| `api/app/Http/Controllers/Api/UserController.php` + `UserApiTest` | **admin 限定 API のお手本**（`Route::middleware('admin')->group` / 403 / 12 tests） |
-| `frontend/src/auth/AdminRoute.tsx` | 非 admin を `/dashboard` へ送るルートガード（カテゴリ/フィールド画面でも流用） |
-| `frontend/src/pages/UsersPage.tsx` + `features/users/useUsers.ts` | 一覧＋検索＋ページング＋編集モーダル＋登録ページの典型形 |
-| `frontend/src/layouts/Sidebar.tsx` | 「設定」に `/settings/categories`・`/settings/fields`・`/settings/mail`（adminOnly）リンクが既にある＝リンク先を実装するだけ |
-| `Device` モデルの `custom_fields`(array cast) / `DeviceTypeField` | カスタムフィールド定義のデータ構造 |
+| `api/app/Http/Controllers/Api/DeviceCategoryController.php` + `DeviceCategoryApiTest` | **CRUD＋reorder の最適なお手本**（admin グループ / 422 / 404 / reorder / 12 tests） |
+| `api/app/Http/Requests/{Store,Update}DeviceCategoryApiRequest.php` | FormRequest 雛形（一意・regex・ignore） |
+| `frontend/src/pages/DeviceCategoriesPage.tsx` + `features/settings/useDeviceCategories.ts` | 一覧＋追加フォーム＋編集モーダル＋削除＋上下並び替えの完成形 |
+| `frontend/src/auth/AdminRoute.tsx` | 非 admin を `/dashboard` へ送るルートガード |
+| `frontend/src/layouts/Sidebar.tsx` | 「設定」に `/settings/fields`・`/settings/mail`（adminOnly）リンクが既にある＝リンク先を実装するだけ |
+| `Device` モデルの `custom_fields`(array cast) | 端末側の値の持ち方 |
 
-→ **3-9 残の本体は「機材カテゴリ CRUD」「カスタムフィールド CRUD（＋並び替え reorder）」「メール送信・CRM 同期」**。
-   admin 保護は UserController と同じ `Route::middleware('admin')->group` でよい。並び替えは drag&drop or 上下ボタン＋ `reorder` API。
-   メール連携は外部依存があるため後回し可。まずはカテゴリ CRUD が着手しやすい。
+→ **3-9 残の本体は「カスタムフィールド CRUD（＋reorder）」と「メール送信・CRM 同期」**。
+   フィールド CRUD は **DeviceCategory 実装をコピーして DeviceTypeField 用に置換するのが最速**（カテゴリコード単位の絞り込みが増える点に注意）。
+   メール連携は外部依存があるため後回し可。
 
 ### 2-3. 変更が必要になりうる既存ファイル
 ```
-api/routes/api.php          ← /device-categories, /device-fields 系を admin グループに追加
-frontend/src/router.tsx     ← /settings/categories, /settings/fields, /settings/mail を AdminRoute 配下に追加
+api/routes/api.php          ← /device-fields 系を admin グループに追加（reorder は {id} より前）
+frontend/src/router.tsx     ← /settings/fields, /settings/mail を AdminRoute 配下に追加
 frontend/src/layouts/Sidebar.tsx ← 設定セクション（リンクは既にあり）
 docs/react-laravel-migration.md  ← 3-9 を更新
 ```
+
+> ⚠️ ハマりどころ: API FormRequest の `nullable` フィールドは未送信だと `safe()->all()` に**含まれない**。
+> `$safe['key'] ?? null` で受けること（カテゴリの icon で 500 になった）。
 
 > ⚠️ 既存の 3 failures は `tests/Feature/Middleware/AdminMiddlewareTest.php` 等の **Blade ルート（`/users` GET など）** が
 > Vite manifest を要求して落ちているもので、API 移行とは別物。Blade ルート自体を撤去する Phase 4 まで残る見込み。
@@ -138,6 +151,7 @@ docs/react-laravel-migration.md  ← 3-9 を更新
 | GET | `/api/sale/history{,/{saleId}}` | 販売履歴 | ✅ |
 | GET | `/api/history?type=&word=&page=` | 統合履歴（レンタル+販売） | ✅ |
 | GET/POST | `/api/users`, `PUT /api/users/{id}` | ユーザー管理（admin 限定） | ✅ |
+| GET/POST/PUT/DELETE | `/api/device-categories{,/{id}}` + `/reorder` | 機材カテゴリ管理（admin 限定） | ✅ |
 
 ---
 
@@ -145,9 +159,9 @@ docs/react-laravel-migration.md  ← 3-9 を更新
 
 ```bash
 git branch                       # → claude/funny-galileo-6fgy3o
-git log --oneline -5             # → 最新が "feat: 3-9 ユーザー管理..." 系
+git log --oneline -5             # → 最新が "feat: 3-9 機材カテゴリ..." 系
 cd api && composer install       # 依存が無ければ
-cd api && php artisan test 2>&1 | grep "Tests:"    # → 319 passed / 1 risky / 3 failures
+cd api && php artisan test 2>&1 | grep "Tests:"    # → 331 passed / 1 risky / 3 failures
 cd ../frontend && npm ci          # node_modules が無ければ（lockfile は TS 5.9.3 を固定）
 cd ../frontend && npm run build && npm run typecheck   # → green
 ```
@@ -169,5 +183,5 @@ cd ../frontend && npm run build && npm run typecheck   # → green
 ---
 
 **ブランチ**: `claude/funny-galileo-6fgy3o`
-**次セッション目標**: 3-9 残（機材カテゴリ CRUD → カスタムフィールド CRUD → メール/CRM）。
-admin 保護・一覧/編集 UI は `UserController`/`UsersPage`/`AdminRoute` がそのままお手本になる。
+**次セッション目標**: 3-9 残（カスタムフィールド CRUD＋reorder → メール/CRM）。
+`DeviceCategoryController`/`DeviceCategoriesPage`/`useDeviceCategories` をコピー＆置換するのが最速。
