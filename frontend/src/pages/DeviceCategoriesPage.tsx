@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { AxiosError } from 'axios';
 import Alert from '@/components/ui/Alert';
 import Loading from '@/components/ui/Loading';
-import Modal from '@/components/ui/Modal';
+import FormModal from '@/components/ui/FormModal';
 import DataTable, { type Column } from '@/components/ui/DataTable';
 import { useToast } from '@/components/ui/toast/useToast';
 import {
@@ -75,8 +75,7 @@ function DeviceCategoriesPage() {
     setEditErrors({});
   };
 
-  const handleEdit = async (e: FormEvent) => {
-    e.preventDefault();
+  const handleEdit = async () => {
     if (!editing) return;
     setEditErrors({});
     try {
@@ -292,8 +291,13 @@ function DeviceCategoriesPage() {
         />
       )}
 
-      <Modal open={editing !== null} title="カテゴリ編集" onClose={() => setEditing(null)}>
-        <form onSubmit={(e) => void handleEdit(e)} noValidate>
+      <FormModal
+        open={editing !== null}
+        title="カテゴリ編集"
+        onClose={() => setEditing(null)}
+        onSubmit={handleEdit}
+        submitting={updateMutation.isPending}
+      >
           <div className="register-field">
             <label htmlFor="edit-code">コード</label>
             <input
@@ -346,21 +350,7 @@ function DeviceCategoriesPage() {
             />
             <label htmlFor="edit-active">有効</label>
           </div>
-
-          <div className="register-actions">
-            <button type="button" className="osm-btn" onClick={() => setEditing(null)}>
-              キャンセル
-            </button>
-            <button
-              type="submit"
-              className="osm-btn osm-btn--primary"
-              disabled={updateMutation.isPending}
-            >
-              {updateMutation.isPending ? '更新中…' : '更新'}
-            </button>
-          </div>
-        </form>
-      </Modal>
+      </FormModal>
     </>
   );
 }

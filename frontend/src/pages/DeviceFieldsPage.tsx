@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { AxiosError } from 'axios';
 import Alert from '@/components/ui/Alert';
 import Loading from '@/components/ui/Loading';
-import Modal from '@/components/ui/Modal';
+import FormModal from '@/components/ui/FormModal';
 import { useToast } from '@/components/ui/toast/useToast';
 import { useDeviceCategories } from '@/features/settings/useDeviceCategories';
 import {
@@ -220,8 +220,7 @@ function DeviceFieldsPage() {
     setEditErrors({});
   };
 
-  const handleEdit = async (e: FormEvent) => {
-    e.preventDefault();
+  const handleEdit = async () => {
     if (!editing) return;
     setEditErrors({});
     try {
@@ -418,29 +417,21 @@ function DeviceFieldsPage() {
           </div>
         ))}
 
-      <Modal open={editing !== null} title="フィールド編集" onClose={() => setEditing(null)}>
-        <form onSubmit={(e) => void handleEdit(e)} noValidate>
-          <FieldFormBody
-            state={editForm}
-            setState={setEditForm}
-            errors={editErrors}
-            fieldTypes={fieldTypes}
-            idPrefix="edit"
-          />
-          <div className="register-actions">
-            <button type="button" className="osm-btn" onClick={() => setEditing(null)}>
-              キャンセル
-            </button>
-            <button
-              type="submit"
-              className="osm-btn osm-btn--primary"
-              disabled={updateMutation.isPending}
-            >
-              {updateMutation.isPending ? '更新中…' : '更新'}
-            </button>
-          </div>
-        </form>
-      </Modal>
+      <FormModal
+        open={editing !== null}
+        title="フィールド編集"
+        onClose={() => setEditing(null)}
+        onSubmit={handleEdit}
+        submitting={updateMutation.isPending}
+      >
+        <FieldFormBody
+          state={editForm}
+          setState={setEditForm}
+          errors={editErrors}
+          fieldTypes={fieldTypes}
+          idPrefix="edit"
+        />
+      </FormModal>
     </>
   );
 }

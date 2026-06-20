@@ -1,9 +1,9 @@
-import { useState, type FormEvent } from 'react';
+import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { AxiosError } from 'axios';
 import Alert from '@/components/ui/Alert';
 import Loading from '@/components/ui/Loading';
-import Modal from '@/components/ui/Modal';
+import FormModal from '@/components/ui/FormModal';
 import DataTable, { type Column } from '@/components/ui/DataTable';
 import SearchBox from '@/components/ui/SearchBox';
 import Pagination from '@/components/ui/Pagination';
@@ -74,8 +74,7 @@ function UsersPage() {
   const setField = (key: keyof EditFields, value: string) =>
     setFields((prev) => ({ ...prev, [key]: value }));
 
-  const handleUpdate = async (e: FormEvent) => {
-    e.preventDefault();
+  const handleUpdate = async () => {
     if (!editing) return;
     setFieldErrors({});
 
@@ -189,12 +188,13 @@ function UsersPage() {
         </>
       )}
 
-      <Modal
+      <FormModal
         open={editing !== null}
         title="ユーザー編集"
         onClose={closeEdit}
+        onSubmit={handleUpdate}
+        submitting={updateMutation.isPending}
       >
-        <form onSubmit={(e) => void handleUpdate(e)} noValidate>
           <div className="register-field">
             <label htmlFor="edit-name">名前</label>
             <input
@@ -263,21 +263,7 @@ function UsersPage() {
               onChange={(e) => setField('password_confirmation', e.target.value)}
             />
           </div>
-
-          <div className="register-actions">
-            <button type="button" className="osm-btn" onClick={closeEdit}>
-              キャンセル
-            </button>
-            <button
-              type="submit"
-              className="osm-btn osm-btn--primary"
-              disabled={updateMutation.isPending}
-            >
-              {updateMutation.isPending ? '更新中…' : '更新'}
-            </button>
-          </div>
-        </form>
-      </Modal>
+      </FormModal>
     </>
   );
 }
