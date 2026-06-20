@@ -1,4 +1,4 @@
-# 次セッション引き継ぎ指示書（OpenStockManager React 移行 / 3-10 共通部品（検索/ページ/カード/フォームモーダル）後）
+# 次セッション引き継ぎ指示書（OpenStockManager React 移行 / 3-10 共通部品（検索/ページ/カード/フォームモーダル/AuthLayout）後）
 
 > このドキュメントは「次の AI セッションが最短で作業に入れること」を目的としています。
 > **まず §1 で現状把握 → §2 で読むべきファイルを開く → §3 の手順で実装** の順に進めてください。
@@ -19,9 +19,9 @@
 | 3-8 | 履歴（レンタル/販売 統合ビュー） | ✅ |
 | 3-9 | 設定 - ユーザー管理 + 機材カテゴリ + カスタムフィールド（admin） | ✅（メール・CRM は残） |
 | 3-11 | エラーページ（400/404/500/503） | ✅ |
-| **3-10** | **共通コンポーネント（検索/ページネーション）** | ◐ **今セッションで一部完了**（モーダル群・SummaryCards 残） |
-| 3-9残 | メール送信・CRM 同期 / プロフィール（任意） | ☐（外部依存あり） |
-| 3-1残 | 認証まわりの残画面 | ☐ |
+| **3-10** | **共通コンポーネント（検索/ページ/カード/フォームモーダル/AuthLayout）** | ◐ **今セッションで大部分完了**（業務モーダルは対応画面実装時に） |
+| 3-9残 | メール送信・CRM 同期 / プロフィール（任意） | ☐（外部依存あり）**← 次の候補** |
+| 3-1残 | 認証まわりの残画面（パスワードリセット等） | ☐ **← 次の候補** |
 
 ### テスト状況
 ```
@@ -30,6 +30,10 @@ Frontend: build / typecheck  すべて green
 ```
 
 ### 直近セッションで実装した内容
+**3-10 AuthLayout**
+- `layouts/AuthLayout.tsx`（ログイン画面の 2 カラムカード＝ブランディングパネル＋フォーム枠）を切り出し、`LoginPage` が利用。
+  フォーム側は `children`。`login.css` は AuthLayout 側で import。ログイン以外の認証画面でも再利用可能。
+
 **3-10 共通コンポーネント（検索 / ページネーション / サマリーカード / フォームモーダル）**
 - `components/ui/SearchBox.tsx`（検索入力＋ボタン）、`Pagination.tsx`（前へ/現在/次へ、1 ページ以下は非表示）、
   `SummaryCards.tsx`（ラベル＋数値カード、variant: primary/danger/success/warning）、
@@ -91,32 +95,35 @@ Frontend: build / typecheck  すべて green
 
 ---
 
-## §2. 次セッションで読むべきファイル（3-10 共通部品 / 3-9 残メール / 3-1 認証残）
+## §2. 次セッションで読むべきファイル（3-9 残メール / 3-1 認証残 / 業務モーダル）
 
 ### 2-1. 候補タスクと所在
-- **3-10 残（共通コンポーネント・モーダル群）**（推奨・外部依存なし）
-  - 済: `components/ui/SearchBox.tsx`・`Pagination.tsx`・`SummaryCards.tsx`・`FormModal.tsx`
-    （一覧 5 画面＋Dashboard＋設定 3 画面の編集モーダルで適用済み）。
-  - 次の着手候補（効果順）:
-    1. **AuthLayout**: 旧 `layouts/auth.blade.php` 相当。`LoginPage` を包む共通レイアウト。`LoginPage.tsx` を確認し、見出し/カード枠を切り出す。
-    2. 旧 Blade の業務モーダル（`api/resources/views/component/modal/*`）= CheckoutModal / ReturnDeviceModal / EditDevice 等。
-       これらは未移植の業務画面（端末編集・カート確定等）とセットなので、当該機能を作る時に `Modal`/`FormModal` ベースで実装する。
-  - ※ ここまでで共通部品の基盤（検索/ページ/カード/フォームモーダル）は揃ったので、3-10 を一区切りとして
-    **3-9 残メール/CRM** や **3-1 認証残** に進む判断も妥当。
+- **3-10 共通部品は一区切り完了**（検索/ページ/サマリーカード/フォームモーダル/AuthLayout）。
+  残るは業務モーダル（`api/resources/views/component/modal/*` = CheckoutModal / ReturnDeviceModal / EditDevice 等）だが、
+  これらは**未移植の業務画面（端末編集・カート確定・返却等）とセット**。当該機能を作る時に `Modal`/`FormModal` ベースで実装する。
 - **3-9 残メール/CRM**（外部依存あり）
   - `api/resources/views/mailform.blade.php`、`config/mail.php`/`config/services.php`、`app/Notifications/*`、`app/Services/*`。
   - サンドボックスでは実送信不可。`Mail::fake()` 前提でテストする。Sidebar に `/settings/mail`（adminOnly）リンクは既にある。
+  - フォームは `register-field`、送信は admin グループの新 API（`Mail::fake()` でテスト）にする。
 - **3-1 認証残**: ログイン以外の認証画面（パスワードリセット等）。`auth/*` と旧 `auth` Blade を参照。
+  AuthLayout（`layouts/AuthLayout.tsx`）が使えるので、画面追加は比較的容易。ただしパスワードリセットはメール送信が絡む。
+- **販売バリデーション強化**（外部依存なし・テスト容易・推奨）
+  - 旧 `StoreSaleCartRequest::withValidator` は「販売済み(`sale_id`)/貸出中(`lending_now`)/不良(`defective`)/販売不可(`not_for_sale`)」の端末を弾く。
+  - 現状の `StoreSaleApiRequest`/`StoreSaleMultiApiRequest` は端末状態を未チェック（レンタルと同形）。フロント側 SaleCartForm は候補から除外済みだが API でも防御したい。
+  - `withValidator` で `device_ids`（と `sales.*.device_id`）の各端末状態を検証して 422 を返す。`SaleApiTest` にケース追加。
+    ※ devices の `defective`/`not_for_sale` のデフォルト値を確認してから（既存 12 テストを壊さないよう注意）。
 
 ### 2-2. お手本・共通化のヒント
 | 既存ファイル | 内容 |
 |-------------|------|
-| `frontend/src/components/ui/{SearchBox,Pagination,SummaryCards,FormModal}.tsx` | 今回新設。共通部品の作り方・配置の見本 |
+| `frontend/src/components/ui/{SearchBox,Pagination,SummaryCards,FormModal}.tsx` | 共通部品の作り方・配置の見本 |
+| `frontend/src/layouts/AuthLayout.tsx` | 認証画面の共通レイアウト（LoginPage が利用）。新しい認証画面はこれで包む |
 | `frontend/src/components/ui/Modal.tsx` | 既存の汎用モーダル（`FormModal` の土台。業務モーダルもこれ/FormModal をベースに） |
 | `frontend/src/pages/{UsersPage,DeviceCategoriesPage,DeviceFieldsPage}.tsx` | `FormModal` 利用の編集モーダル実装例 |
 | `Api\*Controller` + 各 ApiTest | API を足す場合のお手本（admin グループ / 403 / 404 / 422 / reorder） |
 
-→ **次は AuthLayout の切り出し**（外部依存なし）か、共通部品が揃ったので **3-9 残メール/CRM・3-1 認証残** へ。
+→ **おすすめの次の一手は「販売バリデーション強化」**（外部依存なし・テスト容易・実利あり）。
+   メール/CRM・認証残は外部依存（メール送信）が絡むため、`Mail::fake()` 前提で計画的に。
 
 ### 2-3. 変更が必要になりうる既存ファイル（タスクにより）
 ```
@@ -193,7 +200,7 @@ docs/react-laravel-migration.md ← 対象フェーズの表を更新
 
 ```bash
 git branch                       # → claude/funny-galileo-6fgy3o
-git log --oneline -5             # → 最新が "refactor: 3-10 編集モーダルを FormModal..." 系
+git log --oneline -5             # → 最新が "refactor: 3-10 AuthLayout..." 系
 cd api && composer install       # 依存が無ければ
 cd api && php artisan test 2>&1 | grep "Tests:"    # → 343 passed / 1 risky / 3 failures
 cd ../frontend && npm ci          # node_modules が無ければ（lockfile は TS 5.9.3 を固定）
@@ -218,6 +225,6 @@ cd ../frontend && npm run build && npm run typecheck   # → green
 ---
 
 **ブランチ**: `claude/funny-galileo-6fgy3o`（PR #82 が作成済み。push で更新される）
-**次セッション目標**: AuthLayout の切り出し（3-10 残・外部依存なし）、または 3-9 残メール/CRM・3-1 認証残。
-共通部品は一通り整備済み（`components/ui/SearchBox.tsx`・`Pagination.tsx`・`SummaryCards.tsx`・`FormModal.tsx`）。
+**次セッション目標**: 販売バリデーション強化（外部依存なし・テスト容易）を推奨。次点で 3-9 残メール/CRM・3-1 認証残。
+共通部品は一通り整備済み（`components/ui/{SearchBox,Pagination,SummaryCards,FormModal}.tsx`・`layouts/AuthLayout.tsx`）。
 残フェーズ: 3-1（認証残）/ 3-9メール・CRM / 3-10残（モーダル群/AuthLayout）/ Phase 4（Blade 撤去）。

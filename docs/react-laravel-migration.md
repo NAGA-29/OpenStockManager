@@ -79,7 +79,7 @@
 | 3-7 | 手続き・販売（カート／CSV） | ☑ | 6（全て完了） |
 | 3-8 | 履歴（レンタル／販売／詳細／統合ビュー） | ☑ | 5（全体履歴 `/history` で統合） |
 | 3-9 | 設定（ユーザー管理／カテゴリ／カスタムフィールド／メール・CRM同期） | ◐ | 6（ユーザー管理・機材カテゴリ・カスタムフィールド 完了。メール・CRM 残） |
-| 3-10 | 共通コンポーネント・モーダル群 | ◐ | 14（検索/ページネーション/サマリーカード/フォームモーダル共通化 完了。業務モーダル・AuthLayout 残） |
+| 3-10 | 共通コンポーネント・モーダル群 | ◐ | 14（検索/ページ/サマリーカード/フォームモーダル/AuthLayout 完了。業務モーダルは対応画面実装時に） |
 | 3-11 | エラーページ（400/404/500/503） | ☑ | 4（全て完了） |
 
 ### Phase 4 — 仕上げ・撤去
@@ -205,7 +205,7 @@
 | Blade | React コンポーネント | 状態 |
 | --- | --- | --- |
 | `layouts/app` / `sidebar` / `footer` | `AppLayout` / `Sidebar` / `Footer` | ☑ |
-| `layouts/auth` | `AuthLayout` | ☐ |
+| `layouts/auth` | `AuthLayout` | ☑（LoginPage で適用） |
 | `component/alert` | `<Alert>` | ☐ |
 | `component/cart_list` | `<CartList>` | ☐ |
 | `component/search_box` / `search_form` | `<SearchBox>` ＋ `<Pagination>` | ☑（一覧 5 画面で共通化） |
@@ -225,7 +225,9 @@
 > 一覧 5 画面（History / SaleHistory / RentalHistory / Users / DeviceSearch）＋ Dashboard の重複マークアップ、
 > および設定 3 画面（Users / DeviceCategories / DeviceFields）の編集モーダルを共通化。
 > 共通スタイルは `components/ui/ui.css` に集約（`.search-section/.search-form/.search-pagination/.summary-card*`）。
-> 残: AuthLayout・業務モーダル（CartList / CheckoutModal / ReturnDeviceModal 等、対応画面の実装時に移植）。
+> AuthLayout（`layouts/AuthLayout.tsx`）はログイン画面の 2 カラムカード（ブランディング＋フォーム枠）を提供し、
+> `LoginPage` が利用。ログイン以外の認証画面（パスワードリセット等）でも再利用できる。
+> 残: 業務モーダル（CartList / CheckoutModal / ReturnDeviceModal 等、対応画面の実装時に移植）。
 
 ### 3-11 エラーページ
 | Blade | React ルート | 状態 |
