@@ -2,13 +2,17 @@
 
 namespace App\Http\Requests;
 
+use App\Traits\ChecksSaleableDevices;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Validator;
 
 /**
  * 一括販売保存（API）のバリデーション。
  */
 class StoreSaleMultiApiRequest extends FormRequest
 {
+    use ChecksSaleableDevices;
+
     public function authorize(): bool
     {
         return true;
@@ -46,5 +50,17 @@ class StoreSaleMultiApiRequest extends FormRequest
             'sales.*.device_id.required'   => '端末IDが未指定です。',
             'sales.*.device_id.exists'     => '指定された端末が見つかりません。',
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            $deviceIds = collect($this->input('sales', []))
+                ->pluck('device_id')
+                ->filter()
+                ->values()
+                ->all();
+            $this->validateSaleableDevices($validator, $deviceIds, 'sales');
+        });
     }
 }

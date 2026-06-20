@@ -1,4 +1,4 @@
-# 次セッション引き継ぎ指示書（OpenStockManager React 移行 / 3-10 共通部品（検索/ページ/カード/フォームモーダル/AuthLayout）後）
+# 次セッション引き継ぎ指示書（OpenStockManager React 移行 / 販売バリデーション強化後）
 
 > このドキュメントは「次の AI セッションが最短で作業に入れること」を目的としています。
 > **まず §1 で現状把握 → §2 で読むべきファイルを開く → §3 の手順で実装** の順に進めてください。
@@ -25,11 +25,16 @@
 
 ### テスト状況
 ```
-API:      343 passed / 1 risky / 3 pre-existing failures（Blade Vite manifest 由来。React 移行とは無関係）
+API:      347 passed / 1 risky / 3 pre-existing failures（Blade Vite manifest 由来。React 移行とは無関係）
 Frontend: build / typecheck  すべて green
 ```
 
 ### 直近セッションで実装した内容
+**販売バリデーション強化（API）**
+- `App\Traits\ChecksSaleableDevices` を新設し、`StoreSaleApiRequest`・`StoreSaleMultiApiRequest` の `withValidator` で利用。
+  販売済み(`sale_id`)/貸出中(`lending_now`)/不良(`defective`)/販売対象外(`not_for_sale`)の端末を 422 で弾く（旧 StoreSaleCartRequest 相当）。
+- `SaleApiTest` に 4 ケース追加（既存 12 → 16）。devices のデフォルト（sale_id=''/lending_now=''/defective=false/not_for_sale=false）なので既存テストは無影響。
+
 **3-10 AuthLayout**
 - `layouts/AuthLayout.tsx`（ログイン画面の 2 カラムカード＝ブランディングパネル＋フォーム枠）を切り出し、`LoginPage` が利用。
   フォーム側は `children`。`login.css` は AuthLayout 側で import。ログイン以外の認証画面でも再利用可能。
@@ -107,11 +112,8 @@ Frontend: build / typecheck  すべて green
   - フォームは `register-field`、送信は admin グループの新 API（`Mail::fake()` でテスト）にする。
 - **3-1 認証残**: ログイン以外の認証画面（パスワードリセット等）。`auth/*` と旧 `auth` Blade を参照。
   AuthLayout（`layouts/AuthLayout.tsx`）が使えるので、画面追加は比較的容易。ただしパスワードリセットはメール送信が絡む。
-- **販売バリデーション強化**（外部依存なし・テスト容易・推奨）
-  - 旧 `StoreSaleCartRequest::withValidator` は「販売済み(`sale_id`)/貸出中(`lending_now`)/不良(`defective`)/販売不可(`not_for_sale`)」の端末を弾く。
-  - 現状の `StoreSaleApiRequest`/`StoreSaleMultiApiRequest` は端末状態を未チェック（レンタルと同形）。フロント側 SaleCartForm は候補から除外済みだが API でも防御したい。
-  - `withValidator` で `device_ids`（と `sales.*.device_id`）の各端末状態を検証して 422 を返す。`SaleApiTest` にケース追加。
-    ※ devices の `defective`/`not_for_sale` のデフォルト値を確認してから（既存 12 テストを壊さないよう注意）。
+- **レンタルのバリデーション強化（任意）**: 販売側は `ChecksSaleableDevices` で端末状態を弾くようにした（済）。
+  レンタルにも同種の検証（貸出中/不良の端末を弾く）を入れるなら `RentalController` 系の FormRequest に同様の `withValidator` を追加できる。
 
 ### 2-2. お手本・共通化のヒント
 | 既存ファイル | 内容 |
@@ -121,9 +123,10 @@ Frontend: build / typecheck  すべて green
 | `frontend/src/components/ui/Modal.tsx` | 既存の汎用モーダル（`FormModal` の土台。業務モーダルもこれ/FormModal をベースに） |
 | `frontend/src/pages/{UsersPage,DeviceCategoriesPage,DeviceFieldsPage}.tsx` | `FormModal` 利用の編集モーダル実装例 |
 | `Api\*Controller` + 各 ApiTest | API を足す場合のお手本（admin グループ / 403 / 404 / 422 / reorder） |
+| `app/Traits/ChecksSaleableDevices.php` | FormRequest の `withValidator` で端末状態を検証する trait（レンタル側にも流用可） |
 
-→ **おすすめの次の一手は「販売バリデーション強化」**（外部依存なし・テスト容易・実利あり）。
-   メール/CRM・認証残は外部依存（メール送信）が絡むため、`Mail::fake()` 前提で計画的に。
+→ 外部依存なしで完結する大きめタスクは一巡。残るは概ね**外部依存（メール送信）を伴うもの**（3-9 メール/CRM・3-1 認証残）か、
+   **Blade 撤去（Phase 4）**。次セッションでメール系をやる場合は最初に `config/mail.php` と `.env`（`MAIL_MAILER`）を確認し、`Mail::fake()` でテストする。
 
 ### 2-3. 変更が必要になりうる既存ファイル（タスクにより）
 ```
@@ -200,9 +203,9 @@ docs/react-laravel-migration.md ← 対象フェーズの表を更新
 
 ```bash
 git branch                       # → claude/funny-galileo-6fgy3o
-git log --oneline -5             # → 最新が "refactor: 3-10 AuthLayout..." 系
+git log --oneline -5             # → 最新が "feat: 販売バリデーション強化..." 系
 cd api && composer install       # 依存が無ければ
-cd api && php artisan test 2>&1 | grep "Tests:"    # → 343 passed / 1 risky / 3 failures
+cd api && php artisan test 2>&1 | grep "Tests:"    # → 347 passed / 1 risky / 3 failures
 cd ../frontend && npm ci          # node_modules が無ければ（lockfile は TS 5.9.3 を固定）
 cd ../frontend && npm run build && npm run typecheck   # → green
 ```
@@ -225,6 +228,6 @@ cd ../frontend && npm run build && npm run typecheck   # → green
 ---
 
 **ブランチ**: `claude/funny-galileo-6fgy3o`（PR #82 が作成済み。push で更新される）
-**次セッション目標**: 販売バリデーション強化（外部依存なし・テスト容易）を推奨。次点で 3-9 残メール/CRM・3-1 認証残。
-共通部品は一通り整備済み（`components/ui/{SearchBox,Pagination,SummaryCards,FormModal}.tsx`・`layouts/AuthLayout.tsx`）。
+**次セッション目標**: 外部依存なしの大きめタスクは一巡。残る候補は 3-9 残メール/CRM・3-1 認証残（いずれもメール送信＝`Mail::fake()` 前提）、または Phase 4（Blade 撤去）。
+共通部品は整備済み（`components/ui/{SearchBox,Pagination,SummaryCards,FormModal}.tsx`・`layouts/AuthLayout.tsx`）、販売は端末状態検証済み。
 残フェーズ: 3-1（認証残）/ 3-9メール・CRM / 3-10残（モーダル群/AuthLayout）/ Phase 4（Blade 撤去）。

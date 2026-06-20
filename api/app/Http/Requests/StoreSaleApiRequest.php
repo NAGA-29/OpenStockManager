@@ -2,13 +2,17 @@
 
 namespace App\Http\Requests;
 
+use App\Traits\ChecksSaleableDevices;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Validator;
 
 /**
  * 販売登録（API）のバリデーション。
  */
 class StoreSaleApiRequest extends FormRequest
 {
+    use ChecksSaleableDevices;
+
     public function authorize(): bool
     {
         return true;
@@ -45,5 +49,15 @@ class StoreSaleApiRequest extends FormRequest
             'sale_date_at.required'         => '販売日を入力してください。',
             'sale_date_at.date'             => '販売日は有効な日付を入力してください。',
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            $deviceIds = $this->input('device_ids', []);
+            if (is_array($deviceIds)) {
+                $this->validateSaleableDevices($validator, $deviceIds, 'device_ids');
+            }
+        });
     }
 }

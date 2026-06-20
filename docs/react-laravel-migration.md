@@ -169,6 +169,7 @@
 | `sales/sales_detail`（書込） | `/sale/write/:deviceId` | `GET /api/sale/write/:deviceId` | ☐ |
 
 > 販売は不可逆のため返却処理なし。`device_sale` の pivot は `sale_date_at` のみ、`devices.sale_id` に `sale_id` をセットする。詳細画面（`/sale/history/:saleId`）は返却ボタンを持たず表示のみ。
+> 販売登録時は端末状態を検証（販売済み/貸出中/不良/販売対象外を 422 で弾く。`App\Traits\ChecksSaleableDevices` を Store/StoreMulti の両 FormRequest で共有）。
 
 ### 3-8 履歴
 | Blade | React ルート | API | 状態 |

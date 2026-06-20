@@ -225,4 +225,70 @@ class SaleApiTest extends TestCase
         $response->assertStatus(201);
         $response->assertJsonStructure(['data', 'count', 'message']);
     }
+
+    public function test_store_rejects_already_sold_device(): void
+    {
+        $this->device->update(['sale_id' => 'SALE-EXISTING']);
+
+        $response = $this->actingAs($this->user, 'sanctum')
+            ->postJson('/api/sale/store', [
+                'device_ids' => ['TEST-001'],
+                'client_id' => $this->client->client_id,
+                'contact_id' => $this->contact->id,
+                'sale_date_at' => now()->format('Y-m-d'),
+            ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors('device_ids');
+    }
+
+    public function test_store_rejects_lent_device(): void
+    {
+        $this->device->update(['lending_now' => 'RENT-001']);
+
+        $response = $this->actingAs($this->user, 'sanctum')
+            ->postJson('/api/sale/store', [
+                'device_ids' => ['TEST-001'],
+                'client_id' => $this->client->client_id,
+                'contact_id' => $this->contact->id,
+                'sale_date_at' => now()->format('Y-m-d'),
+            ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors('device_ids');
+    }
+
+    public function test_store_rejects_not_for_sale_device(): void
+    {
+        $this->device->update(['not_for_sale' => true]);
+
+        $response = $this->actingAs($this->user, 'sanctum')
+            ->postJson('/api/sale/store', [
+                'device_ids' => ['TEST-001'],
+                'client_id' => $this->client->client_id,
+                'contact_id' => $this->contact->id,
+                'sale_date_at' => now()->format('Y-m-d'),
+            ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors('device_ids');
+    }
+
+    public function test_store_multi_rejects_already_sold_device(): void
+    {
+        $this->device->update(['sale_id' => 'SALE-EXISTING']);
+
+        $response = $this->actingAs($this->user, 'sanctum')
+            ->postJson('/api/sale/multi/store', [
+                'client_id' => $this->client->client_id,
+                'contact_id' => $this->contact->id,
+                'sale_date_at' => now()->format('Y-m-d'),
+                'sales' => [
+                    ['device_id' => 'TEST-001'],
+                ],
+            ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors('sales');
+    }
 }
