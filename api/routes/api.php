@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\HistoryController;
 use App\Http\Controllers\Api\InventoryStockController;
 use App\Http\Controllers\Api\RentalController;
 use App\Http\Controllers\Api\SaleController;
+use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -83,4 +84,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // 履歴 - レンタル／販売 統合
     Route::get('/history', [HistoryController::class, 'index'])->name('api.history.index');
+
+    // 設定 - ユーザー管理（管理者のみ）
+    Route::middleware('admin')->group(function () {
+        Route::get('/users', [UserController::class, 'index'])->name('api.users.index');
+        Route::post('/users', [UserController::class, 'store'])->name('api.users.store');
+        Route::put('/users/{id}', [UserController::class, 'update'])->name('api.users.update');
+    });
 });

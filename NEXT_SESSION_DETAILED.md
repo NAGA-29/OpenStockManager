@@ -1,4 +1,4 @@
-# 次セッション引き継ぎ指示書（OpenStockManager React 移行 / 3-8 履歴完了後）
+# 次セッション引き継ぎ指示書（OpenStockManager React 移行 / 3-9 ユーザー管理完了後）
 
 > このドキュメントは「次の AI セッションが最短で作業に入れること」を目的としています。
 > **まず §1 で現状把握 → §2 で読むべきファイルを開く → §3 の手順で実装** の順に進めてください。
@@ -16,16 +16,27 @@
 | 3-5 | データ（クライアント/担当者/ファイル 全8画面） | ✅ |
 | 3-6 | レンタル手続き | ✅（カート端末検索の配線も完了） |
 | 3-7 | 販売手続き | ✅ |
-| **3-8** | **履歴（レンタル/販売 統合ビュー）** | ✅ **今セッションで完了** |
-| 3-9 | 設定（admin: ユーザー/カテゴリ/カスタムフィールド） | ☐ **← 次の最有力タスク** |
+| 3-8 | 履歴（レンタル/販売 統合ビュー） | ✅ |
+| **3-9** | **設定 - ユーザー管理（admin）** | ✅ **今セッションで完了**（カテゴリ/フィールド/メールは残） |
+| 3-9残 | カテゴリ / カスタムフィールド / メール・CRM連携 | ☐ **← 次の最有力タスク** |
 
 ### テスト状況
 ```
-API:      307 passed / 1 risky / 3 pre-existing failures（Blade Vite manifest 由来。React 移行とは無関係）
+API:      319 passed / 1 risky / 3 pre-existing failures（Blade Vite manifest 由来。React 移行とは無関係）
 Frontend: build / typecheck  すべて green
 ```
 
 ### 直近セッションで実装した内容
+**3-9 設定 - ユーザー管理（admin 限定）**
+- **API**: `Api\UserController`（index/store/update）。`auth:sanctum` + `admin` ミドルウェアで保護（非 admin は 403）。
+  `StoreUserApiRequest`/`UpdateUserApiRequest`（メール一意・パスワード強度・role in[admin,user]）。`UserApiTest`（12 tests）
+  - ルート: `GET /api/users`・`POST /api/users`・`PUT /api/users/{id}`（`Route::middleware('admin')->group`）
+  - ⚠️ `users.id` は bigint オートインクリメント。旧 `StoreUserRequest` の UUID 採番は現スキーマと不一致なので不採用。
+- **フロント**: `features/users/useUsers.ts`（list/create/update）、`UsersPage`（一覧＋検索＋ページング＋編集モーダル）、
+  `UserRegisterPage`（登録）、`auth/AdminRoute.tsx`（非 admin は `/dashboard` へ）。router の `/users`・`/users/register` を `AdminRoute` 配下に。
+  Sidebar「設定 > ユーザー」は既存（adminOnly）。
+- **register.css**: email/password/tel の input を共通スタイル対象に追加、`__hint` クラスと actions の flex/gap を追加。
+
 **3-8 履歴（統合ビュー）**
 - **API**: `Api\HistoryController@index`（`GET /api/history?type=all|rental|sale&word=&page=`）。
   RentalHist / SaleHist を共通フォーマット（id/type/company/contact/date/status/note）に正規化・マージし、
@@ -41,37 +52,40 @@ Frontend: build / typecheck  すべて green
 
 ---
 
-## §2. 次セッションで読むべきファイル（3-9 設定/admin を実装する場合）
+## §2. 次セッションで読むべきファイル（3-9 残：カテゴリ/フィールド/メール を実装する場合）
 
 ### 2-1. 旧 Laravel 実装（ロジック・仕様の正解）
 ```
-api/app/Http/Controllers/UsersController.php          ← ユーザー管理（一覧/登録/プロフィール）
-api/app/Http/Controllers/DeviceCategoryController.php ← 機材カテゴリ（存在すれば）
-api/resources/views/user/*.blade.php                  ← ユーザー画面
-api/routes/web.php                                    ← admin ミドルウェアのルート（grep -n "admin\|user" で確認）
+api/routes/web.php                                   ← admin ルート（grep -n "categories\|fields\|mail" で確認。54-63行 付近）
+api/app/Http/Controllers/（DeviceCategory/DeviceTypeField 系コントローラ）
+api/app/Models/DeviceCategory.php / DeviceTypeField.php  ← 既存モデル
+api/resources/views/device_categories/*, device_fields/*, mailform.blade.php
 ```
 
 ### 2-2. 今あるお手本・関連実装
 | 既存ファイル | 内容 |
 |-------------|------|
-| `api/app/Http/Middleware/*Admin*` + `tests/Feature/Middleware/AdminMiddlewareTest.php` | admin 判定（既存・ただし 3 failures はこの周辺の Blade ルート由来） |
-| `frontend/src/auth/useAuth.ts` | `user.is_admin` を保持（Sidebar の adminOnly 出し分けで使用済み） |
-| `frontend/src/layouts/Sidebar.tsx` | 「設定」セクションに `/users`・`/settings/categories`・`/settings/fields`（adminOnly）リンクが既にある＝リンク先を実装するだけ |
-| 各種 CRUD のお手本 | `Api\ClientController` / `Api\ContactController`（一覧+登録+詳細の典型形） |
+| `api/app/Http/Controllers/Api/UserController.php` + `UserApiTest` | **admin 限定 API のお手本**（`Route::middleware('admin')->group` / 403 / 12 tests） |
+| `frontend/src/auth/AdminRoute.tsx` | 非 admin を `/dashboard` へ送るルートガード（カテゴリ/フィールド画面でも流用） |
+| `frontend/src/pages/UsersPage.tsx` + `features/users/useUsers.ts` | 一覧＋検索＋ページング＋編集モーダル＋登録ページの典型形 |
+| `frontend/src/layouts/Sidebar.tsx` | 「設定」に `/settings/categories`・`/settings/fields`・`/settings/mail`（adminOnly）リンクが既にある＝リンク先を実装するだけ |
+| `Device` モデルの `custom_fields`(array cast) / `DeviceTypeField` | カスタムフィールド定義のデータ構造 |
 
-→ **3-9 の本体はユーザー管理 CRUD（admin 限定）**。`auth:sanctum` に加え admin 認可をどう表現するか
-   （Policy / Gate / ミドルウェア）を最初に決める。カテゴリ・カスタムフィールド管理も同セクション。
+→ **3-9 残の本体は「機材カテゴリ CRUD」「カスタムフィールド CRUD（＋並び替え reorder）」「メール送信・CRM 同期」**。
+   admin 保護は UserController と同じ `Route::middleware('admin')->group` でよい。並び替えは drag&drop or 上下ボタン＋ `reorder` API。
+   メール連携は外部依存があるため後回し可。まずはカテゴリ CRUD が着手しやすい。
 
 ### 2-3. 変更が必要になりうる既存ファイル
 ```
-api/routes/api.php          ← /users 系などを admin 認可付きで追加
-frontend/src/router.tsx     ← /users, /settings/* ルート追加
+api/routes/api.php          ← /device-categories, /device-fields 系を admin グループに追加
+frontend/src/router.tsx     ← /settings/categories, /settings/fields, /settings/mail を AdminRoute 配下に追加
 frontend/src/layouts/Sidebar.tsx ← 設定セクション（リンクは既にあり）
 docs/react-laravel-migration.md  ← 3-9 を更新
 ```
 
-> ⚠️ 既存の 3 failures は `tests/Feature/Middleware/AdminMiddlewareTest.php` 等の **Blade ルート（`/users` GET）** が
-> Vite manifest を要求して落ちているもの。3-9 で `/users` を React 化し API へ寄せる過程で解消できる可能性がある。
+> ⚠️ 既存の 3 failures は `tests/Feature/Middleware/AdminMiddlewareTest.php` 等の **Blade ルート（`/users` GET など）** が
+> Vite manifest を要求して落ちているもので、API 移行とは別物。Blade ルート自体を撤去する Phase 4 まで残る見込み。
+> （3-9 のユーザー管理は API/React 側で実装済みだが、旧 Blade `/users` ルートは web.php に残してあるため失敗も残存。）
 
 ---
 
@@ -123,6 +137,7 @@ docs/react-laravel-migration.md  ← 3-9 を更新
 | POST | `/api/sale/multi/{upload,store}` | CSV一括販売 | ✅ |
 | GET | `/api/sale/history{,/{saleId}}` | 販売履歴 | ✅ |
 | GET | `/api/history?type=&word=&page=` | 統合履歴（レンタル+販売） | ✅ |
+| GET/POST | `/api/users`, `PUT /api/users/{id}` | ユーザー管理（admin 限定） | ✅ |
 
 ---
 
@@ -130,9 +145,9 @@ docs/react-laravel-migration.md  ← 3-9 を更新
 
 ```bash
 git branch                       # → claude/funny-galileo-6fgy3o
-git log --oneline -5             # → 最新が "feat: 3-8 履歴..." 系
+git log --oneline -5             # → 最新が "feat: 3-9 ユーザー管理..." 系
 cd api && composer install       # 依存が無ければ
-cd api && php artisan test 2>&1 | grep "Tests:"    # → 307 passed / 1 risky / 3 failures
+cd api && php artisan test 2>&1 | grep "Tests:"    # → 319 passed / 1 risky / 3 failures
 cd ../frontend && npm ci          # node_modules が無ければ（lockfile は TS 5.9.3 を固定）
 cd ../frontend && npm run build && npm run typecheck   # → green
 ```
@@ -143,8 +158,9 @@ cd ../frontend && npm run build && npm run typecheck   # → green
 
 ---
 
-## §6. 代替タスク（設定以外で進めたい場合）
+## §6. 代替タスク（カテゴリ/フィールド以外で進めたい場合）
 
+- **プロフィール画面**（難度🟢低）: `/profile`（自分の情報表示・メール変更）。メール変更はトークン＋通知が絡むので表示のみ先行も可。
 - **3-4 残（端末画像）**（難度🟢低）: 端末登録の画像アップロードのみ未実装。
 - **販売バリデーション強化**（難度🟢低）: 旧 `StoreSaleCartRequest` は「販売済み/貸出中/不良/販売不可」を弾く。
   現状の API は端末状態チェック未実装（レンタルと同形にしてある）。必要なら `StoreSaleApiRequest::withValidator` で追加。
@@ -153,5 +169,5 @@ cd ../frontend && npm run build && npm run typecheck   # → green
 ---
 
 **ブランチ**: `claude/funny-galileo-6fgy3o`
-**次セッション目標**: 3-9 設定/admin（ユーザー管理 CRUD を admin 認可付きで API 化＋React 化）。
-既存の 3 failures（Blade `/users` ルート）を React 移行で解消できる可能性あり。
+**次セッション目標**: 3-9 残（機材カテゴリ CRUD → カスタムフィールド CRUD → メール/CRM）。
+admin 保護・一覧/編集 UI は `UserController`/`UsersPage`/`AdminRoute` がそのままお手本になる。

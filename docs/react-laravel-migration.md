@@ -78,7 +78,7 @@
 | 3-6 | 手続き・レンタル（カート／CSV／一括返却） | ☑ | 7（カート検索配線含め完了） |
 | 3-7 | 手続き・販売（カート／CSV） | ☑ | 6（全て完了） |
 | 3-8 | 履歴（レンタル／販売／詳細／統合ビュー） | ☑ | 5（全体履歴 `/history` で統合） |
-| 3-9 | 設定（ユーザー管理／カテゴリ／カスタムフィールド／メール・CRM同期） | ☐ | 6 |
+| 3-9 | 設定（ユーザー管理／カテゴリ／カスタムフィールド／メール・CRM同期） | ◐ | 6（ユーザー管理 完了。カテゴリ／フィールド／メール 残） |
 | 3-10 | 共通コンポーネント・モーダル群 | ☐ | 14 |
 | 3-11 | エラーページ（400/404/500/503） | ☐ | 4 |
 
@@ -185,12 +185,18 @@
 ### 3-9 設定
 | Blade | React ルート | API | 状態 |
 | --- | --- | --- | --- |
-| `user/index` | `/users` | `GET /api/users` | ☐ |
-| `user/register` | `/users/register` | `POST /api/users` | ☐ |
+| `user/index` | `/users` | `GET /api/users` ✅ | ☑（一覧＋検索＋編集モーダル。admin 限定） |
+| `user/register` | `/users/register` | `POST /api/users` ✅ | ☑ |
+| （更新） | `/users`（編集モーダル） | `PUT /api/users/{id}` ✅ | ☑ |
 | `user/profile` | `/profile` | `GET /api/profile` | ☐ |
 | `device_categories/index` | `/settings/categories` | `GET/POST/PUT/DELETE /api/device-categories` + `reorder` | ☐ |
 | `device_fields/index` | `/settings/fields` | `GET/POST/PUT/DELETE /api/device-fields` + `reorder` | ☐ |
 | `mailform` | `/settings/mail` | `POST /api/sendmail`, `GET /api/sync/crm` | ☐ |
+
+> ユーザー管理は admin のみ。API は `auth:sanctum` + `admin` ミドルウェアで保護（非 admin は 403）。
+> フロントは `AdminRoute` ガード（非 admin は `/dashboard` へ）と Sidebar の `adminOnly` で二重に出し分け。
+> 注: `users.id` は bigint オートインクリメント（旧 `StoreUserRequest` の UUID 採番は現スキーマと不一致のため API では採用せず）。
+> 旧 Blade の email 変更フロー（`/profile/email/*`、メール送信）と カテゴリ/カスタムフィールド/メール連携は 3-9 の残タスク。
 
 ### 3-10 共通コンポーネント・モーダル
 | Blade | React コンポーネント | 状態 |

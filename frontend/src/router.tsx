@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from './auth/ProtectedRoute';
+import { AdminRoute } from './auth/AdminRoute';
 import AppLayout from './layouts/AppLayout';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
@@ -25,6 +26,8 @@ import SalePage from './pages/SalePage';
 import SaleHistoryPage from './pages/SaleHistoryPage';
 import SaleHistoryDetailPage from './pages/SaleHistoryDetailPage';
 import HistoryPage from './pages/HistoryPage';
+import UsersPage from './pages/UsersPage';
+import UserRegisterPage from './pages/UserRegisterPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 /**
@@ -69,6 +72,13 @@ export const router = createBrowserRouter([
           { path: '/sale/history', element: <SaleHistoryPage /> },
           { path: '/sale/history/:saleId', element: <SaleHistoryDetailPage /> },
           { path: '/history', element: <HistoryPage /> },
+          {
+            element: <AdminRoute />,
+            children: [
+              { path: '/users', element: <UsersPage /> },
+              { path: '/users/register', element: <UserRegisterPage /> },
+            ],
+          },
         ],
       },
     ],
