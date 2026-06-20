@@ -3,6 +3,7 @@ import { NavLink, useSearchParams } from 'react-router-dom';
 import Alert from '@/components/ui/Alert';
 import Loading from '@/components/ui/Loading';
 import DataTable, { type Column } from '@/components/ui/DataTable';
+import Pagination from '@/components/ui/Pagination';
 import StatusLegend from '@/components/StatusLegend';
 import { useDeviceSearch } from '@/features/inventory/useDeviceSearch';
 import type { CategoryDevice } from '@/features/inventory/useDeviceCategory';
@@ -132,29 +133,11 @@ function DeviceSearchPage() {
                 empty="該当する端末がありません。"
               />
 
-              {data.meta.last_page > 1 && (
-                <div className="search-pagination">
-                  <button
-                    type="button"
-                    className="osm-btn"
-                    disabled={data.meta.current_page <= 1}
-                    onClick={() => goToPage(data.meta.current_page - 1)}
-                  >
-                    前へ
-                  </button>
-                  <span className="search-pagination__info">
-                    {data.meta.current_page} / {data.meta.last_page}
-                  </span>
-                  <button
-                    type="button"
-                    className="osm-btn"
-                    disabled={data.meta.current_page >= data.meta.last_page}
-                    onClick={() => goToPage(data.meta.current_page + 1)}
-                  >
-                    次へ
-                  </button>
-                </div>
-              )}
+              <Pagination
+                page={data.meta.current_page}
+                lastPage={data.meta.last_page}
+                onChange={goToPage}
+              />
             </>
           )}
         </>

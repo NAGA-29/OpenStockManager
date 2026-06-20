@@ -1,4 +1,4 @@
-# 次セッション引き継ぎ指示書（OpenStockManager React 移行 / 3-11 エラーページ完了後）
+# 次セッション引き継ぎ指示書（OpenStockManager React 移行 / 3-10 検索・ページネーション共通化後）
 
 > このドキュメントは「次の AI セッションが最短で作業に入れること」を目的としています。
 > **まず §1 で現状把握 → §2 で読むべきファイルを開く → §3 の手順で実装** の順に進めてください。
@@ -18,9 +18,9 @@
 | 3-7 | 販売手続き | ✅ |
 | 3-8 | 履歴（レンタル/販売 統合ビュー） | ✅ |
 | 3-9 | 設定 - ユーザー管理 + 機材カテゴリ + カスタムフィールド（admin） | ✅（メール・CRM は残） |
-| **3-11** | **エラーページ（400/404/500/503）** | ✅ **今セッションで完了** |
+| 3-11 | エラーページ（400/404/500/503） | ✅ |
+| **3-10** | **共通コンポーネント（検索/ページネーション）** | ◐ **今セッションで一部完了**（モーダル群・SummaryCards 残） |
 | 3-9残 | メール送信・CRM 同期 / プロフィール（任意） | ☐（外部依存あり） |
-| 3-10 | 共通コンポーネント・モーダル群 | ☐ **← 次の有力タスク** |
 | 3-1残 | 認証まわりの残画面 | ☐ |
 
 ### テスト状況
@@ -30,6 +30,13 @@ Frontend: build / typecheck  すべて green
 ```
 
 ### 直近セッションで実装した内容
+**3-10 共通コンポーネント（検索 / ページネーション）**
+- `components/ui/SearchBox.tsx`（検索入力＋ボタン）と `components/ui/Pagination.tsx`（前へ/現在/次へ、1 ページ以下は非表示）を新設。
+- 一覧 5 画面（`HistoryPage` / `SaleHistoryPage` / `RentalHistoryPage` / `UsersPage` / `DeviceSearchPage`）の重複マークアップを置換。
+- 共通スタイルを `components/ui/ui.css` に集約（`.search-section/.search-form/.search-pagination` 等）。`rental.css` 等の同名定義は残置（無害）。
+- フロントのみの変更（API テストは 343 passed のまま）。
+- 残: AuthLayout・各種モーダル（CartList / CheckoutModal / EditDevice/Rental/Sale/User 等）・SummaryCards（`DashboardPage` から切り出し）。
+
 **3-11 エラーページ（400/404/500/503）**
 - 共通 `pages/errors/ErrorPage.tsx`（+ `error.css`）を 4 ページで共有。認証/共通レイアウト外でも単体表示できる自前シェル。
 - `NotFoundPage`(404, 既存をリファクタ) / `errors/BadRequestPage`(400) / `errors/ServerErrorPage`(500) / `errors/ServiceUnavailablePage`(503)。
@@ -82,11 +89,13 @@ Frontend: build / typecheck  すべて green
 ## §2. 次セッションで読むべきファイル（3-10 共通部品 / 3-9 残メール / 3-1 認証残）
 
 ### 2-1. 候補タスクと所在
-- **3-10 共通コンポーネント・モーダル群**（推奨・外部依存なし）
-  - 既存 UI: `frontend/src/components/ui/{Modal,Alert,Loading,DataTable}.tsx`、`components/StatusLegend.tsx`、`components/ui/toast/*`
-  - `docs/react-laravel-migration.md` の「### 3-10」表に対象コンポーネント一覧（CartList / SearchBox / SummaryCards / CheckoutModal 等）。
-    まず**既に各ページで重複実装されている部品（検索フォーム・ページネーション・サマリーカード）を共通化**するのが筋。
-  - 旧 Blade: `api/resources/views/component/*`、`layouts/auth.blade.php`（AuthLayout 未移植）。
+- **3-10 残（共通コンポーネント・モーダル群）**（推奨・外部依存なし）
+  - 済: `components/ui/SearchBox.tsx`・`Pagination.tsx`（検索/ページネーション。一覧 5 画面で適用済み）。
+  - 次の着手候補（効果順）:
+    1. **SummaryCards**: `DashboardPage.tsx` のサマリーカードを `components/ui/SummaryCards.tsx` に切り出し。
+    2. **編集モーダルの共通化**: `UsersPage`/`DeviceCategoriesPage`/`DeviceFieldsPage` は `Modal` + register-field を個別実装。共通の `FormModal` に寄せられる。
+    3. **AuthLayout**: 旧 `layouts/auth.blade.php` 相当。`LoginPage` を包む共通レイアウト。
+    4. 旧 Blade の各モーダル（`api/resources/views/component/modal/*`）= CheckoutModal / ReturnDeviceModal / EditDevice 等。実画面で必要になった時に移植。
 - **3-9 残メール/CRM**（外部依存あり）
   - `api/resources/views/mailform.blade.php`、`config/mail.php`/`config/services.php`、`app/Notifications/*`、`app/Services/*`。
   - サンドボックスでは実送信不可。`Mail::fake()` 前提でテストする。Sidebar に `/settings/mail`（adminOnly）リンクは既にある。
@@ -95,13 +104,13 @@ Frontend: build / typecheck  すべて green
 ### 2-2. お手本・共通化のヒント
 | 既存ファイル | 内容 |
 |-------------|------|
+| `frontend/src/components/ui/{SearchBox,Pagination}.tsx` | 今回新設。共通部品の作り方・配置の見本 |
 | `frontend/src/components/ui/Modal.tsx` | 既存の汎用モーダル（編集モーダルで使用中）。CheckoutModal 等はこれを土台に |
-| `frontend/src/pages/{HistoryPage,UsersPage,SaleHistoryPage}.tsx` | 検索フォーム＋ページネーションの同型コードが各所に重複 → `<SearchBox>`/`<Pagination>` に切り出すと効果大 |
 | `frontend/src/pages/DashboardPage.tsx` | サマリーカードの実装（`<SummaryCards>` 候補） |
 | `Api\*Controller` + 各 ApiTest | API を足す場合のお手本（admin グループ / 403 / 404 / 422 / reorder） |
 
-→ **次の有力タスクは 3-10**（外部依存なしで完結）。重複している検索フォーム/ページネーション/サマリーカードの共通部品化から着手すると、
-   既存ページの行数削減にも繋がる。メール/CRM は外部依存があるため後回し推奨。
+→ **次の有力タスクは 3-10 残**（外部依存なしで完結）。SummaryCards 切り出し → 編集モーダル共通化 の順が着手しやすい。
+   メール/CRM は外部依存があるため後回し推奨。
 
 ### 2-3. 変更が必要になりうる既存ファイル（タスクにより）
 ```
@@ -178,7 +187,7 @@ docs/react-laravel-migration.md ← 対象フェーズの表を更新
 
 ```bash
 git branch                       # → claude/funny-galileo-6fgy3o
-git log --oneline -5             # → 最新が "feat: 3-11 エラーページ..." 系
+git log --oneline -5             # → 最新が "refactor: 3-10 検索/ページネーション共通化..." 系
 cd api && composer install       # 依存が無ければ
 cd api && php artisan test 2>&1 | grep "Tests:"    # → 343 passed / 1 risky / 3 failures
 cd ../frontend && npm ci          # node_modules が無ければ（lockfile は TS 5.9.3 を固定）
@@ -202,7 +211,7 @@ cd ../frontend && npm run build && npm run typecheck   # → green
 
 ---
 
-**ブランチ**: `claude/funny-galileo-6fgy3o`
-**次セッション目標**: 3-10 共通コンポーネント（検索フォーム/ページネーション/サマリーカードの共通部品化）。外部依存なしで完結する。
-設定系 CRUD・履歴・エラーページは完了済みで、各 Controller/Page が次の実装のお手本になる。
-残フェーズ: 3-1（認証残）/ 3-9メール・CRM / 3-10（共通部品）/ Phase 4（Blade 撤去）。
+**ブランチ**: `claude/funny-galileo-6fgy3o`（PR #82 が作成済み。push で更新される）
+**次セッション目標**: 3-10 残（SummaryCards 切り出し → 編集モーダル共通化 → AuthLayout）。外部依存なしで完結する。
+検索/ページネーションは共通化済み（`components/ui/SearchBox.tsx`・`Pagination.tsx`）。
+残フェーズ: 3-1（認証残）/ 3-9メール・CRM / 3-10残（モーダル群/SummaryCards）/ Phase 4（Blade 撤去）。

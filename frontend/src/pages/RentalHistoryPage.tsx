@@ -3,6 +3,8 @@ import { NavLink } from 'react-router-dom';
 import Alert from '@/components/ui/Alert';
 import Loading from '@/components/ui/Loading';
 import DataTable, { type Column } from '@/components/ui/DataTable';
+import SearchBox from '@/components/ui/SearchBox';
+import Pagination from '@/components/ui/Pagination';
 import { useRentalHistory, type RentalHist } from '@/features/rental/useRental';
 import './rental.css';
 
@@ -13,8 +15,7 @@ function RentalHistoryPage() {
 
   const { data, isLoading, isError, refetch } = useRentalHistory(page, word);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSearch = () => {
     setWord(searchTerm);
     setPage(1);
   };
@@ -78,20 +79,11 @@ function RentalHistoryPage() {
 
       {data && (
         <>
-          <div className="search-section">
-            <form onSubmit={handleSearch} className="search-form">
-              <input
-                type="text"
-                placeholder="検索キーワード"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="form-control"
-              />
-              <button type="submit" className="osm-btn osm-btn--primary">
-                <i className="fas fa-search" /> 検索
-              </button>
-            </form>
-          </div>
+          <SearchBox
+            value={searchTerm}
+            onChange={setSearchTerm}
+            onSubmit={handleSearch}
+          />
 
           {word && (
             <div className="search-summary">
@@ -106,27 +98,11 @@ function RentalHistoryPage() {
             empty="レンタル履歴がありません。"
           />
 
-          {data.meta.last_page > 1 && (
-            <div className="search-pagination">
-              <button
-                onClick={() => setPage(Math.max(1, page - 1))}
-                disabled={page === 1}
-                className="osm-btn osm-btn--small"
-              >
-                &lt; 前へ
-              </button>
-              <span className="search-pagination__info">
-                {page} / {data.meta.last_page}
-              </span>
-              <button
-                onClick={() => setPage(Math.min(data.meta.last_page, page + 1))}
-                disabled={page === data.meta.last_page}
-                className="osm-btn osm-btn--small"
-              >
-                次へ &gt;
-              </button>
-            </div>
-          )}
+          <Pagination
+            page={page}
+            lastPage={data.meta.last_page}
+            onChange={setPage}
+          />
         </>
       )}
     </>

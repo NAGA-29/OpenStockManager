@@ -79,7 +79,7 @@
 | 3-7 | 手続き・販売（カート／CSV） | ☑ | 6（全て完了） |
 | 3-8 | 履歴（レンタル／販売／詳細／統合ビュー） | ☑ | 5（全体履歴 `/history` で統合） |
 | 3-9 | 設定（ユーザー管理／カテゴリ／カスタムフィールド／メール・CRM同期） | ◐ | 6（ユーザー管理・機材カテゴリ・カスタムフィールド 完了。メール・CRM 残） |
-| 3-10 | 共通コンポーネント・モーダル群 | ☐ | 14 |
+| 3-10 | 共通コンポーネント・モーダル群 | ◐ | 14（検索/ページネーション共通化 完了。モーダル群・SummaryCards 残） |
 | 3-11 | エラーページ（400/404/500/503） | ☑ | 4（全て完了） |
 
 ### Phase 4 — 仕上げ・撤去
@@ -208,7 +208,7 @@
 | `layouts/auth` | `AuthLayout` | ☐ |
 | `component/alert` | `<Alert>` | ☐ |
 | `component/cart_list` | `<CartList>` | ☐ |
-| `component/search_box` / `search_form` | `<SearchBox>` / `<SearchForm>` | ☐ |
+| `component/search_box` / `search_form` | `<SearchBox>` ＋ `<Pagination>` | ☑（一覧 5 画面で共通化） |
 | `component/summary_cards` | `<SummaryCards>` | ☐ |
 | `component/modal/checkout` | `<CheckoutModal>` | ☐ |
 | `component/modal/client_search`(+for_contact) | `<ClientSearchModal>` | ☐ |
@@ -219,6 +219,11 @@
 | `component/modal/email_change` | `<EmailChangeModal>` | ☐ |
 | `component/modal/incart_modal` | `<InCartModal>` | ☐ |
 | `component/modal/return_device` | `<ReturnDeviceModal>` | ☐ |
+
+> 共通検索/ページネーションを `components/ui/SearchBox.tsx`・`Pagination.tsx` に切り出し、
+> 一覧 5 画面（History / SaleHistory / RentalHistory / Users / DeviceSearch）の重複マークアップを集約。
+> 共通スタイルは `components/ui/ui.css` に集約（`.search-section/.search-form/.search-pagination`）。
+> 残: AuthLayout・各種モーダル（CartList / CheckoutModal / 各 EditModal 等）・SummaryCards。
 
 ### 3-11 エラーページ
 | Blade | React ルート | 状態 |

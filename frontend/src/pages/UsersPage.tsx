@@ -5,6 +5,8 @@ import Alert from '@/components/ui/Alert';
 import Loading from '@/components/ui/Loading';
 import Modal from '@/components/ui/Modal';
 import DataTable, { type Column } from '@/components/ui/DataTable';
+import SearchBox from '@/components/ui/SearchBox';
+import Pagination from '@/components/ui/Pagination';
 import { useToast } from '@/components/ui/toast/useToast';
 import {
   useUsers,
@@ -47,8 +49,7 @@ function UsersPage() {
   });
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
 
-  const handleSearch = (e: FormEvent) => {
-    e.preventDefault();
+  const handleSearch = () => {
     setWord(searchTerm);
     setPage(1);
   };
@@ -160,20 +161,12 @@ function UsersPage() {
 
       {data && (
         <>
-          <div className="search-section">
-            <form onSubmit={handleSearch} className="search-form">
-              <input
-                type="text"
-                placeholder="名前 or メールで検索"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="form-control"
-              />
-              <button type="submit" className="osm-btn osm-btn--primary">
-                <i className="fas fa-search" /> 検索
-              </button>
-            </form>
-          </div>
+          <SearchBox
+            value={searchTerm}
+            onChange={setSearchTerm}
+            onSubmit={handleSearch}
+            placeholder="名前 or メールで検索"
+          />
 
           {word && (
             <div className="search-summary">
@@ -188,27 +181,11 @@ function UsersPage() {
             empty="ユーザーがいません。"
           />
 
-          {data.meta.last_page > 1 && (
-            <div className="search-pagination">
-              <button
-                onClick={() => setPage(Math.max(1, page - 1))}
-                disabled={page === 1}
-                className="osm-btn osm-btn--small"
-              >
-                &lt; 前へ
-              </button>
-              <span className="search-pagination__info">
-                {page} / {data.meta.last_page}
-              </span>
-              <button
-                onClick={() => setPage(Math.min(data.meta.last_page, page + 1))}
-                disabled={page === data.meta.last_page}
-                className="osm-btn osm-btn--small"
-              >
-                次へ &gt;
-              </button>
-            </div>
-          )}
+          <Pagination
+            page={page}
+            lastPage={data.meta.last_page}
+            onChange={setPage}
+          />
         </>
       )}
 
