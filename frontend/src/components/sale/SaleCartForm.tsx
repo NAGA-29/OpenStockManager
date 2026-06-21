@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { AxiosError } from 'axios';
 import Alert from '@/components/ui/Alert';
 import DataTable, { type Column } from '@/components/ui/DataTable';
 import { useStoreSale, useSales, type SaleHist } from '@/features/sale/useSale';
@@ -7,6 +8,11 @@ import { useContacts, type Contact } from '@/features/contacts/useContacts';
 import { useDeviceSearch } from '@/features/inventory/useDeviceSearch';
 import type { Client } from '@/features/clients/useClients';
 import type { CategoryDevice } from '@/features/inventory/useDeviceCategory';
+
+interface ValidationErrorResponse {
+  message?: string;
+  errors?: Record<string, string[]>;
+}
 
 interface SaleFormState {
   device_ids: string[];
@@ -97,8 +103,9 @@ function SaleCartForm({ clients }: SaleCartFormProps) {
       refetchSales();
       setTimeout(() => navigate('/sale/history'), 2000);
     } catch (err) {
-      if ((err as any).response?.status === 422) {
-        setErrors((err as any).response.data.errors || {});
+      const axiosErr = err as AxiosError<ValidationErrorResponse>;
+      if (axiosErr.response?.status === 422) {
+        setErrors(axiosErr.response.data?.errors || {});
       }
     }
   };

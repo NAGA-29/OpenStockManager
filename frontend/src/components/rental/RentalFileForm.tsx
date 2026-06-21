@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { AxiosError } from 'axios';
 import Alert from '@/components/ui/Alert';
 import DataTable, { type Column } from '@/components/ui/DataTable';
 import {
@@ -9,6 +10,11 @@ import {
 } from '@/features/rental/useRental';
 import { useContacts, type Contact } from '@/features/contacts/useContacts';
 import type { Client } from '@/features/clients/useClients';
+
+interface ValidationErrorResponse {
+  message?: string;
+  errors?: Record<string, string[]>;
+}
 
 type FormState = 'upload' | 'confirm' | 'completed';
 
@@ -69,8 +75,9 @@ function RentalFileForm({ clients }: RentalFileFormProps) {
       setState('confirm');
       setMessage(`${data.count}件のレンタル対象を読み込みました。`);
     } catch (err) {
-      if ((err as any).response?.status === 422) {
-        setErrors((err as any).response.data.errors || {});
+      const axiosErr = err as AxiosError<ValidationErrorResponse>;
+      if (axiosErr.response?.status === 422) {
+        setErrors(axiosErr.response.data?.errors || {});
       }
     }
   };
@@ -97,10 +104,11 @@ function RentalFileForm({ clients }: RentalFileFormProps) {
       setMessage(data.message);
       setTimeout(() => navigate('/rental/history'), 3000);
     } catch (err) {
-      if ((err as any).response?.status === 422) {
-        setErrors((err as any).response.data.errors || {});
+      const axiosErr = err as AxiosError<ValidationErrorResponse>;
+      if (axiosErr.response?.status === 422) {
+        setErrors(axiosErr.response.data?.errors || {});
       } else {
-        setMessage((err as any).response?.data?.message || 'エラーが発生しました。');
+        setMessage(axiosErr.response?.data?.message || 'エラーが発生しました。');
       }
     }
   };
