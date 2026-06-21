@@ -86,12 +86,17 @@
 
 | # | タスク | 状態 | 備考 |
 | --- | --- | --- | --- |
-| 4-1 | 旧 Blade（`resources/views`）と Blade 用フロント資産を削除 | ☐ | 全画面移行完了後 |
-| 4-2 | `routes/web.php` を SPA フォールバック or 認証外のみに簡素化 | ☐ | |
+| 4-1 | 旧 Blade（`resources/views`）と Blade 用フロント資産を削除 | ◐ | Blade UI ビュー・Blade コントローラ削除済（`emails/` のみ残）。npm 資産整理は 4-3 |
+| 4-2 | `routes/web.php` を SPA フォールバック or 認証外のみに簡素化 | ☑ | Blade UI ルート・`Auth::routes()` 撤去。Laravel は API 専用に |
 | 4-3 | 不要 npm 依存（bootstrap/jsbarcode/toastr 等）を整理 | ☐ | React 版へ置換後 |
 | 4-4 | CI にフロントのビルド／型チェック／lint を追加 | ☐ | |
 | 4-5 | デプロイ手順（`deploy-to-prod.yml`）をモノレポ対応へ | ☐ | |
 | 4-6 | README・docs 更新、`docs/Architecture` 反映 | ☐ | |
+
+> **Blade 撤去（4-1/4-2）実施内容**: `routes/web.php` から Blade UI ルートと `Auth::routes()` を撤去し API 専用化。
+> Blade 用コントローラ 12 種（Dashboard/Devices/Clients/Contacts/RentalHists/SalesHists/User/Mailing/InventoryStock/InventoryUnit/DeviceCategory/DeviceTypeField）と `Http/Controllers/Auth/*`、`resources/views/**`（`emails/` を除く）を削除。
+> 旧 Blade 依存だった Feature テスト（LoginTest / DashboardAccessTest / BasicTest）を削除、`AdminMiddlewareTest` は API 管理者ルート（`/api/users`）検証に置換。これにより長年の **3 failures（Vite manifest 由来）が解消**し、テストは全 green に。
+> 残課題: `emails/` ビューと `CustomEmailChangeNotification`・`User::sendEmailChangeNotification` はメール機能（仕様未確定）用に保持。npm 依存整理（4-3）・CI（4-4）・デプロイ（4-5）・README（4-6）は未着手。
 
 ---
 

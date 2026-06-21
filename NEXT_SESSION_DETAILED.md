@@ -1,4 +1,4 @@
-# 次セッション引き継ぎ指示書（OpenStockManager React 移行 / レンタル・販売 端末状態バリデーション後）
+# 次セッション引き継ぎ指示書（OpenStockManager React 移行 / Blade 撤去（Phase 4-1/4-2）後）
 
 > このドキュメントは「次の AI セッションが最短で作業に入れること」を目的としています。
 > **まず §1 で現状把握 → §2 で読むべきファイルを開く → §3 の手順で実装** の順に進めてください。
@@ -25,11 +25,20 @@
 
 ### テスト状況
 ```
-API:      350 passed / 1 risky / 3 pre-existing failures（Blade Vite manifest 由来。React 移行とは無関係）
+API:      344 passed / 1 risky / 0 failures（Blade 撤去で長年の 3 failures を解消）
 Frontend: build / typecheck  すべて green
 ```
+※ 1 risky は事前から存在する別件（テスト本体がアサーションを持たない等）。Blade 撤去とは無関係。
 
 ### 直近セッションで実装した内容
+**Blade 撤去（Phase 4-1 / 4-2）**
+- `routes/web.php` を API 専用化（Blade UI ルート・`Auth::routes()` を全撤去、ファイルはコメントのみ残す）。
+- Blade コントローラ 12 種（Dashboard/Devices/Clients/Contacts/RentalHists/SalesHists/User/Mailing/InventoryStock/InventoryUnit/DeviceCategory/DeviceTypeField）と `Http/Controllers/Auth/*` を削除。
+- `resources/views/**` を削除（**`emails/` のみ保持**＝メール機能用）。
+- Blade 依存の Feature テストを削除（LoginTest / DashboardAccessTest / BasicTest）、`AdminMiddlewareTest` を API（`/api/users`）検証に置換。
+- 結果: 長年の **3 failures（Blade の Vite manifest 由来）が解消**し全 green（344 passed / 0 failed）。
+- 保持: `CustomEmailChangeNotification`・`User::sendEmailChangeNotification`・`emails/` ビュー（メール仕様確定後に使用）。`HomeController`（旧 scaffolding・未配線）は据え置き。
+
 **メール（Mailtrap）有効化の準備のみ**
 - `api/.env.example` のメール設定を Mailtrap 用に整備（`MAIL_HOST=sandbox.smtp.mailtrap.io`、`MAIL_PORT=2525`、`MAIL_ENCRYPTION=tls`、from 既定値、資格情報は空のまま）。
   送信機能自体は未確定のため**雛形のみ**。Mailtrap の USERNAME/PASSWORD を `.env` に入れれば config は env 経由で効く（`config/mail.php` は変更不要）。
@@ -104,20 +113,19 @@ Frontend: build / typecheck  すべて green
 
 ---
 
-## §2. 次セッションで読むべきファイル（3-9 残メール / 3-1 認証残 / 業務モーダル）
+## §2. 次セッションで読むべきファイル（Phase 4 残 / メール / 認証残）
 
 ### 2-1. 候補タスクと所在
-- **3-10 共通部品は一区切り完了**（検索/ページ/サマリーカード/フォームモーダル/AuthLayout）。
-  残るは業務モーダル（`api/resources/views/component/modal/*` = CheckoutModal / ReturnDeviceModal / EditDevice 等）だが、
-  これらは**未移植の業務画面（端末編集・カート確定・返却等）とセット**。当該機能を作る時に `Modal`/`FormModal` ベースで実装する。
-- **3-9 残メール/CRM**（外部依存あり・仕様未確定）
-  - メール仕様は**未確定**のため保留中。接続準備のみ実施済み（`.env.example` が Mailtrap 用。`MAIL_USERNAME`/`MAIL_PASSWORD` を `.env` に入れれば効く）。
-  - 実装する場合: `api/resources/views/mailform.blade.php`、`config/mail.php`/`config/services.php`、`app/Notifications/*`、`app/Services/*` を参照。
-    送信は admin グループの新 API、テストは `Mail::fake()`。Sidebar に `/settings/mail`（adminOnly）リンクは既にある。
-- **3-1 認証残**: ログイン以外の認証画面（パスワードリセット等）。`auth/*` と旧 `auth` Blade を参照。
-  AuthLayout（`layouts/AuthLayout.tsx`）が使えるので画面追加は容易だが、パスワードリセットはメール送信が絡む（仕様未確定）。
-- **Phase 4（Blade 撤去）**: 既存 3 failures（Blade `/users` 等の Vite manifest 由来）の解消につながる。旧 web ルート全廃は影響大なので段階的に。
-- **端末状態バリデーションはレンタル/販売とも実装済み**（`ChecksRentableDevices`/`ChecksSaleableDevices`）。
+- **Phase 4-3 不要 npm 依存の整理**（外部依存なし・推奨）
+  - 旧 Blade で使っていた npm 依存（bootstrap / jsbarcode / toastr / sweetalert2 / jquery 等）が `api/package.json` や `frontend/package.json` に残っていないか確認し、未使用なら削除。
+  - Blade ビルド資産（`api/resources/js`・`api/resources/sass`・`api/vite.config.js` の Blade エントリ・`api/webpack.mix.js` 等）も未使用なら整理。
+  - ⚠️ 削除前に `grep` で参照ゼロを確認。`frontend/` 側の依存は React で使用中なので触らない。
+- **Phase 4-4 CI 整備**（外部依存なし）: フロントの build / typecheck / lint、API の `php artisan test` を CI に追加。
+- **3-9 メール/CRM**（外部依存・仕様未確定）: メール仕様が決まってから。接続準備（Mailtrap）は済。
+  実装時は `config/mail.php`/`config/services.php`、`app/Notifications/*`、`emails/` ビュー、`Mail::fake()` テスト。Sidebar に `/settings/mail`（adminOnly）リンクあり。
+- **3-1 認証残**（パスワードリセット等）: メール送信が絡むため仕様確定後。`AuthLayout` が使える。
+- **業務モーダル**（未移植の業務画面＝端末編集/カート確定/返却 とセット）: 当該機能を作る時に `Modal`/`FormModal` ベースで実装。
+- **済**: 端末状態バリデーションはレンタル/販売とも実装済み（`ChecksRentableDevices`/`ChecksSaleableDevices`）。Blade 撤去（4-1/4-2）済み。
 
 ### 2-2. お手本・共通化のヒント
 | 既存ファイル | 内容 |
@@ -129,8 +137,8 @@ Frontend: build / typecheck  すべて green
 | `Api\*Controller` + 各 ApiTest | API を足す場合のお手本（admin グループ / 403 / 404 / 422 / reorder） |
 | `app/Traits/{ChecksSaleableDevices,ChecksRentableDevices}.php` | FormRequest の `withValidator` で端末状態を検証する trait（販売・レンタルで実装済み） |
 
-→ 外部依存なしで完結する大きめタスクは一巡。残るは概ね**外部依存（メール送信）を伴うもの**（3-9 メール/CRM・3-1 認証残）か、
-   **Blade 撤去（Phase 4）**。次セッションでメール系をやる場合は最初に `config/mail.php` と `.env`（`MAIL_MAILER`）を確認し、`Mail::fake()` でテストする。
+→ Blade 撤去（4-1/4-2）が完了し API 専用化。外部依存なしの残タスクは **Phase 4-3（npm 依存整理）/ 4-4（CI）/ 4-6（README・docs）**。
+   メール系（3-9・3-1）は仕様確定後に `Mail::fake()` 前提で。
 
 ### 2-3. 変更が必要になりうる既存ファイル（タスクにより）
 ```
@@ -143,9 +151,8 @@ docs/react-laravel-migration.md ← 対象フェーズの表を更新
 > ⚠️ ハマりどころ: API FormRequest の `nullable` フィールドは未送信だと `safe()->all()` に**含まれない**。
 > `$safe['key'] ?? null` で受けること（カテゴリの icon で 500 になった）。
 
-> ⚠️ 既存の 3 failures は `tests/Feature/Middleware/AdminMiddlewareTest.php` 等の **Blade ルート（`/users` GET など）** が
-> Vite manifest を要求して落ちているもので、API 移行とは別物。Blade ルート自体を撤去する Phase 4 まで残る見込み。
-> （3-9 のユーザー管理は API/React 側で実装済みだが、旧 Blade `/users` ルートは web.php に残してあるため失敗も残存。）
+> ✅ 旧「3 failures（Blade Vite manifest 由来）」は Blade 撤去（Phase 4-1/4-2）で解消済み。
+> Laravel は API 専用（`routes/web.php` は Blade UI ルートを持たない）。`resources/views/` は `emails/` のみ残置。
 
 ---
 
@@ -207,9 +214,9 @@ docs/react-laravel-migration.md ← 対象フェーズの表を更新
 
 ```bash
 git branch                       # → claude/funny-galileo-6fgy3o
-git log --oneline -5             # → 最新が "feat: レンタル端末状態バリデーション / chore: Mailtrap 準備" 系
+git log --oneline -5             # → 最新が "refactor: Blade UI 撤去（Phase 4-1/4-2）" 系
 cd api && composer install       # 依存が無ければ
-cd api && php artisan test 2>&1 | grep "Tests:"    # → 350 passed / 1 risky / 3 failures
+cd api && php artisan test 2>&1 | grep "Tests:"    # → 344 passed / 1 risky / 0 failures
 cd ../frontend && npm ci          # node_modules が無ければ（lockfile は TS 5.9.3 を固定）
 cd ../frontend && npm run build && npm run typecheck   # → green
 ```
@@ -222,15 +229,15 @@ cd ../frontend && npm run build && npm run typecheck   # → green
 
 ## §6. 代替タスク
 
-- **プロフィール画面（表示のみ）**（難度🟢低）: `/profile`（自分の情報表示）。`GET /api/auth/me` の情報を表示するだけなら外部依存なし。メール変更は仕様確定後。
+- **Phase 4-3（npm 依存・Blade ビルド資産の整理）**（難度🟢低・推奨）: 旧 Blade 用 npm 依存／`api/resources/js`・`sass`／mix・vite Blade エントリの整理。削除前に参照ゼロを確認。
+- **Phase 4-4（CI 整備）**（難度🟢低）: フロント build/typecheck/lint・API test を CI に追加。
+- **プロフィール画面（表示のみ）**（難度🟢低）: `/profile`（`GET /api/auth/me` 表示のみなら外部依存なし）。メール変更は仕様確定後。
 - **3-4 残（端末画像）**（難度🟢低・要ストレージ確認）: 端末登録の画像アップロードのみ未実装。
-- **Phase 4（Blade 撤去）**（難度🟠中）: 既存 3 failures の解消につながる。旧 web ルート全廃は影響大なので段階的に。
 - **3-9 メール/CRM・3-1 認証残**（外部依存・仕様未確定）: メール仕様が決まってから。接続準備（Mailtrap）は済。
 
 ---
 
 **ブランチ**: `claude/funny-galileo-6fgy3o`（PR #82 が作成済み。push で更新される）
-**次セッション目標**: メール仕様が確定するまでは 3-9 メール/3-1 認証残は保留（接続準備のみ済）。
-外部依存なしで残るのは **Phase 4（Blade 撤去・既存 3 failures 解消）** が中心。慎重に段階導入する。
-共通部品は整備済み（`components/ui/{SearchBox,Pagination,SummaryCards,FormModal}.tsx`・`layouts/AuthLayout.tsx`）、レンタル/販売とも端末状態検証済み。
-残フェーズ: 3-1（認証残）/ 3-9メール・CRM / 3-10残（モーダル群/AuthLayout）/ Phase 4（Blade 撤去）。
+**次セッション目標**: Phase 4-3（npm/Blade ビルド資産の整理）または 4-4（CI）。いずれも外部依存なし。
+メール系（3-9・3-1）は仕様確定後。共通部品・端末状態検証・Blade 撤去は完了済み。
+残フェーズ: Phase 4-3〜4-6（npm整理/CI/デプロイ/README）、3-9メール・CRM、3-1 認証残、業務モーダル（対応画面実装時）。
