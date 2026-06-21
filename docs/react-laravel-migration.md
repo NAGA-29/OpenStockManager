@@ -150,13 +150,15 @@
 ### 3-6 手続き・レンタル
 | Blade | React ルート | API | 状態 |
 | --- | --- | --- | --- |
-| `rental/index` | `/rental` | `GET /api/rental` | ☐ |
-| `rental/rental` | `/rental/cart` | `POST /api/rental/store` | ☐ |
-| `rental/components/cart` | カート部品 | — | ☐ |
-| `rental/components/file` | CSV 部品 | `POST /api/rental/multi/upload` | ☐ |
-| `rental/rental_with_file_confirm` | CSV 確認 | `POST /api/rental/multi/store` | ☐ |
-| `rental/multi_return_device_confirm` | `/rental/return/:lendId` | `POST /api/rental/multi/return/:lendId` | ☐ |
+| `rental/index` | `/rental` | `GET /api/rental` ✅ | ☑ |
+| `rental/rental` | `/rental`（カート式タブ） | `POST /api/rental/store` ✅ | ☑ |
+| `rental/components/cart` | `RentalCartForm`（端末検索配線済） | `GET /api/devices/search` | ☑ |
+| `rental/components/file` | `RentalFileForm`（ファイル式タブ） | `POST /api/rental/multi/upload` ✅ | ☑ |
+| `rental/rental_with_file_confirm` | CSV 確認（confirm ステート） | `POST /api/rental/multi/store` ✅ | ☑ |
+| `rental/multi_return_device_confirm` | 詳細画面の返却ボタン | `POST /api/rental/multi/return/:lendId` ✅ | ☑ |
 | `history/checkout`（貸出明細） | `/rental/checkout/:deviceId` | `GET /api/rental/checkout/:deviceId` | ☐ |
+
+> レンタル登録時は端末状態を検証（販売済み/貸出中/不良を 422 で弾く。`App\Traits\ChecksRentableDevices` を Store/StoreMulti の両 FormRequest で共有）。
 
 ### 3-7 手続き・販売
 | Blade | React ルート | API | 状態 |

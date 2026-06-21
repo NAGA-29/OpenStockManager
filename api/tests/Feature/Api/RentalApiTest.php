@@ -249,4 +249,57 @@ class RentalApiTest extends TestCase
             'lending_now' => '',
         ]);
     }
+
+    public function test_store_rejects_already_lent_device(): void
+    {
+        $this->device->update(['lending_now' => 'RENT-EXISTING']);
+
+        $response = $this->actingAs($this->user, 'sanctum')
+            ->postJson('/api/rental/store', [
+                'device_ids' => ['TEST-001'],
+                'client_id' => $this->client->client_id,
+                'contact_id' => $this->contact->id,
+                'checkout_at' => now()->format('Y-m-d'),
+                'schedule_return_at' => now()->addDays(7)->format('Y-m-d'),
+            ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors('device_ids');
+    }
+
+    public function test_store_rejects_sold_device(): void
+    {
+        $this->device->update(['sale_id' => 'SALE-EXISTING']);
+
+        $response = $this->actingAs($this->user, 'sanctum')
+            ->postJson('/api/rental/store', [
+                'device_ids' => ['TEST-001'],
+                'client_id' => $this->client->client_id,
+                'contact_id' => $this->contact->id,
+                'checkout_at' => now()->format('Y-m-d'),
+                'schedule_return_at' => now()->addDays(7)->format('Y-m-d'),
+            ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors('device_ids');
+    }
+
+    public function test_store_multi_rejects_already_lent_device(): void
+    {
+        $this->device->update(['lending_now' => 'RENT-EXISTING']);
+
+        $response = $this->actingAs($this->user, 'sanctum')
+            ->postJson('/api/rental/multi/store', [
+                'client_id' => $this->client->client_id,
+                'contact_id' => $this->contact->id,
+                'checkout_at' => now()->format('Y-m-d'),
+                'schedule_return_at' => now()->addDays(7)->format('Y-m-d'),
+                'rentals' => [
+                    ['device_id' => 'TEST-001'],
+                ],
+            ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors('rentals');
+    }
 }
