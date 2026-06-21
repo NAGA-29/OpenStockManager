@@ -1,5 +1,11 @@
 # 開発Tips
 
+> **モノレポでの実行場所**: 以下の PHP 系コマンドは Laravel（`api/`）を対象とします。
+> Docker 利用時は `docker compose exec laravel.test <コマンド>`、
+> ローカル実行時は `api/` ディレクトリ内で実行してください
+> （例: `cd api && composer lint`）。本ページの `sail ...` 表記は
+> `docker compose exec laravel.test ...` に読み替えてください。
+
 ## コード品質ツール
 
 本プロジェクトでは **Larastan**（静的解析）と **Pint**（コードスタイル修正）を導入しています。

@@ -7,12 +7,12 @@
 
 ## 1. ゴール（最終状態）
 
-- [ ] リポジトリが `api/`（Laravel・JSON API 専用）と `frontend/`（React + Vite + TypeScript SPA）に分割されている
-- [ ] 認証は Laravel Sanctum のトークン方式（SPA がトークンを保持）
-- [ ] 旧 Blade ビュー（84 ファイル）の全画面が React コンポーネントへ置き換わっている
-- [ ] 旧 `resources/views`・Blade 用フロント資産（Bootstrap/jQuery/Vite blade 入力）が削除されている
-- [ ] CI / Docker / デプロイがモノレポ構成（バックエンド・フロント別ビルド）に更新されている
-- [ ] README とドキュメントが新構成を反映している
+- [x] リポジトリが `api/`（Laravel・JSON API 専用）と `frontend/`（React + Vite + TypeScript SPA）に分割されている
+- [x] 認証は Laravel Sanctum のトークン方式（SPA がトークンを保持）
+- [ ] 旧 Blade ビュー（84 ファイル）の全画面が React コンポーネントへ置き換わっている（主要画面は完了。認証残/メール・CRM/業務モーダルが残）
+- [x] 旧 `resources/views`・Blade 用フロント資産（Bootstrap/jQuery/Vite blade 入力）が削除されている（`emails/` のみ保持）
+- [ ] CI / Docker / デプロイがモノレポ構成（バックエンド・フロント別ビルド）に更新されている（CI・Docker は完了。本番デプロイ 4-5 が残）
+- [x] README とドキュメントが新構成を反映している
 
 ### アーキテクチャ決定（確定事項）
 
@@ -86,12 +86,12 @@
 
 | # | タスク | 状態 | 備考 |
 | --- | --- | --- | --- |
-| 4-1 | 旧 Blade（`resources/views`）と Blade 用フロント資産を削除 | ◐ | Blade UI ビュー・Blade コントローラ削除済（`emails/` のみ残）。npm 資産整理は 4-3 |
+| 4-1 | 旧 Blade（`resources/views`）と Blade 用フロント資産を削除 | ☑ | Blade UI ビュー・コントローラ削除済（`emails/` のみ残）。Blade 用フロント資産は 4-3 で撤去完了 |
 | 4-2 | `routes/web.php` を SPA フォールバック or 認証外のみに簡素化 | ☑ | Blade UI ルート・`Auth::routes()` 撤去。Laravel は API 専用に |
-| 4-3 | 不要 npm 依存（bootstrap/jsbarcode/toastr 等）を整理 | ☐ | React 版へ置換後 |
-| 4-4 | CI にフロントのビルド／型チェック／lint を追加 | ☐ | |
-| 4-5 | デプロイ手順（`deploy-to-prod.yml`）をモノレポ対応へ | ☐ | |
-| 4-6 | README・docs 更新、`docs/Architecture` 反映 | ☐ | |
+| 4-3 | 不要 npm 依存（bootstrap/jsbarcode/toastr 等）を整理 | ☑ | `api/resources/{css,js}`・`vite.config.js`・`tailwind.config.js`・`postcss.config.cjs`・`tsconfig.json`・`package.json`・`pnpm-lock.yaml` を削除。`resources/lang`・`emails/` は保持。API テスト 344 passed 維持 |
+| 4-4 | CI にフロントのビルド／型チェック／lint を追加 | ☑ | `frontend_ci.yml`（lint/typecheck/build, Node 22）新設。`code_security.yml` の npm 監査を `frontend/`（`--omit=dev`）へ。PHP 系 CI を 8.3→8.4 に修正。デプロイ連鎖（`code_build.yml`/`deploy-to-prod.yml`）は 4-5 として保留。`code_analysis.yml`（PHPStan 72 件・PHPCS）は**移行前から存在する既存債務**で赤のまま（別タスク） |
+| 4-5 | デプロイ手順（`code_build.yml`/`deploy-to-prod.yml`）をモノレポ対応へ | ☐ | VPS 構成（api サブディレクトリ配置・SPA 配信方法）確定後に再設計。現状この 2 ワークフローは旧 api npm ビルド前提で破損 |
+| 4-6 | README・docs 更新、`docs/Architecture` 反映 | ☑ | `README.md`・`docs/wiki/development_setup.md`（モノレポ手順へ全面更新）・`develop_tips.md`（実行場所注記）・本ロードマップを更新。`Architecture.md` は未記入テンプレート・`CONTRIBUTING.md` は空のため対象外 |
 
 > **Blade 撤去（4-1/4-2）実施内容**: `routes/web.php` から Blade UI ルートと `Auth::routes()` を撤去し API 専用化。
 > Blade 用コントローラ 12 種（Dashboard/Devices/Clients/Contacts/RentalHists/SalesHists/User/Mailing/InventoryStock/InventoryUnit/DeviceCategory/DeviceTypeField）と `Http/Controllers/Auth/*`、`resources/views/**`（`emails/` を除く）を削除。
@@ -413,4 +413,16 @@
 
 ### 既知の課題（移設前から存在 / 本移行の前提ではない）
 - ~~`tests/Unit/Models/ContactsTest` の3ケースが失敗~~ **2026-06-17 解消済み（3-5 担当者対応でテストを現モデル仕様へ追従）**。直近の「personnel → contact」リファクタで `Contacts` モデルの主キーが `contact_id`→`id`（auto-increment）へ変わった一方、テストが旧仕様（`contact_id` 主キー・非incrementing・fillable に `contact_id`）を期待していたのが原因。
-- `tests/Feature/*` の一部は Blade を描画するため `php artisan test` 前に `npm run build`（Vite manifest 生成）が必要。Blade 全廃（Phase 4-1）まではこの前提を維持。
+- ~~`tests/Feature/*` の一部は Blade を描画するため `php artisan test` 前に `npm run build`（Vite manifest 生成）が必要~~ **Blade 全廃（Phase 4-1/4-2）で解消済み**。API テストは単体で 344 passed / 1 risky。
+
+---
+
+- 2026-06-21: **Phase 4-3 完了**（旧 Blade ビルド資産の撤去）。React SPA 移行で未参照となった `api/resources/{css,js}`・`vite.config.js`・`tailwind.config.js`・`postcss.config.cjs`・`tsconfig.json`・`package.json`・`pnpm-lock.yaml` を削除（計 36 ファイル）。`app/`・`config/`・`views/`・`tests/`・phpstan/pint/phpcs/composer から参照ゼロを確認。`resources/lang`（API の `__()`/`trans()` で使用）・`resources/views/emails/`（メール）は保持。API テスト **344 passed / 1 risky** 維持。
+- 2026-06-21: **Phase 4-4 完了**（CI 品質系の整備。デプロイ連鎖は 4-5 へ保留）。
+  - `frontend_ci.yml` 新設: `frontend/` で lint・typecheck・build（Node 22、npm キャッシュ）。push（develop/feature/feat/hotfix）と develop への PR で起動。
+  - `code_security.yml`: 削除済み api の npm 監査を `frontend/` に向け直し。本番依存のみ監査（`npm audit --omit=dev` → 0 件。vite/esbuild 等の開発ツール脆弱性は出荷物に含まれないため対象外）。
+  - `run-tests.yml`/`code_analysis.yml`/`code_security.yml`: `setup-php` を 8.3→8.4 に修正（`composer.json` の `php ^8.4` と不一致で `composer install` が失敗していた既存バグ）。
+  - フロント lint（`no-explicit-any` 14 件）解消のため、業務フォーム 4 ファイル（Rental/Sale の Cart/File Form）の axios エラー処理を `(err as any)` から既存作法の `AxiosError<ValidationErrorResponse>` 型へ統一。frontend lint/typecheck/build green。
+  - **既存債務**: `code_analysis.yml`（PHPStan level 5 で 72 件・PHPCS 違反）は `app/` 配下のコード品質問題で移行前から存在（ベースライン無し）。本移行とは別タスク。
+- 2026-06-21: **Phase 4-6 完了**（README・docs 更新）。`README.md` を API/フロント分離構成へ更新（フロントスタックを React/Vite/TS 系に刷新・ロゴパス修正）。`docs/wiki/development_setup.md` をモノレポ手順（`docker compose` でルートから api+frontend 起動）へ全面更新。`docs/wiki/develop_tips.md` に実行場所の注記を追加。本ロードマップの §1 ゴール・§2 Phase 4 表を更新。`Architecture.md`（未記入テンプレート）・`CONTRIBUTING.md`（空）は対象外。
+- 残タスク: **4-5（本番デプロイのモノレポ対応）** は VPS 構成確定後に再設計（`code_build.yml`/`deploy-to-prod.yml` は現状破損）。その他、3-1 認証残（パスワードリセット等）・3-9 メール/CRM・3-10 業務モーダルは仕様/外部依存待ちで保留。`code_analysis.yml` の既存 PHPStan/PHPCS 債務は別タスクで解消（または phpstan baseline 導入）を検討。
