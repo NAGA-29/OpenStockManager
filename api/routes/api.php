@@ -4,9 +4,14 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\DeviceCategoryController;
 use App\Http\Controllers\Api\DeviceController;
+use App\Http\Controllers\Api\DeviceFieldController;
+use App\Http\Controllers\Api\HistoryController;
 use App\Http\Controllers\Api\InventoryStockController;
 use App\Http\Controllers\Api\RentalController;
+use App\Http\Controllers\Api\SaleController;
+use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -70,4 +75,36 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/rental/multi/return/{lendId}', [RentalController::class, 'returnDevice'])->name('api.rental.return');
     Route::get('/rental/history', [RentalController::class, 'history'])->name('api.rental.history');
     Route::get('/rental/history/{lendId}', [RentalController::class, 'historyDetail'])->name('api.rental.history.detail');
+
+    // 手続き - 販売
+    Route::get('/sale', [SaleController::class, 'index'])->name('api.sale.index');
+    Route::post('/sale/store', [SaleController::class, 'store'])->name('api.sale.store');
+    Route::post('/sale/multi/upload', [SaleController::class, 'uploadMulti'])->name('api.sale.multi.upload');
+    Route::post('/sale/multi/store', [SaleController::class, 'storeMulti'])->name('api.sale.multi.store');
+    Route::get('/sale/history', [SaleController::class, 'history'])->name('api.sale.history');
+    Route::get('/sale/history/{saleId}', [SaleController::class, 'historyDetail'])->name('api.sale.history.detail');
+
+    // 履歴 - レンタル／販売 統合
+    Route::get('/history', [HistoryController::class, 'index'])->name('api.history.index');
+
+    // 設定 - ユーザー管理（管理者のみ）
+    Route::middleware('admin')->group(function () {
+        Route::get('/users', [UserController::class, 'index'])->name('api.users.index');
+        Route::post('/users', [UserController::class, 'store'])->name('api.users.store');
+        Route::put('/users/{id}', [UserController::class, 'update'])->name('api.users.update');
+
+        // 設定 - 機材カテゴリ。`reorder` は `{id}` より前に定義する。
+        Route::get('/device-categories', [DeviceCategoryController::class, 'index'])->name('api.device_categories.index');
+        Route::post('/device-categories', [DeviceCategoryController::class, 'store'])->name('api.device_categories.store');
+        Route::post('/device-categories/reorder', [DeviceCategoryController::class, 'reorder'])->name('api.device_categories.reorder');
+        Route::put('/device-categories/{id}', [DeviceCategoryController::class, 'update'])->name('api.device_categories.update');
+        Route::delete('/device-categories/{id}', [DeviceCategoryController::class, 'destroy'])->name('api.device_categories.destroy');
+
+        // 設定 - カスタムフィールド。`reorder` は `{id}` より前に定義する。
+        Route::get('/device-fields', [DeviceFieldController::class, 'index'])->name('api.device_fields.index');
+        Route::post('/device-fields', [DeviceFieldController::class, 'store'])->name('api.device_fields.store');
+        Route::post('/device-fields/reorder', [DeviceFieldController::class, 'reorder'])->name('api.device_fields.reorder');
+        Route::put('/device-fields/{id}', [DeviceFieldController::class, 'update'])->name('api.device_fields.update');
+        Route::delete('/device-fields/{id}', [DeviceFieldController::class, 'destroy'])->name('api.device_fields.destroy');
+    });
 });

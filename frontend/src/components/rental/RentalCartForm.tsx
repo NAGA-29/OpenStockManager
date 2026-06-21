@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Alert from '@/components/ui/Alert';
 import DataTable, { type Column } from '@/components/ui/DataTable';
 import { useStoreRental, useRentals, type RentalHist } from '@/features/rental/useRental';
 import { useContacts, type Contact } from '@/features/contacts/useContacts';
+import { useDeviceSearch } from '@/features/inventory/useDeviceSearch';
 import type { Client } from '@/features/clients/useClients';
 import type { CategoryDevice } from '@/features/inventory/useDeviceCategory';
 
@@ -35,9 +36,21 @@ function RentalCartForm({ clients }: RentalCartFormProps) {
   });
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [searchResults, setSearchResults] = useState<CategoryDevice[]>([]);
+  const [debouncedTerm, setDebouncedTerm] = useState('');
   const [errors, setErrors] = useState<Record<string, string[]>>({});
   const [successMessage, setSuccessMessage] = useState('');
+
+  // 入力をデバウンスして端末検索 API の呼び出し回数を抑える。
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedTerm(searchTerm.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  const { data: searchData } = useDeviceSearch(debouncedTerm, '', 1);
+  // 検索結果から既に選択済みの端末を除外して候補に出す。
+  const searchResults = (searchData?.data ?? []).filter(
+    (device) => !form.device_ids.includes(device.device_id),
+  );
 
   const { data: allContacts } = useContacts('');
   const contactsData = form.client_id
@@ -53,7 +66,6 @@ function RentalCartForm({ clients }: RentalCartFormProps) {
         device_ids: [...prev.device_ids, device.device_id],
       }));
     }
-    setSearchResults([]);
     setSearchTerm('');
   };
 

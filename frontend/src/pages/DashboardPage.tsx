@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import Alert from '@/components/ui/Alert';
 import Loading from '@/components/ui/Loading';
 import DataTable, { type Column } from '@/components/ui/DataTable';
+import SummaryCards from '@/components/ui/SummaryCards';
 import {
   useDashboard,
   type DashboardRental,
@@ -72,22 +73,17 @@ function DashboardPage() {
 
       {data && (
         <>
-          <div className="summary-cards">
-            <div className="summary-card summary-card--primary">
-              <span className="summary-card__label">貸出中台数</span>
-              <span className="summary-card__value">{data.lending_count}</span>
-            </div>
-            <div className="summary-card summary-card--danger">
-              <span className="summary-card__label">延滞中</span>
-              <span className="summary-card__value">{data.overdue.length}</span>
-            </div>
-            <div className="summary-card summary-card--success">
-              <span className="summary-card__label">期限間近（3日以内）</span>
-              <span className="summary-card__value">
-                {data.near_deadline.length}
-              </span>
-            </div>
-          </div>
+          <SummaryCards
+            cards={[
+              { label: '貸出中台数', value: data.lending_count, variant: 'primary' },
+              { label: '延滞中', value: data.overdue.length, variant: 'danger' },
+              {
+                label: '期限間近（3日以内）',
+                value: data.near_deadline.length,
+                variant: 'success',
+              },
+            ]}
+          />
 
           <div className="dashboard-grid">
             <div className="dashboard-card">

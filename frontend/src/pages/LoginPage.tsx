@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Navigate } from 'react-router-dom';
 import { AxiosError } from 'axios';
 import { useAuth } from '@/auth/useAuth';
-import './login.css';
+import AuthLayout from '@/layouts/AuthLayout';
 
 /** Laravel のバリデーションエラー応答（422）。 */
 interface ValidationErrorResponse {
@@ -61,84 +61,64 @@ function LoginPage() {
   };
 
   return (
-    <div className="login-screen">
-      <div className="login-card">
-        <aside className="login-card__aside">
-          <span className="login-card__badge">Device Manager</span>
-          <h2>Welcome</h2>
-          <p>管理者から発行されたアカウント情報でログインしてください。</p>
-          <ul className="login-card__features">
-            <li>
-              <i className="fas fa-tablet-alt" aria-hidden="true" />
-              <span>デバイス管理・ステータス確認を一元化</span>
-            </li>
-            <li>
-              <i className="fas fa-history" aria-hidden="true" />
-              <span>履歴情報を安全にトラッキング</span>
-            </li>
-          </ul>
-        </aside>
-
-        <div className="login-card__form">
-          <div className="login-card__form-header">
-            <h3>ログイン</h3>
-            <p>メールアドレスとパスワードを入力してください</p>
-          </div>
-
-          {generalError && (
-            <div className="login-alert" role="alert">
-              {generalError}
-            </div>
-          )}
-
-          <form onSubmit={(e) => void handleSubmit(e)} noValidate>
-            <div className="login-field">
-              <label htmlFor="email">メールアドレス</label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                className={fieldErrors.email ? 'is-invalid' : undefined}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoComplete="email"
-                autoFocus
-              />
-              {fieldErrors.email?.map((msg) => (
-                <span key={msg} className="login-field__error" role="alert">
-                  {msg}
-                </span>
-              ))}
-            </div>
-
-            <div className="login-field">
-              <label htmlFor="password">パスワード</label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                className={fieldErrors.password ? 'is-invalid' : undefined}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                autoComplete="current-password"
-              />
-              {fieldErrors.password?.map((msg) => (
-                <span key={msg} className="login-field__error" role="alert">
-                  {msg}
-                </span>
-              ))}
-            </div>
-
-            <button type="submit" className="login-submit" disabled={submitting}>
-              <i className="fas fa-sign-in-alt" aria-hidden="true" />{' '}
-              {submitting ? 'ログイン中…' : 'ログイン'}
-            </button>
-          </form>
-        </div>
+    <AuthLayout>
+      <div className="login-card__form-header">
+        <h3>ログイン</h3>
+        <p>メールアドレスとパスワードを入力してください</p>
       </div>
-    </div>
+
+      {generalError && (
+        <div className="login-alert" role="alert">
+          {generalError}
+        </div>
+      )}
+
+      <form onSubmit={(e) => void handleSubmit(e)} noValidate>
+        <div className="login-field">
+          <label htmlFor="email">メールアドレス</label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            className={fieldErrors.email ? 'is-invalid' : undefined}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            autoComplete="email"
+            autoFocus
+          />
+          {fieldErrors.email?.map((msg) => (
+            <span key={msg} className="login-field__error" role="alert">
+              {msg}
+            </span>
+          ))}
+        </div>
+
+        <div className="login-field">
+          <label htmlFor="password">パスワード</label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            className={fieldErrors.password ? 'is-invalid' : undefined}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            autoComplete="current-password"
+          />
+          {fieldErrors.password?.map((msg) => (
+            <span key={msg} className="login-field__error" role="alert">
+              {msg}
+            </span>
+          ))}
+        </div>
+
+        <button type="submit" className="login-submit" disabled={submitting}>
+          <i className="fas fa-sign-in-alt" aria-hidden="true" />{' '}
+          {submitting ? 'ログイン中…' : 'ログイン'}
+        </button>
+      </form>
+    </AuthLayout>
   );
 }
 

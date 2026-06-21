@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from './auth/ProtectedRoute';
+import { AdminRoute } from './auth/AdminRoute';
 import AppLayout from './layouts/AppLayout';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
@@ -21,7 +22,18 @@ import ContactDetailPage from './pages/ContactDetailPage';
 import RentalPage from './pages/RentalPage';
 import RentalHistoryPage from './pages/RentalHistoryPage';
 import RentalHistoryDetailPage from './pages/RentalHistoryDetailPage';
+import SalePage from './pages/SalePage';
+import SaleHistoryPage from './pages/SaleHistoryPage';
+import SaleHistoryDetailPage from './pages/SaleHistoryDetailPage';
+import HistoryPage from './pages/HistoryPage';
+import UsersPage from './pages/UsersPage';
+import UserRegisterPage from './pages/UserRegisterPage';
+import DeviceCategoriesPage from './pages/DeviceCategoriesPage';
+import DeviceFieldsPage from './pages/DeviceFieldsPage';
 import NotFoundPage from './pages/NotFoundPage';
+import BadRequestPage from './pages/errors/BadRequestPage';
+import ServerErrorPage from './pages/errors/ServerErrorPage';
+import ServiceUnavailablePage from './pages/errors/ServiceUnavailablePage';
 
 /**
  * アプリのルーティング定義。
@@ -35,8 +47,14 @@ export const router = createBrowserRouter([
     path: '/login',
     element: <LoginPage />,
   },
+  // 単体表示するエラーページ（認証・共通レイアウト外）。
+  { path: '/error/400', element: <BadRequestPage /> },
+  { path: '/error/500', element: <ServerErrorPage /> },
+  { path: '/error/503', element: <ServiceUnavailablePage /> },
   {
     element: <ProtectedRoute />,
+    // 配下ルートのレンダリング/ローダー例外は 500 ページで受ける。
+    errorElement: <ServerErrorPage />,
     children: [
       {
         element: <AppLayout />,
@@ -61,6 +79,19 @@ export const router = createBrowserRouter([
           { path: '/rental', element: <RentalPage /> },
           { path: '/rental/history', element: <RentalHistoryPage /> },
           { path: '/rental/history/:lendId', element: <RentalHistoryDetailPage /> },
+          { path: '/sale', element: <SalePage /> },
+          { path: '/sale/history', element: <SaleHistoryPage /> },
+          { path: '/sale/history/:saleId', element: <SaleHistoryDetailPage /> },
+          { path: '/history', element: <HistoryPage /> },
+          {
+            element: <AdminRoute />,
+            children: [
+              { path: '/users', element: <UsersPage /> },
+              { path: '/users/register', element: <UserRegisterPage /> },
+              { path: '/settings/categories', element: <DeviceCategoriesPage /> },
+              { path: '/settings/fields', element: <DeviceFieldsPage /> },
+            ],
+          },
         ],
       },
     ],

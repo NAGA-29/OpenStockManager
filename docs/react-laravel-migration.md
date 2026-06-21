@@ -75,23 +75,28 @@
 | 3-3 | 在庫（数量管理／個別管理／端末詳細／バーコード） | ☑ | 7（数量管理／個別管理／端末詳細／バーコード／検索 完了） |
 | 3-4 | 端末登録（単体／CSV一括／確認） | ◐ | 5（単体登録・CSV一括 完了。画像 残） |
 | 3-5 | データ（スペック／ベンチマーク／企業／担当者） | ☑ | 8（全て完了） |
-| 3-6 | 手続き・レンタル（カート／CSV／一括返却） | ☐ | 7 |
-| 3-7 | 手続き・販売（カート／CSV） | ☐ | 6 |
-| 3-8 | 履歴（レンタル／販売／詳細） | ☐ | 5 |
-| 3-9 | 設定（ユーザー管理／カテゴリ／カスタムフィールド／メール・CRM同期） | ☐ | 6 |
-| 3-10 | 共通コンポーネント・モーダル群 | ☐ | 14 |
-| 3-11 | エラーページ（400/404/500/503） | ☐ | 4 |
+| 3-6 | 手続き・レンタル（カート／CSV／一括返却） | ☑ | 7（カート検索配線含め完了） |
+| 3-7 | 手続き・販売（カート／CSV） | ☑ | 6（全て完了） |
+| 3-8 | 履歴（レンタル／販売／詳細／統合ビュー） | ☑ | 5（全体履歴 `/history` で統合） |
+| 3-9 | 設定（ユーザー管理／カテゴリ／カスタムフィールド／メール・CRM同期） | ◐ | 6（ユーザー管理・機材カテゴリ・カスタムフィールド 完了。メール・CRM 残） |
+| 3-10 | 共通コンポーネント・モーダル群 | ◐ | 14（検索/ページ/サマリーカード/フォームモーダル/AuthLayout 完了。業務モーダルは対応画面実装時に） |
+| 3-11 | エラーページ（400/404/500/503） | ☑ | 4（全て完了） |
 
 ### Phase 4 — 仕上げ・撤去
 
 | # | タスク | 状態 | 備考 |
 | --- | --- | --- | --- |
-| 4-1 | 旧 Blade（`resources/views`）と Blade 用フロント資産を削除 | ☐ | 全画面移行完了後 |
-| 4-2 | `routes/web.php` を SPA フォールバック or 認証外のみに簡素化 | ☐ | |
+| 4-1 | 旧 Blade（`resources/views`）と Blade 用フロント資産を削除 | ◐ | Blade UI ビュー・Blade コントローラ削除済（`emails/` のみ残）。npm 資産整理は 4-3 |
+| 4-2 | `routes/web.php` を SPA フォールバック or 認証外のみに簡素化 | ☑ | Blade UI ルート・`Auth::routes()` 撤去。Laravel は API 専用に |
 | 4-3 | 不要 npm 依存（bootstrap/jsbarcode/toastr 等）を整理 | ☐ | React 版へ置換後 |
 | 4-4 | CI にフロントのビルド／型チェック／lint を追加 | ☐ | |
 | 4-5 | デプロイ手順（`deploy-to-prod.yml`）をモノレポ対応へ | ☐ | |
 | 4-6 | README・docs 更新、`docs/Architecture` 反映 | ☐ | |
+
+> **Blade 撤去（4-1/4-2）実施内容**: `routes/web.php` から Blade UI ルートと `Auth::routes()` を撤去し API 専用化。
+> Blade 用コントローラ 12 種（Dashboard/Devices/Clients/Contacts/RentalHists/SalesHists/User/Mailing/InventoryStock/InventoryUnit/DeviceCategory/DeviceTypeField）と `Http/Controllers/Auth/*`、`resources/views/**`（`emails/` を除く）を削除。
+> 旧 Blade 依存だった Feature テスト（LoginTest / DashboardAccessTest / BasicTest）を削除、`AdminMiddlewareTest` は API 管理者ルート（`/api/users`）検証に置換。これにより長年の **3 failures（Vite manifest 由来）が解消**し、テストは全 green に。
+> 残課題: `emails/` ビューと `CustomEmailChangeNotification`・`User::sendEmailChangeNotification` はメール機能（仕様未確定）用に保持。npm 依存整理（4-3）・CI（4-4）・デプロイ（4-5）・README（4-6）は未着手。
 
 ---
 
@@ -150,52 +155,69 @@
 ### 3-6 手続き・レンタル
 | Blade | React ルート | API | 状態 |
 | --- | --- | --- | --- |
-| `rental/index` | `/rental` | `GET /api/rental` | ☐ |
-| `rental/rental` | `/rental/cart` | `POST /api/rental/store` | ☐ |
-| `rental/components/cart` | カート部品 | — | ☐ |
-| `rental/components/file` | CSV 部品 | `POST /api/rental/multi/upload` | ☐ |
-| `rental/rental_with_file_confirm` | CSV 確認 | `POST /api/rental/multi/store` | ☐ |
-| `rental/multi_return_device_confirm` | `/rental/return/:lendId` | `POST /api/rental/multi/return/:lendId` | ☐ |
+| `rental/index` | `/rental` | `GET /api/rental` ✅ | ☑ |
+| `rental/rental` | `/rental`（カート式タブ） | `POST /api/rental/store` ✅ | ☑ |
+| `rental/components/cart` | `RentalCartForm`（端末検索配線済） | `GET /api/devices/search` | ☑ |
+| `rental/components/file` | `RentalFileForm`（ファイル式タブ） | `POST /api/rental/multi/upload` ✅ | ☑ |
+| `rental/rental_with_file_confirm` | CSV 確認（confirm ステート） | `POST /api/rental/multi/store` ✅ | ☑ |
+| `rental/multi_return_device_confirm` | 詳細画面の返却ボタン | `POST /api/rental/multi/return/:lendId` ✅ | ☑ |
 | `history/checkout`（貸出明細） | `/rental/checkout/:deviceId` | `GET /api/rental/checkout/:deviceId` | ☐ |
+
+> レンタル登録時は端末状態を検証（販売済み/貸出中/不良を 422 で弾く。`App\Traits\ChecksRentableDevices` を Store/StoreMulti の両 FormRequest で共有）。
 
 ### 3-7 手続き・販売
 | Blade | React ルート | API | 状態 |
 | --- | --- | --- | --- |
-| `sales/index` | `/sale` | `GET /api/sale` | ☐ |
-| `sales/sales` | `/sale/cart` | `POST /api/sale/store` | ☐ |
-| `sales/components/cart` | カート部品 | — | ☐ |
-| `sales/components/file` | CSV 部品 | `POST /api/sale/multi/upload` | ☐ |
-| `sales/multi_sale_confirm` | CSV 確認 | `POST /api/sale/multi/store` | ☐ |
+| `sales/index` | `/sale` | `GET /api/sale` ✅実装済 | ☑ |
+| `sales/sales` | `/sale`（カート式タブ） | `POST /api/sale/store` ✅実装済 | ☑ |
+| `sales/components/cart` | `SaleCartForm`（端末検索配線済） | `GET /api/devices/search` | ☑ |
+| `sales/components/file` | `SaleFileForm`（ファイル式タブ） | `POST /api/sale/multi/upload` ✅実装済 | ☑ |
+| `sales/multi_sale_confirm` | CSV 確認（confirm ステート） | `POST /api/sale/multi/store` ✅実装済 | ☑ |
 | `sales/sales_detail`（書込） | `/sale/write/:deviceId` | `GET /api/sale/write/:deviceId` | ☐ |
+
+> 販売は不可逆のため返却処理なし。`device_sale` の pivot は `sale_date_at` のみ、`devices.sale_id` に `sale_id` をセットする。詳細画面（`/sale/history/:saleId`）は返却ボタンを持たず表示のみ。
+> 販売登録時は端末状態を検証（販売済み/貸出中/不良/販売対象外を 422 で弾く。`App\Traits\ChecksSaleableDevices` を Store/StoreMulti の両 FormRequest で共有）。
 
 ### 3-8 履歴
 | Blade | React ルート | API | 状態 |
 | --- | --- | --- | --- |
-| `history/all_rental_historys` | `/rental/history` | `GET /api/rental/history` | ☐ |
-| `rental/rental_detail` | `/rental/history/:id` | `GET /api/rental/history/:id` | ☐ |
-| `history/all_sales_historys` | `/sale/history` | `GET /api/sale/history` | ☐ |
-| `sales/sales_detail` | `/sale/history/:id` | `GET /api/sale/history/:id` | ☐ |
-| `history/checkout` | 詳細内 | — | ☐ |
+| `history/all_rental_historys` | `/rental/history` | `GET /api/rental/history` ✅ | ☑ |
+| `rental/rental_detail` | `/rental/history/:id` | `GET /api/rental/history/:id` ✅ | ☑ |
+| `history/all_sales_historys` | `/sale/history` | `GET /api/sale/history` ✅ | ☑ |
+| `sales/sales_detail` | `/sale/history/:id` | `GET /api/sale/history/:id` ✅ | ☑ |
+| （統合） | `/history` | `GET /api/history?type=&word=&page=` ✅ | ☑ |
+| `history/checkout` | — | — | ☐（旧 Blade は未完成のスキャフォールド。移植対象外） |
+
+> 全体履歴 `/history` はレンタル/販売を統合した一覧。種別フィルタ（すべて/レンタル/販売）・キーワード検索・ページネーションを持ち、各行は既存の per-type 詳細（`/rental/history/:id`・`/sale/history/:id`）へリンクする。API は `HistoryController@index` が両モデルを正規化・マージして 10 件ページングで返す。
 
 ### 3-9 設定
 | Blade | React ルート | API | 状態 |
 | --- | --- | --- | --- |
-| `user/index` | `/users` | `GET /api/users` | ☐ |
-| `user/register` | `/users/register` | `POST /api/users` | ☐ |
+| `user/index` | `/users` | `GET /api/users` ✅ | ☑（一覧＋検索＋編集モーダル。admin 限定） |
+| `user/register` | `/users/register` | `POST /api/users` ✅ | ☑ |
+| （更新） | `/users`（編集モーダル） | `PUT /api/users/{id}` ✅ | ☑ |
 | `user/profile` | `/profile` | `GET /api/profile` | ☐ |
-| `device_categories/index` | `/settings/categories` | `GET/POST/PUT/DELETE /api/device-categories` + `reorder` | ☐ |
-| `device_fields/index` | `/settings/fields` | `GET/POST/PUT/DELETE /api/device-fields` + `reorder` | ☐ |
+| `device_categories/index` | `/settings/categories` | `GET/POST/PUT/DELETE /api/device-categories` + `reorder` ✅ | ☑（一覧＋追加＋編集モーダル＋削除＋並び替え。admin 限定） |
+| `device_fields/index` | `/settings/fields` | `GET/POST/PUT/DELETE /api/device-fields` + `reorder` ✅ | ☑（カテゴリ別一覧＋追加＋編集モーダル＋削除＋並び替え。select は選択肢エディタ。admin 限定） |
 | `mailform` | `/settings/mail` | `POST /api/sendmail`, `GET /api/sync/crm` | ☐ |
+
+> ユーザー管理は admin のみ。API は `auth:sanctum` + `admin` ミドルウェアで保護（非 admin は 403）。
+> フロントは `AdminRoute` ガード（非 admin は `/dashboard` へ）と Sidebar の `adminOnly` で二重に出し分け。
+> 注: `users.id` は bigint オートインクリメント（旧 `StoreUserRequest` の UUID 採番は現スキーマと不一致のため API では採用せず）。
+> 機材カテゴリは CRUD＋並び替え（`reorder`）を実装。コード変更時は `devices.device_type` も追従更新、機材が紐づくカテゴリは削除拒否（422）。
+> カスタムフィールドは カテゴリ別 CRUD＋並び替え（`reorder`）を実装。`field_key` はラベルから自動採番、`select` 型のみ選択肢 `options` を保持。
+> 更新ではカテゴリ・`field_key` は変更不可。削除しても端末側の JSON 値は残す（legacy 仕様）。
+> 旧 Blade の email 変更フロー（`/profile/email/*`、メール送信）と メール・CRM 連携は 3-9 の残タスク。
 
 ### 3-10 共通コンポーネント・モーダル
 | Blade | React コンポーネント | 状態 |
 | --- | --- | --- |
 | `layouts/app` / `sidebar` / `footer` | `AppLayout` / `Sidebar` / `Footer` | ☑ |
-| `layouts/auth` | `AuthLayout` | ☐ |
+| `layouts/auth` | `AuthLayout` | ☑（LoginPage で適用） |
 | `component/alert` | `<Alert>` | ☐ |
 | `component/cart_list` | `<CartList>` | ☐ |
-| `component/search_box` / `search_form` | `<SearchBox>` / `<SearchForm>` | ☐ |
-| `component/summary_cards` | `<SummaryCards>` | ☐ |
+| `component/search_box` / `search_form` | `<SearchBox>` ＋ `<Pagination>` | ☑（一覧 5 画面で共通化） |
+| `component/summary_cards` | `<SummaryCards>` | ☑（DashboardPage で適用） |
 | `component/modal/checkout` | `<CheckoutModal>` | ☐ |
 | `component/modal/client_search`(+for_contact) | `<ClientSearchModal>` | ☐ |
 | `component/modal/edit_device_info` | `<EditDeviceModal>` | ☐ |
@@ -206,10 +228,26 @@
 | `component/modal/incart_modal` | `<InCartModal>` | ☐ |
 | `component/modal/return_device` | `<ReturnDeviceModal>` | ☐ |
 
+> 共通検索/ページネーションを `components/ui/SearchBox.tsx`・`Pagination.tsx`、サマリーカードを
+> `components/ui/SummaryCards.tsx`、フォーム用モーダルを `components/ui/FormModal.tsx` に切り出し。
+> 一覧 5 画面（History / SaleHistory / RentalHistory / Users / DeviceSearch）＋ Dashboard の重複マークアップ、
+> および設定 3 画面（Users / DeviceCategories / DeviceFields）の編集モーダルを共通化。
+> 共通スタイルは `components/ui/ui.css` に集約（`.search-section/.search-form/.search-pagination/.summary-card*`）。
+> AuthLayout（`layouts/AuthLayout.tsx`）はログイン画面の 2 カラムカード（ブランディング＋フォーム枠）を提供し、
+> `LoginPage` が利用。ログイン以外の認証画面（パスワードリセット等）でも再利用できる。
+> 残: 業務モーダル（CartList / CheckoutModal / ReturnDeviceModal 等、対応画面の実装時に移植）。
+
 ### 3-11 エラーページ
 | Blade | React ルート | 状態 |
 | --- | --- | --- |
-| `errors/400` `404` `500` `503` | `/error/*`・ErrorBoundary | ☐ |
+| `errors/404` | catch-all `*` → `NotFoundPage` | ☑ |
+| `errors/400` | `/error/400` → `BadRequestPage` | ☑ |
+| `errors/500` | `/error/500` + Router `errorElement` → `ServerErrorPage` | ☑ |
+| `errors/503` | `/error/503` → `ServiceUnavailablePage`（API 503 で自動誘導） | ☑ |
+
+> 共通 `ErrorPage` コンポーネント（`pages/errors/ErrorPage.tsx` + `error.css`）を 4 ページで共有。
+> 認証・共通レイアウトの外側で単体表示できる自前シェルを持つ。レンダリング例外は `ProtectedRoute` の
+> `errorElement`（`ServerErrorPage`）で捕捉。API 応答 503 は axios インターセプタで `/error/503` へ誘導。
 
 ---
 

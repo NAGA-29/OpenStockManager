@@ -45,6 +45,7 @@ const NAV_SECTIONS: NavSection[] = [
     label: '履歴',
     icon: 'fa fa-history',
     children: [
+      { label: '全体', to: '/history' },
       { label: 'レンタル', to: '/rental/history' },
       { label: '販売', to: '/sale/history' },
     ],

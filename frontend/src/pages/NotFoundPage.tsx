@@ -1,13 +1,18 @@
-import { Link } from 'react-router-dom';
+import ErrorPage from './errors/ErrorPage';
 
-/** 404 プレースホルダ（エラーページ群は 3-11 で整備）。 */
+/** 404 Not Found（不明なルート）。 */
 function NotFoundPage() {
   return (
-    <main className="app-shell">
-      <h1>404</h1>
-      <p>ページが見つかりませんでした。</p>
-      <Link to="/dashboard">ダッシュボードへ戻る</Link>
-    </main>
+    <ErrorPage
+      code="404"
+      title="お探しのページが見つかりません。"
+      message={
+        <>
+          <p>お探しのページは削除されたか、URLが変更された可能性があります。</p>
+          <p>お手数ですが、トップページから再度お探しください。</p>
+        </>
+      }
+    />
   );
 }
 

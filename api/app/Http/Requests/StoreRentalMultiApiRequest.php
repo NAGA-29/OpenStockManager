@@ -2,13 +2,17 @@
 
 namespace App\Http\Requests;
 
+use App\Traits\ChecksRentableDevices;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Validator;
 
 /**
  * 一括レンタル保存（API）のバリデーション。
  */
 class StoreRentalMultiApiRequest extends FormRequest
 {
+    use ChecksRentableDevices;
+
     public function authorize(): bool
     {
         return true;
@@ -49,5 +53,17 @@ class StoreRentalMultiApiRequest extends FormRequest
             'rentals.*.device_id.required' => '端末IDが未指定です。',
             'rentals.*.device_id.exists'   => '指定された端末が見つかりません。',
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            $deviceIds = collect($this->input('rentals', []))
+                ->pluck('device_id')
+                ->filter()
+                ->values()
+                ->all();
+            $this->validateRentableDevices($validator, $deviceIds, 'rentals');
+        });
     }
 }

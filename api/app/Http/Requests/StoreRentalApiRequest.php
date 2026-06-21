@@ -2,13 +2,17 @@
 
 namespace App\Http\Requests;
 
+use App\Traits\ChecksRentableDevices;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Validator;
 
 /**
  * レンタル登録（API）のバリデーション。
  */
 class StoreRentalApiRequest extends FormRequest
 {
+    use ChecksRentableDevices;
+
     public function authorize(): bool
     {
         return true;
@@ -48,5 +52,15 @@ class StoreRentalApiRequest extends FormRequest
             'schedule_return_at.required'   => '返却予定日を入力してください。',
             'schedule_return_at.date'       => '返却予定日は有効な日付を入力してください。',
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            $deviceIds = $this->input('device_ids', []);
+            if (is_array($deviceIds)) {
+                $this->validateRentableDevices($validator, $deviceIds, 'device_ids');
+            }
+        });
     }
 }
