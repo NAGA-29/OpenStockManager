@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/auth/useAuth';
+import { InventoryCartProvider } from '@/features/inventory/InventoryCartProvider';
 import Sidebar from './Sidebar';
 import Footer from './Footer';
+import HeaderCartButton from './HeaderCartButton';
 import './layout.css';
 
 /**
@@ -22,47 +24,52 @@ function AppLayout() {
   };
 
   return (
-    <div className="layout-root">
-      <header className="osm-navbar">
-        <Link to="/dashboard" className="osm-navbar__brand">
-          <span className="brand-open">Open</span>
-          <span className="brand-rest">StockManager</span>
-        </Link>
-
-        <div className="osm-navbar__menu">
-          <button
-            type="button"
-            className="osm-navbar__user"
-            aria-haspopup="true"
-            aria-expanded={menuOpen}
-            onClick={() => setMenuOpen((prev) => !prev)}
-          >
-            {user?.name}
-            <i className="fas fa-caret-down" aria-hidden="true" />
-          </button>
-          {menuOpen && (
-            <div className="osm-navbar__dropdown">
-              <Link to="/profile" onClick={() => setMenuOpen(false)}>
-                マイページ
-              </Link>
-              <button type="button" onClick={() => void handleLogout()}>
-                ログアウト
-              </button>
-            </div>
-          )}
-        </div>
-      </header>
-
-      <div className="osm-body">
-        <Sidebar />
-        <main className="osm-main">
-          <div className="osm-main__content">
-            <Outlet />
+    <InventoryCartProvider>
+      <div className="layout-root">
+        <header className="osm-navbar">
+          <div className="osm-navbar__left">
+            <Link to="/dashboard" className="osm-navbar__brand">
+              <span className="brand-open">Open</span>
+              <span className="brand-rest">StockManager</span>
+            </Link>
           </div>
-          <Footer />
-        </main>
+
+          <div className="osm-navbar__menu">
+            <HeaderCartButton />
+            <button
+              type="button"
+              className="osm-navbar__user"
+              aria-haspopup="true"
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen((prev) => !prev)}
+            >
+              {user?.name}
+              <i className="fas fa-caret-down" aria-hidden="true" />
+            </button>
+            {menuOpen && (
+              <div className="osm-navbar__dropdown">
+                <Link to="/profile" onClick={() => setMenuOpen(false)}>
+                  マイページ
+                </Link>
+                <button type="button" onClick={() => void handleLogout()}>
+                  ログアウト
+                </button>
+              </div>
+            )}
+          </div>
+        </header>
+
+        <div className="osm-body">
+          <Sidebar />
+          <main className="osm-main">
+            <div className="osm-main__content">
+              <Outlet />
+            </div>
+            <Footer />
+          </main>
+        </div>
       </div>
-    </div>
+    </InventoryCartProvider>
   );
 }
 

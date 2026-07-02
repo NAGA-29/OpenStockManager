@@ -72,6 +72,30 @@
   white-space: nowrap;
 }
 
+.device-select {
+  width: 48px;
+  text-align: center;
+}
+
+.device-select input {
+  inline-size: 1rem;
+  block-size: 1rem;
+}
+
+.device-cart-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.device-cart-actions__count {
+  font-weight: 700;
+  color: #374151;
+  margin-right: 0.25rem;
+}
+
 /* ---- 端末詳細 ---- */
 .device-detail__actions {
   display: flex;

@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AxiosError } from 'axios';
 import Alert from '@/components/ui/Alert';
 import DataTable, { type Column } from '@/components/ui/DataTable';
 import { useStoreRental, useRentals, type RentalHist } from '@/features/rental/useRental';
 import { useContacts, type Contact } from '@/features/contacts/useContacts';
+import { readCartDeviceIds } from '@/features/inventory/cartSelection';
 import { useDeviceSearch } from '@/features/inventory/useDeviceSearch';
+import { useInventoryCart } from '@/features/inventory/useInventoryCart';
 import type { Client } from '@/features/clients/useClients';
 import type { CategoryDevice } from '@/features/inventory/useDeviceCategory';
 
@@ -30,8 +32,11 @@ interface RentalCartFormProps {
 
 function RentalCartForm({ clients }: RentalCartFormProps) {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { selectedDeviceIds, clearCart } = useInventoryCart();
+  const initialDeviceIds = readCartDeviceIds(searchParams);
   const [form, setForm] = useState<RentalFormState>({
-    device_ids: [],
+    device_ids: initialDeviceIds.length > 0 ? initialDeviceIds : selectedDeviceIds,
     client_id: '',
     contact_id: '',
     checkout_at: new Date().toISOString().split('T')[0],
@@ -102,6 +107,7 @@ function RentalCartForm({ clients }: RentalCartFormProps) {
         note: form.note || undefined,
       });
       setSuccessMessage('レンタル登録が完了しました。');
+      clearCart();
       refetchRentals();
       setTimeout(() => navigate('/rental/history'), 2000);
     } catch (err) {
@@ -321,7 +327,8 @@ function RentalCartForm({ clients }: RentalCartFormProps) {
           <button
             type="button"
             className="osm-btn"
-            onClick={() =>
+            onClick={() => {
+              clearCart();
               setForm({
                 device_ids: [],
                 client_id: '',
@@ -332,7 +339,7 @@ function RentalCartForm({ clients }: RentalCartFormProps) {
                   .split('T')[0],
                 note: '',
               })
-            }
+            }}
           >
             リセット
           </button>

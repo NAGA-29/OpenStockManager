@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AxiosError } from 'axios';
 import Alert from '@/components/ui/Alert';
 import DataTable, { type Column } from '@/components/ui/DataTable';
 import { useStoreSale, useSales, type SaleHist } from '@/features/sale/useSale';
 import { useContacts, type Contact } from '@/features/contacts/useContacts';
+import { readCartDeviceIds } from '@/features/inventory/cartSelection';
 import { useDeviceSearch } from '@/features/inventory/useDeviceSearch';
+import { useInventoryCart } from '@/features/inventory/useInventoryCart';
 import type { Client } from '@/features/clients/useClients';
 import type { CategoryDevice } from '@/features/inventory/useDeviceCategory';
 
@@ -29,8 +31,11 @@ interface SaleCartFormProps {
 
 function SaleCartForm({ clients }: SaleCartFormProps) {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { selectedDeviceIds, clearCart } = useInventoryCart();
+  const initialDeviceIds = readCartDeviceIds(searchParams);
   const [form, setForm] = useState<SaleFormState>({
-    device_ids: [],
+    device_ids: initialDeviceIds.length > 0 ? initialDeviceIds : selectedDeviceIds,
     client_id: '',
     contact_id: '',
     sale_date_at: new Date().toISOString().split('T')[0],
@@ -100,6 +105,7 @@ function SaleCartForm({ clients }: SaleCartFormProps) {
         note: form.note || undefined,
       });
       setSuccessMessage('販売登録が完了しました。');
+      clearCart();
       refetchSales();
       setTimeout(() => navigate('/sale/history'), 2000);
     } catch (err) {
@@ -300,7 +306,8 @@ function SaleCartForm({ clients }: SaleCartFormProps) {
           <button
             type="button"
             className="osm-btn"
-            onClick={() =>
+            onClick={() => {
+              clearCart();
               setForm({
                 device_ids: [],
                 client_id: '',
@@ -308,7 +315,7 @@ function SaleCartForm({ clients }: SaleCartFormProps) {
                 sale_date_at: new Date().toISOString().split('T')[0],
                 note: '',
               })
-            }
+            }}
           >
             リセット
           </button>
