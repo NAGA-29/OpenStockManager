@@ -1,8 +1,14 @@
 # ADR-0001: pnpm セキュリティ設定の導入
 
-- **ステータス**: 承認済み
+- **ステータス**: 廃止（[ADR-0003](0003-pnpm-migration-minimum-release-age.md) により置き換え）
 - **決定日**: 2026-02-20
 - **決定者**: 開発チーム
+
+> **注記（2026-07-02）**: 本 ADR で採用した自作 `.pnpmfile.cjs` フック（公開7日未満のパッケージを
+> `afterAllResolved` でブロックする方式）は、pnpm 10.16 で標準搭載された `minimumReleaseAge` 設定へ
+> 置き換えた。またモノレポ再構成（Phase 4）により JS 依存はすべて `frontend/` 配下へ移動し、
+> 本 ADR が参照する repo ルート直下の `package.json` / `.npmrc` / `.pnpmfile.cjs` は現存しない。
+> 現行方針は [ADR-0003](0003-pnpm-migration-minimum-release-age.md) を参照。
 
 ---
 

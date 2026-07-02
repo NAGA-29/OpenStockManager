@@ -11,6 +11,7 @@
 /.serena
 /.kiro
 /.agents
+/.pnpm-store
 
 # Docker override
 docker-compose.override.yml

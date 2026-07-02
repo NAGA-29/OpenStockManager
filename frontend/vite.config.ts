@@ -14,6 +14,12 @@ export default defineConfig({
     host: true, // docker-compose の `npm run dev -- --host` 相当（0.0.0.0 で公開）
     port: 5173,
     strictPort: true,
+    proxy: {
+      '/api': {
+        target: process.env.VITE_DEV_API_PROXY_TARGET || 'http://localhost',
+        changeOrigin: true,
+      },
+    },
   },
   preview: {
     host: true,

@@ -1,10 +1,9 @@
 # 開発Tips
 
 > **モノレポでの実行場所**: 以下の PHP 系コマンドは Laravel（`api/`）を対象とします。
-> Docker 利用時は `docker compose exec laravel.test <コマンド>`、
+> Docker 利用時は `docker compose exec api <コマンド>`、
 > ローカル実行時は `api/` ディレクトリ内で実行してください
-> （例: `cd api && composer lint`）。本ページの `sail ...` 表記は
-> `docker compose exec laravel.test ...` に読み替えてください。
+> （例: `cd api && composer lint`）。
 
 ## コード品質ツール
 
@@ -17,10 +16,10 @@ PHPStan に Laravel 固有の解析ルール（Eloquent、ファサード、リ�
 
 ```bash
 # 基本実行
-sail artisan phpstan
+docker compose exec api php artisan phpstan
 
 # 解析レベルを指定して実行（0〜9、数値が大きいほど厳密）
-sail artisan phpstan --level=8
+docker compose exec api php artisan phpstan --level=8
 ```
 
 ### Pint（コードスタイル）
@@ -30,13 +29,13 @@ Laravel 公式のコードスタイル修正ツールです。PSR-12 をベー�
 
 ```bash
 # コードスタイルを自動修正
-sail artisan pint
+docker compose exec api php artisan pint
 
 # チェックのみ（修正しない）
-sail artisan pint --test
+docker compose exec api php artisan pint --test
 
 # Git で変更したファイルのみ対象
-sail artisan pint --dirty
+docker compose exec api php artisan pint --dirty
 ```
 
 ### 一括実行（lint）
@@ -45,13 +44,13 @@ Pint のチェックと Larastan の解析をまとめて実行します。
 
 ```bash
 # チェックのみ（Pint + PHPStan）
-sail artisan lint
+docker compose exec api php artisan lint
 
 # Pint の自動修正も含めて実行
-sail artisan lint --fix
+docker compose exec api php artisan lint --fix
 
 # Git で変更したファイルのみ対象
-sail artisan lint --dirty
+docker compose exec api php artisan lint --dirty
 ```
 
 ### Composer スクリプト

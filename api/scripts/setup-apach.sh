@@ -20,15 +20,15 @@ sudo service apache2 restart
 sudo apt install -y software-properties-common
 sudo add-apt-repository ppa:ondrej/php # Ondřej SurýのPPAは一般的に使われている
 sudo apt update
-sudo apt install -y php8.3
+sudo apt install -y php8.4
 # php -v # バージョン確認
 
 # Composer の準備
 sudo apt install -y curl php-cli php-mbstring unzip
 # sqliteの準備
-sudo apt install -y sqlite3 php8.3-sqlite3
+sudo apt install -y sqlite3 php8.4-sqlite3
 # 必要な拡張モジュールをインストール
-sudo apt install -y php8.3-bcmath php8.3-ctype php8.3-fileinfo php8.3-mbstring php8.3-tokenizer php8.3-xml php8.3-curl php8.3-gd php8.3-zip php8.3-pdo
+sudo apt install -y php8.4-bcmath php8.4-ctype php8.4-fileinfo php8.4-mbstring php8.4-tokenizer php8.4-xml php8.4-curl php8.4-gd php8.4-zip php8.4-pdo
 
 # Composer のインストール
 EXPECTED_CHECKSUM="$(wget -q -O - https://composer.github.io/installer.sig)"

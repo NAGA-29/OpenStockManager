@@ -3,8 +3,6 @@
 # さくらのVPSのUbuntuにLEMP環境を構築するスクリプト
 # 変数宣言
 PHP_VERSION=php8.4
-NODE_JS_VERSION=22
-MYSQL_ROOT_PASSWORD="MySQLStrongPassword123" # 必ず本番環境では変更すること
 TIMEZONE="Asia/Tokyo"
 
 # Ubuntu システムを更新
@@ -36,7 +34,7 @@ sudo apt install -y curl ${PHP_VERSION}-cli ${PHP_VERSION}-mbstring unzip # 2026
 # sqliteの準備
 sudo apt install -y sqlite3 $PHP_VERSION-sqlite3
 # 必要な拡張モジュールをインストール
-sudo apt install -y $PHP_VERSION-bcmath $PHP_VERSION-ctype $PHP_VERSION-fileinfo $PHP_VERSION-mbstring $PHP_VERSION-tokenizer $PHP_VERSION-xml $PHP_VERSION-curl $PHP_VERSION-gd $PHP_VERSION-zip $PHP_VERSION-pdo $PHP_VERSION-gmp
+sudo apt install -y $PHP_VERSION-bcmath $PHP_VERSION-ctype $PHP_VERSION-fileinfo $PHP_VERSION-mbstring $PHP_VERSION-tokenizer $PHP_VERSION-xml $PHP_VERSION-curl $PHP_VERSION-gd $PHP_VERSION-zip $PHP_VERSION-pdo $PHP_VERSION-pgsql $PHP_VERSION-gmp
 
 # Composer のインストール
 EXPECTED_CHECKSUM="$(wget -q -O - https://composer.github.io/installer.sig)"
@@ -56,27 +54,6 @@ rm composer-setup.php
 sudo mv composer.phar /usr/local/bin/composer
 sudo chmod +x /usr/local/bin/composer
 composer --version
-
-# # MySQL/MariaDBのインストール（LEMPスタックのM部分）
-# echo "MySQLをインストール中..."
-# sudo apt install -y mysql-server
-# sudo systemctl start mysql
-# sudo systemctl enable mysql
-
-# # MySQLのセキュリティ設定
-# sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '$MYSQL_ROOT_PASSWORD';"
-# sudo mysql -e "DELETE FROM mysql.user WHERE User='';"
-# sudo mysql -e "DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');"
-# sudo mysql -e "DROP DATABASE IF EXISTS test;"
-# sudo mysql -e "DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';"
-# sudo mysql -e "FLUSH PRIVILEGES;"
-
-# # Node.jsとnpmのインストール
-# echo "Node.jsをインストール中..."
-# curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-# sudo apt install -y nodejs
-# node -v
-# npm -v
 
 # # セキュリティ強化: Uncomplicated Firewall (UFW)の設定
 # echo "ファイアウォールを設定中..."

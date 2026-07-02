@@ -4,7 +4,7 @@
 バックエンド（`api/` = Laravel API）とフロントエンド（`frontend/` = React SPA）の
 両サービスをまとめて起動します。
 
-- `api/` … Laravel 12 の JSON API（Sanctum トークン認証）。コンテナ名 `laravel.test`、`http://localhost`
+- `api/` … Laravel 12 の JSON API（Sanctum トークン認証）。Compose サービス名 `api`、`http://localhost`
 - `frontend/` … React + Vite の SPA。コンテナ名 `frontend`、`http://localhost:5173`
 
 ---
@@ -21,7 +21,7 @@ cp frontend/.env.example frontend/.env
 
 ## 2. コンテナのユーザー/グループ ID を設定
 
-Sail 互換イメージのビルドに必要です（ホストのファイル権限と揃える）。
+API イメージのビルドに必要です（ホストのファイル権限と揃える）。
 
 ```bash
 export WWWUSER=$(id -u)
@@ -31,7 +31,7 @@ export WWWGROUP=$(id -g)
 ## 3. コンテナを起動（初回はイメージビルド）
 
 `api`（PHP/PostgreSQL/Redis/Meilisearch/Mailpit）と `frontend`（Vite dev server）を
-まとめて起動します。`frontend` サービスは起動時に `npm install` と `npm run dev` を自動実行します。
+まとめて起動します。`frontend` サービスは起動時に `pnpm install` と `pnpm run dev` を自動実行します。
 
 ```bash
 docker compose up -d --build
@@ -40,13 +40,13 @@ docker compose up -d --build
 ## 4. PHP 依存関係をインストール
 
 ```bash
-docker compose exec laravel.test composer install
+make composer-install
 ```
 
 ## 5. アプリケーションキーを生成
 
 ```bash
-docker compose exec laravel.test php artisan key:generate
+make key
 ```
 
 ## 6. `.env` の DB 設定（既定で PostgreSQL 用に設定済み）
@@ -59,14 +59,14 @@ DB_CONNECTION=pgsql
 DB_HOST=pgsql
 DB_PORT=5432
 DB_DATABASE=laravel
-DB_USERNAME=sail
+DB_USERNAME=app
 DB_PASSWORD=secret
 ```
 
 ## 7. マイグレーションとシーダーを実行
 
 ```bash
-docker compose exec laravel.test php artisan migrate --seed
+make migrate
 ```
 
 ## 8. 動作確認 URL
@@ -80,13 +80,13 @@ docker compose exec laravel.test php artisan migrate --seed
 
 ```bash
 cd frontend
-npm install
-npm run dev        # http://localhost:5173
+pnpm install
+pnpm run dev       # http://localhost:5173
 
 # 品質チェック
-npm run lint
-npm run typecheck
-npm run build
+pnpm run lint
+pnpm run typecheck
+pnpm run build
 ```
 
 ## 10. 開発終了時にコンテナを停止
@@ -99,12 +99,12 @@ docker compose down
 
 ## 補足: artisan / composer / テストの実行
 
-Laravel 関連のコマンドは `laravel.test` コンテナ内で実行します。
+Laravel 関連のコマンドは `api` コンテナ内で実行します。
 
 ```bash
-docker compose exec laravel.test php artisan <command>
-docker compose exec laravel.test composer <command>
-docker compose exec laravel.test php artisan test
+docker compose exec api php artisan <command>
+docker compose exec api composer <command>
+docker compose exec api php artisan test
 ```
 
 コード品質ツール（Larastan / Pint）の詳しい使い方は

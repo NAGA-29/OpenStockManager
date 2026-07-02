@@ -9,7 +9,7 @@
 [![Laravel](https://img.shields.io/badge/Laravel-12.0-red.svg)](https://laravel.com/)
 [![PHP](https://img.shields.io/badge/PHP-8.4-blue.svg)](https://www.php.net/)
 [![React](https://img.shields.io/badge/React-18.3-61dafb.svg)](https://react.dev/)
-[![Sail](https://img.shields.io/badge/Sail-Docker-green.svg)](https://laravel.com/docs/sail)
+[![Docker](https://img.shields.io/badge/Docker-Compose-blue.svg)](https://docs.docker.com/compose/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 [デモを見る](#) | [ドキュメント](docs/) | [貢献する](docs/CONTRIBUTING.md)
@@ -39,7 +39,7 @@
 
 ### 開発環境
 #### バックエンド（`api/`）
-- [Docker](https://www.docker.com/) / [Laravel Sail](https://laravel.com/docs/sail)
+- [Docker](https://www.docker.com/) / [Docker Compose](https://docs.docker.com/compose/)
 - [PHP](https://www.php.net/) ^8.4
 - [Laravel](https://laravel.com/) ^12.0
 - [PostgreSQL](https://www.postgresql.org/) 14
@@ -81,5 +81,5 @@
 
 #### フロントエンド（`frontend/`）
 - [ESLint](https://eslint.org/) v8（Lint）
-- `npm run typecheck`（型チェック / `tsc --noEmit`）
-- `npm run build`（型チェック付きビルド）
+- `pnpm run typecheck`（型チェック / `tsc --noEmit`）
+- `pnpm run build`（型チェック付きビルド）

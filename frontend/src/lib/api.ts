@@ -4,11 +4,12 @@ import { clearToken, getToken } from './token';
 /**
  * Laravel JSON API 向けの共有 Axios クライアント。
  *
- * - baseURL: `${VITE_API_BASE_URL}/api`（API 規約どおり全エンドポイントは `/api/...`）
+ * - baseURL: `VITE_API_BASE_URL + /api`。未指定時は Vite dev proxy の `/api` を使う。
  * - リクエスト時に Bearer トークンを自動付与
  * - 401 応答時はトークンを破棄しログインへ誘導（トークン方式）
  */
-const baseURL = `${import.meta.env.VITE_API_BASE_URL ?? ''}/api`;
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') ?? '';
+const baseURL = `${apiBaseUrl}/api`;
 
 export const api = axios.create({
   baseURL,
