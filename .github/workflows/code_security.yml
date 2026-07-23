@@ -8,6 +8,10 @@ on:
       - feat/*
       - hotfix/*
 
+defaults:
+  run:
+    working-directory: api
+
 jobs:
   security-check:
     runs-on: ubuntu-24.04
@@ -18,7 +22,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: "8.3"
+          php-version: "8.4"
           coverage: "none"
 
       - name: Install Local PHP Security Checker
@@ -31,19 +35,28 @@ jobs:
             echo "PHP_FAILED=true" >> $GITHUB_ENV
           fi
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20" # Node.jsのバージョンを指定
+          node-version: "22" # Node.jsのバージョンを指定
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
 
-      - name: Install npm dependencies using npm ci
-        run: npm ci
+      # フロントエンド(frontend/)の依存を監査。Laravel(api/)は API 専用で Node 依存なし。
+      - name: Install dependencies
+        working-directory: frontend
+        run: pnpm install --frozen-lockfile
 
-        # 詳細を確認
-      - name: Run npm audit
+        # 詳細を確認（出荷される本番依存のみ監査。vite/esbuild 等の開発ツールの
+        # 脆弱性は SPA ビルド成果物に含まれないため対象外とする）
+      - name: Run pnpm audit
         id: node-check
+        working-directory: frontend
         run: |
-          if ! npm audit; then
+          if ! pnpm audit --prod; then
             echo "NODE_FAILED=true" >> $GITHUB_ENV
           fi
 

@@ -1,0 +1,171 @@
+/*
+ * ログイン画面のスタイル（旧 auth/login.blade.php の二分割カードを簡略移植）。
+ * Tailwind 非導入のため素の CSS で再現する。
+ */
+
+.login-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #f1f5f9 0%, #ffffff 50%, #e2e8f0 100%);
+}
+
+.login-card {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: 100%;
+  max-width: 720px;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 1.25rem 2.5rem rgba(15, 23, 42, 0.15);
+}
+
+.login-card__aside {
+  background: linear-gradient(135deg, #1e293b 0%, #020617 100%);
+  color: #fff;
+  padding: 2rem;
+}
+
+.login-card__badge {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  padding: 0.25rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+
+.login-card__aside h2 {
+  font-size: 1.75rem;
+  margin: 0 0 1rem;
+}
+
+.login-card__aside p {
+  font-size: 0.875rem;
+  color: #cbd5e1;
+  margin: 0 0 1.5rem;
+}
+
+.login-card__features {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+  color: #cbd5e1;
+}
+
+.login-card__features li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.login-card__form {
+  padding: 2.5rem 2rem;
+}
+
+.login-card__form-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.login-card__form-header h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.5rem;
+  color: #1e293b;
+}
+
+.login-card__form-header p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.login-field {
+  margin-bottom: 1rem;
+}
+
+.login-field label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.login-field input {
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.login-field input:focus {
+  outline: none;
+  border-color: #1e293b;
+  box-shadow: 0 0 0 2px rgba(30, 41, 59, 0.15);
+}
+
+.login-field input.is-invalid {
+  border-color: #dc2626;
+}
+
+.login-field__error {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.8rem;
+  color: #dc2626;
+}
+
+.login-alert {
+  margin-bottom: 1rem;
+  padding: 0.6rem 0.85rem;
+  border-radius: 0.5rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  font-size: 0.85rem;
+}
+
+.login-submit {
+  width: 100%;
+  padding: 0.65rem 1rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: #1e293b;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.login-submit:hover:not(:disabled) {
+  background: #0f172a;
+}
+
+.login-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .login-card {
+    grid-template-columns: 1fr;
+  }
+
+  .login-card__aside {
+    display: none;
+  }
+}

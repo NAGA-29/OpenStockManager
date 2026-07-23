@@ -5,6 +5,10 @@ on:
     branches:
       - develop
 
+defaults:
+  run:
+    working-directory: api
+
 jobs:
   phpunit:
     runs-on: ubuntu-24.04
@@ -16,15 +20,15 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: "8.3"
+          php-version: "8.4"
           extensions: mbstring, xml, ctype, iconv, intl, pdo, pdo_sqlite, sqlite3
           coverage: none
 
       - name: Cache Composer dependencies
         uses: actions/cache@v4
         with:
-          path: vendor
-          key: composer-${{ hashFiles('composer.lock') }}
+          path: api/vendor
+          key: composer-${{ hashFiles('api/composer.lock') }}
           restore-keys: composer-
 
       - name: Install Composer dependencies
@@ -43,10 +47,10 @@ jobs:
         run: php artisan migrate --force
         env:
           DB_CONNECTION: sqlite
-          DB_DATABASE: ${{ github.workspace }}/database/database.sqlite
+          DB_DATABASE: ${{ github.workspace }}/api/database/database.sqlite
 
       - name: Run tests
         run: php artisan test
         env:
           DB_CONNECTION: sqlite
-          DB_DATABASE: ${{ github.workspace }}/database/database.sqlite
+          DB_DATABASE: ${{ github.workspace }}/api/database/database.sqlite

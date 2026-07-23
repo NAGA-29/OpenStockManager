@@ -1,69 +1,111 @@
 # 開発環境構築手順
 
+本プロジェクトはモノレポ構成です。リポジトリ直下の `docker-compose.yml` が
+バックエンド（`api/` = Laravel API）とフロントエンド（`frontend/` = React SPA）の
+両サービスをまとめて起動します。
+
+- `api/` … Laravel 12 の JSON API（Sanctum トークン認証）。Compose サービス名 `api`、`http://localhost`
+- `frontend/` … React + Vite の SPA。コンテナ名 `frontend`、`http://localhost:5173`
+
+---
+
 ## 1. 環境変数ファイルを作成
 
 ```bash
-cp .env.example .env
+# バックエンド（Laravel）
+cp api/.env.example api/.env
+
+# フロントエンド（Vite）。VITE_API_BASE_URL の既定は http://localhost
+cp frontend/.env.example frontend/.env
 ```
 
-## 2. PHP 依存関係をインストール
+## 2. コンテナのユーザー/グループ ID を設定
+
+API イメージのビルドに必要です（ホストのファイル権限と揃える）。
 
 ```bash
-composer install
+export WWWUSER=$(id -u)
+export WWWGROUP=$(id -g)
 ```
 
-## 3. Sail コンテナを起動
+## 3. コンテナを起動（初回はイメージビルド）
+
+`api`（PHP/PostgreSQL/Redis/Meilisearch/Mailpit）と `frontend`（Vite dev server）を
+まとめて起動します。`frontend` サービスは起動時に `pnpm install` と `pnpm run dev` を自動実行します。
 
 ```bash
-./vendor/bin/sail up -d
+docker compose up -d --build
 ```
 
-## 4. アプリケーションキーを生成
+## 4. PHP 依存関係をインストール
 
 ```bash
-./vendor/bin/sail artisan key:generate
+make composer-install
 ```
 
-## 5. `.env` の DB 設定を PostgreSQL 用に変更（未設定の場合）
+## 5. アプリケーションキーを生成
+
+```bash
+make key
+```
+
+## 6. `.env` の DB 設定（既定で PostgreSQL 用に設定済み）
+
+`api/.env.example` は `docker-compose.yml` の PostgreSQL サービスに合わせてあります。
+変更が必要な場合のみ以下を確認してください。
 
 ```dotenv
 DB_CONNECTION=pgsql
 DB_HOST=pgsql
 DB_PORT=5432
 DB_DATABASE=laravel
-DB_USERNAME=sail
+DB_USERNAME=app
 DB_PASSWORD=secret
 ```
 
-## 6. マイグレーションとシーダーを実行
+## 7. マイグレーションとシーダーを実行
 
 ```bash
-./vendor/bin/sail artisan migrate --seed
+make migrate
 ```
 
-## 7. フロントエンド依存関係をインストール
+## 8. 動作確認 URL
+
+- API（Laravel）: `http://localhost`
+- フロントエンド（React SPA）: `http://localhost:5173`
+- Mailpit（メール開発環境）: `http://localhost:8025`
+- Meilisearch: `http://localhost:7700`
+
+## 9. フロントエンドを Docker を使わずローカルで動かす場合（任意）
 
 ```bash
-# 初回または lockfile 不一致時
-./vendor/bin/sail pnpm install --no-frozen-lockfile
+cd frontend
+pnpm install
+pnpm run dev       # http://localhost:5173
 
-# 2回目以降（通常運用）
-./vendor/bin/sail pnpm install --frozen-lockfile
+# 品質チェック
+pnpm run lint
+pnpm run typecheck
+pnpm run build
 ```
-
-## 8. フロントエンド開発サーバーを起動
-
-```bash
-./vendor/bin/sail pnpm run dev
-```
-
-## 9. 動作確認 URL
-
-- アプリ: `http://localhost`
-- Mailpit: `http://localhost:8025`
 
 ## 10. 開発終了時にコンテナを停止
 
 ```bash
-./vendor/bin/sail down
+docker compose down
 ```
+
+---
+
+## 補足: artisan / composer / テストの実行
+
+Laravel 関連のコマンドは `api` コンテナ内で実行します。
+
+```bash
+docker compose exec api php artisan <command>
+docker compose exec api composer <command>
+docker compose exec api php artisan test
+```
+
+コード品質ツール（Larastan / Pint）の詳しい使い方は
+[develop_tips.md](develop_tips.md) を参照してください。

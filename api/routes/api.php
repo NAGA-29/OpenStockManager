@@ -1,0 +1,110 @@
+<?php
+
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\ClientController;
+use App\Http\Controllers\Api\ContactController;
+use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\DeviceCategoryController;
+use App\Http\Controllers\Api\DeviceController;
+use App\Http\Controllers\Api\DeviceFieldController;
+use App\Http\Controllers\Api\HistoryController;
+use App\Http\Controllers\Api\InventoryStockController;
+use App\Http\Controllers\Api\RentalController;
+use App\Http\Controllers\Api\SaleController;
+use App\Http\Controllers\Api\UserController;
+use Illuminate\Support\Facades\Route;
+
+/*
+|--------------------------------------------------------------------------
+| API Routes
+|--------------------------------------------------------------------------
+|
+| SPA(React)向けの JSON API ルート。認証は Laravel Sanctum の
+| Personal Access Token 方式（`auth:sanctum`）。フロントは
+| `Authorization: Bearer <token>` を付与する。
+|
+*/
+
+// 認証不要
+Route::post('/auth/login', [AuthController::class, 'login'])->name('api.auth.login');
+
+// 認証必須（Sanctum トークン）
+Route::middleware('auth:sanctum')->group(function () {
+    // 認証
+    Route::get('/auth/me', [AuthController::class, 'me'])->name('api.auth.me');
+    Route::post('/auth/logout', [AuthController::class, 'logout'])->name('api.auth.logout');
+
+    // ダッシュボード
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('api.dashboard');
+
+    // 在庫 - 数量管理
+    Route::get('/inventory/stocks', [InventoryStockController::class, 'index'])->name('api.inventory.stocks');
+
+    // 在庫 - 個別管理（カテゴリ別一覧／端末詳細）
+    Route::get('/devices/category/{code}', [DeviceController::class, 'byCategory'])->name('api.devices.category');
+    // 端末検索。`/devices/{deviceId}` より前に定義する。
+    Route::get('/devices/search', [DeviceController::class, 'search'])->name('api.devices.search');
+    // 端末登録（フォーム選択肢／単体登録）。`/devices/{deviceId}` より前に定義する。
+    Route::get('/devices/form-options', [DeviceController::class, 'formOptions'])->name('api.devices.form_options');
+    Route::post('/devices', [DeviceController::class, 'store'])->name('api.devices.store');
+    // 複数端末 CSV 登録（アップロード・確認）。`/devices/{deviceId}` より前に定義する。
+    Route::post('/devices/multi/upload', [DeviceController::class, 'uploadDeviceMulti'])->name('api.devices.multi.upload');
+    Route::post('/devices/multi/store', [DeviceController::class, 'storeDeviceMulti'])->name('api.devices.multi.store');
+    // ファイルアップロード（スペック・ベンチマーク）。`/devices/{deviceId}` より前に定義する。
+    Route::get('/devices/file/spec', [DeviceController::class, 'getSpecFile'])->name('api.devices.file.spec');
+    Route::post('/devices/file/spec', [DeviceController::class, 'uploadSpecFile'])->name('api.devices.file.spec.upload');
+    Route::get('/devices/file/benchmark', [DeviceController::class, 'getBenchmarkFile'])->name('api.devices.file.benchmark');
+    Route::post('/devices/file/benchmark', [DeviceController::class, 'uploadBenchmarkFile'])->name('api.devices.file.benchmark.upload');
+    Route::get('/devices/{deviceId}', [DeviceController::class, 'show'])->name('api.devices.show');
+
+    // データ - クライアント
+    Route::get('/clients', [ClientController::class, 'index'])->name('api.clients.index');
+    Route::post('/clients', [ClientController::class, 'store'])->name('api.clients.store');
+    Route::get('/clients/{clientId}', [ClientController::class, 'show'])->name('api.clients.show');
+
+    // データ - 担当者
+    Route::get('/contacts', [ContactController::class, 'index'])->name('api.contacts.index');
+    Route::post('/contacts', [ContactController::class, 'store'])->name('api.contacts.store');
+    Route::get('/contacts/{contactId}', [ContactController::class, 'show'])->name('api.contacts.show');
+
+    // 手続き - レンタル
+    Route::get('/rental', [RentalController::class, 'index'])->name('api.rental.index');
+    Route::post('/rental/store', [RentalController::class, 'store'])->name('api.rental.store');
+    Route::post('/rental/multi/upload', [RentalController::class, 'uploadMulti'])->name('api.rental.multi.upload');
+    Route::post('/rental/multi/store', [RentalController::class, 'storeMulti'])->name('api.rental.multi.store');
+    Route::post('/rental/multi/return/{lendId}', [RentalController::class, 'returnDevice'])->name('api.rental.return');
+    Route::get('/rental/history', [RentalController::class, 'history'])->name('api.rental.history');
+    Route::get('/rental/history/{lendId}', [RentalController::class, 'historyDetail'])->name('api.rental.history.detail');
+
+    // 手続き - 販売
+    Route::get('/sale', [SaleController::class, 'index'])->name('api.sale.index');
+    Route::post('/sale/store', [SaleController::class, 'store'])->name('api.sale.store');
+    Route::post('/sale/multi/upload', [SaleController::class, 'uploadMulti'])->name('api.sale.multi.upload');
+    Route::post('/sale/multi/store', [SaleController::class, 'storeMulti'])->name('api.sale.multi.store');
+    Route::get('/sale/history', [SaleController::class, 'history'])->name('api.sale.history');
+    Route::get('/sale/history/{saleId}', [SaleController::class, 'historyDetail'])->name('api.sale.history.detail');
+
+    // 履歴 - レンタル／販売 統合
+    Route::get('/history', [HistoryController::class, 'index'])->name('api.history.index');
+
+    // 設定 - ユーザー管理（管理者のみ）
+    Route::middleware('admin')->group(function () {
+        Route::get('/users', [UserController::class, 'index'])->name('api.users.index');
+        Route::post('/users', [UserController::class, 'store'])->name('api.users.store');
+        Route::put('/users/{id}', [UserController::class, 'update'])->name('api.users.update');
+
+        // 設定 - 機材カテゴリ。`reorder` は `{id}` より前に定義する。
+        Route::get('/device-categories', [DeviceCategoryController::class, 'index'])->name('api.device_categories.index');
+        Route::post('/device-categories', [DeviceCategoryController::class, 'store'])->name('api.device_categories.store');
+        Route::post('/device-categories/reorder', [DeviceCategoryController::class, 'reorder'])->name('api.device_categories.reorder');
+        Route::put('/device-categories/{id}', [DeviceCategoryController::class, 'update'])->name('api.device_categories.update');
+        Route::delete('/device-categories/{id}', [DeviceCategoryController::class, 'destroy'])->name('api.device_categories.destroy');
+
+        // 設定 - カスタムフィールド。`reorder` は `{id}` より前に定義する。
+        Route::get('/device-fields', [DeviceFieldController::class, 'index'])->name('api.device_fields.index');
+        Route::post('/device-fields', [DeviceFieldController::class, 'store'])->name('api.device_fields.store');
+        Route::post('/device-fields/reorder', [DeviceFieldController::class, 'reorder'])->name('api.device_fields.reorder');
+        Route::put('/device-fields/{id}', [DeviceFieldController::class, 'update'])->name('api.device_fields.update');
+        Route::delete('/device-fields/{id}', [DeviceFieldController::class, 'destroy'])->name('api.device_fields.destroy');
+    });
+});
